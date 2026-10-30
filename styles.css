@@ -6,3 +6,9 @@
 .server-state.is-offline .state-dot{background:#e07878;box-shadow:0 0 10px #e0787855}
 .server-state.is-online b{color:#a5edb1}
 .server-state.is-offline b{color:#e99a9a}
+
+
+/* Server message of the day */
+.server-state-copy{min-width:0}
+.server-motd{margin:7px 0 0;color:#b9c9bd;font-size:11px;line-height:1.5;max-width:390px;overflow-wrap:anywhere}
+@media(max-width:620px){.server-motd{max-width:100%}}
