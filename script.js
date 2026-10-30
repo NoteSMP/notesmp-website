@@ -23,3 +23,47 @@ copyButton?.addEventListener('click', async () => {
     window.setTimeout(() => toast.classList.remove('show'), 2200);
   }
 });
+
+// Public Minecraft status. The provider caches responses, so displayed values
+// may be up to five minutes old even though this page checks periodically.
+const statusTitle = document.querySelector('#status-title');
+const statusDetail = document.querySelector('#status-detail');
+const statusDot = document.querySelector('#status-dot');
+const statusBox = document.querySelector('#server-status');
+const statusEndpoint = 'https://api.mcsrvstat.us/3/notesmp.de';
+
+async function refreshServerStatus() {
+  if (!statusTitle || !statusDetail || !statusDot) return;
+  try {
+    const response = await fetch(statusEndpoint, { headers: { Accept: 'application/json' } });
+    if (!response.ok) throw new Error('Status service unavailable');
+    const data = await response.json();
+
+    if (data.online) {
+      const online = Number(data.players?.online ?? 0);
+      const max = Number(data.players?.max ?? 0);
+      statusTitle.textContent = 'ONLINE · ' + online + (max ? '/' + max : '') + ' PLAYERS';
+      const version = data.version ? ' · ' + data.version : '';
+      statusDetail.textContent = 'Java server' + version + ' · Auto-updating';
+      statusDot.classList.add('is-online');
+      statusDot.classList.remove('is-offline');
+      statusBox?.classList.add('is-online');
+      statusBox?.classList.remove('is-offline');
+    } else {
+      statusTitle.textContent = 'CURRENTLY OFFLINE';
+      statusDetail.textContent = 'The server is not responding right now';
+      statusDot.classList.add('is-offline');
+      statusDot.classList.remove('is-online');
+      statusBox?.classList.add('is-offline');
+      statusBox?.classList.remove('is-online');
+    }
+  } catch {
+    statusTitle.textContent = 'STATUS UNAVAILABLE';
+    statusDetail.textContent = 'Could not reach the status service · Try again soon';
+    statusDot.classList.remove('is-online', 'is-offline');
+    statusBox?.classList.remove('is-online', 'is-offline');
+  }
+}
+
+refreshServerStatus();
+window.setInterval(refreshServerStatus, 60_000);
