@@ -122,7 +122,7 @@ function commandsPage() {
 }
 
 function devlogPage() {
-  return `<div class="page-shell">${pageHeading('Devlog', 'Development posts from the NoteSMP Discord server.', 'SERVER DEVELOPMENT')}<div class="page-content">${emptyPage('Devlog integration pending', 'The NoteSMP bot will publish posts from its Discord channel here once the bot integration is available.')}</div></div>`;
+  return `<div class="page-shell">${pageHeading('Updates', 'Announcements and development posts from the NoteSMP Discord server.', 'SERVER UPDATES')}<div class="page-content">${emptyPage('Devlog integration pending', 'The NoteSMP bot will publish posts from its Discord channel here once the bot integration is available.')}</div></div>`;
 }
 
 function rulesPage() {
@@ -261,7 +261,10 @@ document.addEventListener('click', event => {
     selectedGalleryGroup = groupButton.dataset.galleryGroup;
     render();
   }
-  const eventPeriodButton = event.target.closest('[data-event-period]');\n  if (eventPeriodButton) {\n    eventPeriodButton.closest('.gallery-groups').querySelectorAll('[data-event-period]').forEach(button => button.setAttribute('aria-pressed', String(button === eventPeriodButton)));\n  }\n  if (event.target.closest('.gallery-groups button') && !groupButton && !eventPeriodButton) {
+  const eventPeriodButton = event.target.closest('[data-event-period]');
+  if (eventPeriodButton) {
+    eventPeriodButton.closest('.gallery-groups').querySelectorAll('[data-event-period]').forEach(button => button.setAttribute('aria-pressed', String(button === eventPeriodButton)));
+  }\n  if (event.target.closest('.gallery-groups button') && !groupButton && !eventPeriodButton) {
     const buttons = [...event.target.closest('.gallery-groups').querySelectorAll('button')];
     buttons.forEach(button => button.setAttribute('aria-pressed', String(button === event.target)));
   }
