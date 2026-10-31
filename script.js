@@ -4,7 +4,7 @@ const app = document.querySelector('#app');
 const nav = document.querySelector('.portal-nav');
 const menuButton = document.querySelector('.nav-toggle');
 const toast = document.querySelector('.toast');
-const routeTitles = { '/': 'Home', '/events': 'Events', '/gallery': 'Gallery', '/players': 'Players', '/commands': 'Commands', '/rules': 'Rules' };
+const routeTitles = { '/': 'Info', '/events': 'Events', '/gallery': 'Gallery', '/players': 'Players', '/commands': 'Commands', '/rules': 'Rules', '/devlog': 'Devlog' };
 let serverData = null;
 let playerData = [];
 let playerLoadFailed = false;
@@ -13,6 +13,11 @@ let toastTimer;
 
 function safeText(value) {
   return String(value ?? '').replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+}
+
+function safeWebUrl(value) {
+  if (typeof value !== 'string' || !/^https?:\/\//i.test(value)) return '';
+  return safeText(value);
 }
 
 function formatNumber(value) {
@@ -84,8 +89,8 @@ function eventsPage() {
 }
 
 function galleryPage() {
-  const groups = ['Events', 'Buildings', 'Places'];
-  return `<div class="page-shell">${pageHeading('Gallery', 'A growing archive of builds, places, and shared server moments.', 'FROM THE WORLD')}<div class="page-content"><div class="gallery-groups" aria-label="Gallery categories">${groups.map(group => `<button class="gallery-group" type="button" data-gallery-group="${group}" aria-pressed="${selectedGalleryGroup === group}">${group}</button>`).join('')}</div>${emptyPage(`${selectedGalleryGroup} gallery is empty`, 'Images will be added by the NoteSMP team through Discord. Each collection will keep its event or location context.')}</div></div>`;
+  const groups = ['Events', 'Buildings', 'Places', 'In Progress'];
+  return `<div class="page-shell">${pageHeading('Gallery', 'A growing archive of builds, places, and shared server moments.', 'FROM THE WORLD')}<div class="page-content"><div class="gallery-groups" aria-label="Gallery categories">${groups.map(group => `<button class="gallery-group" type="button" data-gallery-group="${group}" aria-pressed="${selectedGalleryGroup === group}">${group}</button>`).join('')}</div>${emptyPage(`${selectedGalleryGroup} gallery is empty`, 'Gallery entries and in-progress projects will appear here after the NoteSMP bot publishes Discord posts.')}</div></div>`;
 }
 
 function playerListPage() {
@@ -97,8 +102,27 @@ function playerProfilePage(uuid) {
 }
 
 function commandsPage() {
-  const nativeCommands = [['/help', 'Show available commands. The list depends on your permissions and installed server plugins.'], ['/msg <player> <message>', 'Send a private message to another player.'], ['/tell <player> <message>', 'Vanilla alias for sending a private message.'], ['/w <player> <message>', 'Vanilla alias for sending a private message.'], ['/teammsg <message>', 'Send a message to your current team, when teams are enabled.'], ['/me <action>', 'Send a third-person action message in chat.']];
-  return `<div class="page-shell">${pageHeading('Commands', 'A quick reference grouped by where each command comes from.', 'PLAYER GUIDE')}<div class="page-content"><section class="command-heritage"><header class="command-heritage-heading"><div><span class="overline">NATIVE COMMANDS</span><h2>Minecraft: Java Edition</h2></div><span class="status-meta">VANILLA</span></header><div class="command-list">${nativeCommands.map(([command, description]) => `<article class="command-item"><code>${safeText(command)}</code><p>${safeText(description)}</p></article>`).join('')}</div></section><section class="command-heritage"><header class="command-heritage-heading"><div><span class="overline">PLUGIN COMMANDS</span><h2>Server plugins</h2></div></header><div class="panel"><div class="empty-state"><strong>Plugin command list not configured</strong>Once the server plugin list is confirmed, commands will be grouped here under each plugin's name.</div></div></section><p class="fine-print">Native command availability can vary by server configuration and player permissions. Plugin commands will be documented only after the installed plugins are confirmed.</p></div></div>`;
+  const groups = [
+    {
+      name: 'Vanilla',
+      category: 'Minecraft Java Edition',
+      source: 'NATIVE',
+      commands: [['/help', 'Show available commands. The list depends on your permissions and installed server plugins.'], ['/msg <player> <message>', 'Send a private message to another player.'], ['/tell <player> <message>', 'Vanilla alias for sending a private message.'], ['/w <player> <message>', 'Vanilla alias for sending a private message.'], ['/teammsg <message>', 'Send a message to your current team, when teams are enabled.'], ['/me <action>', 'Send a third-person action message in chat.']]
+    },
+    {
+      name: 'GSit',
+      category: 'Plugin commands',
+      source: 'PLUGIN',
+      commands: [['/sit', 'Sit on the block or seat in front of you.'], ['/crawl', 'Crawl along the ground.'], ['/lay', 'Lie down in place.'], ['/spin', 'Spin in place.']]
+    }
+  ];
+  const commandCount = groups.reduce((count, group) => count + group.commands.length, 0);
+  const groupMarkup = groups.map(group => `<section class="command-heritage" data-command-group data-group-search="${safeText(`${group.name} ${group.category} ${group.source}`.toLowerCase())}"><header class="command-heritage-heading"><div><span class="overline">${safeText(group.category)}</span><h2>${safeText(group.name)}</h2></div><span class="status-meta">${safeText(group.source)}</span></header><div class="command-list">${group.commands.map(([command, description]) => `<article class="command-item" data-command-search="${safeText(`${group.name} ${group.category} ${command} ${description}`.toLowerCase())}"><code>${safeText(command)}</code><p>${safeText(description)}</p></article>`).join('')}</div></section>`).join('');
+  return `<div class="page-shell">${pageHeading('Commands', 'Search by command, category, or plugin.', 'PLAYER GUIDE')}<div class="page-content"><div class="toolbar"><input class="search-input" id="command-search" type="search" placeholder="Search commands or categories…" aria-label="Search commands or categories"><span class="player-count" id="command-count">${commandCount} commands</span></div><div id="command-groups">${groupMarkup}</div><div class="panel empty-state" id="command-no-results" hidden><strong>No matching commands</strong>Try a command, category, or plugin name.</div><p class="fine-print">Command availability depends on server configuration and player permissions. GSit commands listed here are enabled on NoteSMP.</p></div></div>`;
+}
+
+function devlogPage() {
+  return `<div class="page-shell">${pageHeading('Devlog', 'Development posts from the NoteSMP Discord server.', 'SERVER DEVELOPMENT')}<div class="page-content">${emptyPage('Devlog integration pending', 'The NoteSMP bot will publish posts from its Discord channel here once the bot integration is available.')}</div></div>`;
 }
 
 function rulesPage() {
@@ -122,8 +146,10 @@ function render() {
   else if (knownRoute === '/players') app.innerHTML = playerListPage();
   else if (knownRoute === '/commands') app.innerHTML = commandsPage();
   else if (knownRoute === '/rules') app.innerHTML = rulesPage();
+  else if (knownRoute === '/devlog') app.innerHTML = devlogPage();
   closeMenu();
   if (knownRoute === '/players' && !profileMatch) loadPlayers();
+  if (knownRoute === '/commands') filterCommands();
   if (profileMatch) renderPlayerProfile(profileMatch[1]);
 }
 
@@ -177,20 +203,6 @@ function renderPlayers() {
   results.innerHTML = `<div class="table-wrap"><table class="player-table"><thead><tr><th>Player</th><th class="numeric">Playtime</th><th class="numeric">Placed</th><th class="numeric">Broken</th><th class="numeric">Kills</th><th class="numeric">Deaths</th></tr></thead><tbody>${filtered.map(player => `<tr><td><a class="player-name" href="/players/${encodeURIComponent(player.uuid)}">${safeText(player.username)}</a></td><td class="numeric">${formatPlaytime(player.playtime_seconds)}</td><td class="numeric">${formatNumber(player.blocks_placed)}</td><td class="numeric">${formatNumber(player.blocks_broken)}</td><td class="numeric">${formatNumber(player.kills)}</td><td class="numeric">${formatNumber(player.deaths)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
-async function loadPlayers() {
-  try {
-    const response = await fetch(`${API_BASE}/players?limit=100`, { headers: { Accept: 'application/json' } });
-    if (!response.ok) throw new Error('Player list unavailable');
-    const data = await response.json();
-    playerData = Array.isArray(data.players) ? data.players : [];
-    playerLoadFailed = false;
-  } catch {
-    playerData = [];
-    playerLoadFailed = true;
-  }
-  renderPlayers();
-}
-
 async function renderPlayerProfile(uuid) {
   const profile = document.querySelector('#player-profile');
   if (!profile) return;
@@ -204,6 +216,28 @@ async function renderPlayerProfile(uuid) {
   } catch {
     profile.innerHTML = `<a class="back-link" href="/players">← All players</a>${emptyPage('Player profile unavailable', 'This player could not be found or the player API is unavailable.')}`;
   }
+}
+
+function filterCommands() {
+  const search = document.querySelector('#command-search')?.value.trim().toLowerCase() || '';
+  const groups = [...document.querySelectorAll('[data-command-group]')];
+  const count = document.querySelector('#command-count');
+  const noResults = document.querySelector('#command-no-results');
+  let visibleCount = 0;
+  groups.forEach(group => {
+    const groupMatches = !search || group.dataset.groupSearch.includes(search);
+    const commands = [...group.querySelectorAll('[data-command-search]')];
+    let groupVisibleCount = 0;
+    commands.forEach(command => {
+      const visible = groupMatches || command.dataset.commandSearch.includes(search);
+      command.hidden = !visible;
+      if (visible) groupVisibleCount += 1;
+    });
+    group.hidden = groupVisibleCount === 0;
+    visibleCount += groupVisibleCount;
+  });
+  if (count) count.textContent = `${visibleCount} ${visibleCount === 1 ? 'command' : 'commands'}`;
+  if (noResults) noResults.hidden = visibleCount > 0;
 }
 
 function closeMenu() {
@@ -235,6 +269,7 @@ document.addEventListener('click', event => {
 
 document.addEventListener('input', event => {
   if (event.target.matches('#player-search')) renderPlayers();
+  if (event.target.matches('#command-search')) filterCommands();
 });
 document.addEventListener('change', event => {
   if (event.target.matches('#player-sort')) renderPlayers();

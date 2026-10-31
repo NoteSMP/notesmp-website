@@ -24,7 +24,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .portal-header { height: 78px; display: flex; align-items: center; gap: 42px; max-width: 1440px; padding: 0 5.2%; margin: auto; border-bottom: 1px solid var(--line); }
 .portal-brand { display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; font-size: 13px; font-weight: 800; letter-spacing: 0; }
 .portal-brand > span:last-child > span { color: var(--lime); }
-.brand-emblem { width: 31px; height: 31px; display: grid; place-items: center; color: #1b2418; background: var(--lime); font-size: 16px; font-weight: 800; }
+.brand-logo { width: 34px; height: 34px; display: block; object-fit: contain; }
 .portal-nav { display: flex; align-items: center; gap: 28px; height: 100%; margin-left: auto; }
 .portal-nav a { position: relative; display: flex; align-items: center; height: 100%; color: var(--muted); font-size: 12px; font-weight: 700; }
 .portal-nav a:hover, .portal-nav a[aria-current="page"] { color: var(--text); }
@@ -34,7 +34,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .nav-toggle { display: none; }
 #app { min-height: 70vh; }
 .page-shell { max-width: 1260px; padding: 0 34px; margin: auto; }
-.home-hero { position: relative; min-height: 380px; display: flex; align-items: end; overflow: hidden; padding: 54px 58px; margin: 32px auto 0; background: #24352a url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=2200&q=85') center 53% / cover; }
+.home-hero { position: relative; min-height: 380px; display: flex; align-items: end; overflow: hidden; padding: 54px 58px; margin: 32px auto 0; background: #24352a url('https://minecraft.wiki/images/Forest.png?536a7') center 53% / cover; }
 .home-hero::before { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14, 21, 17, .9), rgba(14, 21, 17, .42) 58%, rgba(14, 21, 17, .08)), linear-gradient(0deg, rgba(14, 21, 17, .55), transparent 55%); content: ''; }
 .home-hero-content { position: relative; z-index: 1; max-width: 640px; }
 .eyebrow, .overline, .metric-label, .label-mono { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0; }
@@ -110,6 +110,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .gallery-group[aria-pressed="true"] { border-color: var(--lime); color: var(--lime); }
 .command-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; border: 1px solid var(--line); background: var(--line); }
 .command-heritage + .command-heritage { margin-top: 28px; }
+.command-heritage[hidden], .command-item[hidden] { display: none; }
 .command-heritage-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 0 0 13px; }
 .command-heritage-heading h2 { margin: 0; font-size: 17px; }
 .command-item { padding: 18px; background: var(--surface); }
@@ -122,7 +123,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .toast.show { opacity: 1; transform: translateY(0); }
 .notice-bar[hidden] { display: none; }
 
-@media (max-width: 760px) {
+@media (max-width: 900px) {
   .portal-header { height: 66px; padding: 0 20px; gap: 14px; }
   .nav-toggle { width: 38px; height: 38px; display: grid; align-content: center; justify-items: center; gap: 5px; order: 3; margin-left: auto; border: 1px solid var(--line); background: transparent; }
   .nav-toggle span { width: 15px; height: 1px; background: var(--text); }
@@ -143,6 +144,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 @media (max-width: 480px) {
+  .header-join span { display: none; }
   .home-hero h1 { font-size: 43px; }
   .page-heading h1 { font-size: 34px; }
   .home-hero p { font-size: 12px; }
