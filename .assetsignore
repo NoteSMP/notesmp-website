@@ -1,0 +1,5 @@
+/api/**
+/README.md
+/wrangler.jsonc
+/.assetsignore
+/.git/**
