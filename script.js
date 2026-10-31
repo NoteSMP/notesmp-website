@@ -264,7 +264,8 @@ document.addEventListener('click', event => {
   const eventPeriodButton = event.target.closest('[data-event-period]');
   if (eventPeriodButton) {
     eventPeriodButton.closest('.gallery-groups').querySelectorAll('[data-event-period]').forEach(button => button.setAttribute('aria-pressed', String(button === eventPeriodButton)));
-  }\n  if (event.target.closest('.gallery-groups button') && !groupButton && !eventPeriodButton) {
+  }
+  if (event.target.closest('.gallery-groups button') && !groupButton && !eventPeriodButton) {
     const buttons = [...event.target.closest('.gallery-groups').querySelectorAll('button')];
     buttons.forEach(button => button.setAttribute('aria-pressed', String(button === event.target)));
   }
