@@ -31,7 +31,7 @@ const statusDetail = document.querySelector('#status-detail');
 const statusDot = document.querySelector('#status-dot');
 const statusBox = document.querySelector('#server-status');
 const statusMotd = document.querySelector('#server-motd');
-const statusEndpoint = 'https://api.mcsrvstat.us/3/notesmp.de';
+const statusEndpoint = 'https://notesmp-api.notesmp-de.workers.dev/v1/server';
 
 async function refreshServerStatus() {
   if (!statusTitle || !statusDetail || !statusDot) return;
