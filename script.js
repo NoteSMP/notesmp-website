@@ -41,8 +41,8 @@ async function refreshServerStatus() {
     const data = await response.json();
 
     if (data.online) {
-      const online = Number(data.players?.online ?? 0);
-      const max = Number(data.players?.max ?? 0);
+      const online = Number(data.playersOnline ?? 0);
+      const max = Number(data.maxPlayers ?? 0);
       statusTitle.textContent = 'ONLINE · ' + online + (max ? '/' + max : '') + ' PLAYERS';
       const motdLines = data.motd?.clean;
       const motdText = Array.isArray(motdLines) ? motdLines.join(' ').trim() : (typeof motdLines === 'string' ? motdLines.trim() : '');
