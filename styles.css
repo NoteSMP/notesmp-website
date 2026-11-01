@@ -103,17 +103,19 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 
 /* Clean event cover; fade the artwork into the event text column from the left. */
 .scheduled-event-aside.has-event-cover{
-  background-image:var(--event-cover-image) !important;
+  background-image:var(--event-cover-image);
   border-color:transparent;
   position:relative;
+  isolation:isolate;
   overflow:hidden;
 }
 .scheduled-event-aside.has-event-cover::before{
   content:"";
   position:absolute;
-  z-index:-1;
+  z-index:0;
   inset:0 auto 0 -1px;
   width:58%;
   background:linear-gradient(90deg,var(--panel) 0%,rgba(16,25,21,.82) 34%,rgba(16,25,21,.24) 76%,transparent 100%);
   pointer-events:none;
 }
+.scheduled-event-aside.has-event-cover>*{position:relative;z-index:1}
