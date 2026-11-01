@@ -199,3 +199,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .scheduled-event-card > .post-card-footer { margin: 0 18px; padding: 10px 0; }
 @media (max-width: 760px) { .scheduled-event-layout { grid-template-columns: minmax(0, 1fr) 130px; } .scheduled-event-cover { grid-column: 1 / -1; max-height: 220px; } .scheduled-event-cover .post-card-image { max-height: 220px; } .scheduled-event-main { padding: 16px; } .scheduled-event-sidebar { padding: 16px; border-left: 1px solid var(--line); } }
 @media (max-width: 480px) { .scheduled-event-layout { grid-template-columns: 1fr; } .scheduled-event-sidebar { border-left: 0; border-top: 1px solid var(--line); } }
+
+/* Discord-managed news banner */
+.notice-bar.news-maintenance,.notice-bar.news-warning,.notice-bar.news-info { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:16px clamp(18px,4vw,56px); border-bottom:1px solid currentColor; }
+.notice-bar.news-maintenance { background:#3a2024; color:#ffb6bd; }
+.notice-bar.news-warning { background:#3b2b17; color:#ffc36b; }
+.notice-bar.news-info { background:#15343a; color:#80e4e5; }
+.news-copy { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.news-copy strong { font-size:16px; }
+.news-copy span { font-size:14px; }
+.news-countdown { flex:0 0 auto; font:700 clamp(20px,3vw,30px) var(--mono); white-space:nowrap; }
+@media(max-width:600px) { .notice-bar.news-maintenance,.notice-bar.news-warning,.notice-bar.news-info { align-items:flex-start; flex-direction:column; gap:10px; } }
