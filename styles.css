@@ -71,3 +71,18 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 .scheduled-event-aside.has-event-cover{background-blend-mode:normal;color:#fff}
 .scheduled-event-aside .scheduled-event-start{color:#fff;font-weight:650}
 @media(max-width:520px){.scheduled-event-details{grid-template-columns:minmax(0,1fr)}.scheduled-event-aside{align-items:flex-start;text-align:left}}
+
+
+/* Event archive: keep each time group vertically stacked, with newest/soonest first. */
+.page-content .event-period-section{margin:0 0:28px}
+.event-period-heading{margin:0 0:14px;font-size:clamp(20px,2vw,27px);line-height:1.25}
+#upcoming-events-feed,#past-events-feed{display:flex;flex-direction:column;gap:16px}
+#upcoming-events-feed>.post-feed,#past-events-feed>.post-feed{display:flex;flex-direction:column;gap:16px;width:100%}
+#upcoming-events-feed>.post-feed>.post-card,#past-events-feed>.post-feed>.post-card{width:100%;max-width:none}
+.scheduled-event-details{grid-template-columns:minmax(0,1fr) minmax(230px,38%);gap:18px}
+.scheduled-event-aside{width:100%;min-width:0;min-height:150px;align-items:flex-end;justify-content:center;gap:12px;padding:18px;background-position:center;background-size:cover}
+.scheduled-event-aside.has-event-cover{background-color:#111b14}
+.scheduled-event-start,.scheduled-event-countdown,.scheduled-event-place{max-width:100%;text-align:right}
+.scheduled-event-start{font-size:13px;line-height:1.45;white-space:normal}
+.scheduled-event-countdown{white-space:normal}
+@media(max-width:680px){.scheduled-event-details{grid-template-columns:minmax(0,1fr)}.scheduled-event-aside{min-height:140px;align-items:flex-start}.scheduled-event-start,.scheduled-event-countdown,.scheduled-event-place{text-align:left}}
