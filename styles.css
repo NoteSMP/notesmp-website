@@ -26,3 +26,14 @@
 .image-viewer-image{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
 .image-viewer-close{position:absolute;top:16px;right:18px;width:44px;height:44px;border:1px solid #ffffff55;border-radius:50%;background:#142019;color:#fff;font-size:32px;cursor:pointer;line-height:1}
 @media(max-width:620px){.image-viewer{padding:56px 12px 12px}.post-image-expand{width:36px;height:36px;right:8px;bottom:8px}}
+
+/* Twitch creator cards */
+.creator-card{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:6px;background:#0b130e;min-width:0}
+.creator-card:hover{border-color:#45684d;background:#101b14}
+.creator-avatar{width:44px;height:44px;flex:none;border-radius:50%;object-fit:cover;background:#1b2a20}
+.creator-info{display:flex;flex:1;flex-direction:column;gap:5px;min-width:0}
+.creator-name{font-size:13px;font-weight:700;overflow-wrap:anywhere}
+.creator-stream-title{font-size:11px;line-height:1.45;color:#a6b7aa;overflow-wrap:anywhere}
+.creator-status{flex:none;font-size:9px;font-weight:800;letter-spacing:.06em;padding:6px 8px;border-radius:4px}
+.creator-status.live{color:#a5edb1;background:#1b3824;border:1px solid #376a43}
+.creator-status.offline{color:#95a399;background:#17201a;border:1px solid var(--line)}
