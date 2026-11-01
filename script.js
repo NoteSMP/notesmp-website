@@ -565,7 +565,7 @@ function renderNewsBanner(posts) {
     const type = post.event?.type || post.group || "";
     const expiry = type === "maintenance" ? Date.parse(post.event?.expiryAt || "") : NaN;
     return !Number.isFinite(expiry) || expiry > now;
-  });
+  }).sort((a,b) => Date.parse(b.publishedAt || b.updatedAt || 0) - Date.parse(a.publishedAt || a.updatedAt || 0)).slice(0,1);
   target.replaceChildren();
   if (!active.length) { section.hidden = true; return; }
   section.hidden = false;
@@ -646,14 +646,7 @@ async function loadPage() {
       } else if (path === "/") {
         const panels = app.querySelectorAll(".main-column .panel");
         if (panels[1]) replaceFeed(panels[1], await getPosts("updates").then(items => items.slice(0,2)), "No announcements yet", "New NoteSMP announcements will appear here.");
-        const startedEvents = (await getPosts("events")).filter(post => {
-          const raw = post.event?.status ?? post.event?.eventStatus ?? post.event?.discordStatus;
-          const status = String(raw ?? "").toLowerCase();
-          return status.includes("started") || status.includes("active") || Number(raw) === 2;
-        });
-        const newsResponse = await fetch(API + "/content/posts?category=news&limit=5", {cache:"no-store"});
-        const newsData = newsResponse.ok ? await newsResponse.json() : {posts:[]};
-        renderNewsBanner([...(newsData.posts || []), ...startedEvents]);
+        await refreshNewsBanner();
         const eventHeading = app.querySelector(".home-section-heading");
         const eventPanel = eventHeading?.nextElementSibling;
         if (eventPanel?.classList.contains("panel")) {
