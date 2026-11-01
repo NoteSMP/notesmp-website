@@ -389,6 +389,19 @@ window.setInterval(fetchServerStatus, 60_000);
     closeList(); closeQuote();
     return output.join("").replace(/\uE000(\d+)\uE001/g, (_, i) => fragments[Number(i)] || "");
   }
+  function resolveEventCover(post, images = []) {
+    const event = post?.event || {};
+    const direct = safeUrl(event.coverImage);
+    if (direct) return direct;
+    const hash = typeof event.coverImage === "string" ? event.coverImage.trim() : "";
+    const guildId = String(event.guildId || "");
+    const eventId = String(event.id || event.eventId || post?.discordEventId || "");
+    if (hash && /^\d+$/.test(guildId) && /^\d+$/.test(eventId)) {
+      const extension = hash.startsWith("a_") ? "gif" : "png";
+      return safeUrl("https://cdn.discordapp.com/guild-events/" + guildId + "/" + eventId + "/" + hash + "." + extension + "?size=1024");
+    }
+    return images[0] || "";
+  }
   function makeCard(post) {
     const card = element("article", "post-card panel");
     const images = (Array.isArray(post.images) ? post.images : []).map(safeUrl).filter(Boolean);
@@ -426,7 +439,7 @@ window.setInterval(fetchServerStatus, 60_000);
       const eventInfo = element("div", "scheduled-event-details");
       const details = element("div", "scheduled-event-copy");
       const aside = element("div", "scheduled-event-aside");
-      const cover = safeUrl(post.event.coverImage) || images[0] || "";
+      const cover = resolveEventCover(post, images);
       if (cover) {
         aside.style.backgroundImage = 'linear-gradient(90deg, rgba(8,14,10,.28), rgba(8,14,10,.82)), url("' + cover.replace(/["\\]/g, "") + '")';
         aside.classList.add("has-event-cover");
