@@ -116,3 +116,11 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
   background:linear-gradient(270deg,rgba(16,25,21,.62) 0%,rgba(16,25,21,.28) 70%,transparent 100%);
   pointer-events:none;
 }
+
+
+/* Event cover aligns flush with the event divider and stays inside its card. */
+.scheduled-event-details{padding-top:0;overflow:hidden}
+.scheduled-event-aside{margin-top:0;align-self:stretch;min-height:100%;border-radius:0 6px 6px 0;overflow:hidden;background-clip:padding-box}
+.scheduled-event-aside.has-event-cover{background-position:center;background-size:cover}
+.scheduled-event-details .scheduled-event-aside::before{content:none}
+@media(max-width:520px){.scheduled-event-aside{border-radius:6px}}
