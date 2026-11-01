@@ -410,7 +410,15 @@ window.setInterval(fetchServerStatus, 60_000);
     const date = post.event && post.event.scheduledStartTime ? post.event.scheduledStartTime : post.publishedAt;
     meta.append(element("span", "", date && !Number.isNaN(Date.parse(date)) ? new Date(date).toLocaleString(undefined,{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}) : ""));
     content.append(meta);
-    content.append(element("h3", "", post.title || (post.body || "NoteSMP post").split("\\n")[0].slice(0, 120)));
+    const postBody = String(post.subtitle || post.body || "");
+    const postTitle = String(post.title || "").trim();
+    // Discord-derived titles may be the same raw Markdown heading already rendered in the body.
+    // Suppress that duplicate/raw title instead of showing a second, unformatted copy.
+    const titleDuplicatesBody = postTitle && postBody.trim().startsWith(postTitle);
+    const titleLooksLikeMarkdown = /^#{1,6}\\s|<a?:[A-Za-z0-9_]+:\\d+>|\\*\\*|__|~~/.test(postTitle);
+    if (postTitle && !titleDuplicatesBody && !titleLooksLikeMarkdown) {
+      content.append(element("h3", "", postTitle));
+    }
     if (post.subtitle || post.body) { const body = element("div", "post-card-body"); body.innerHTML = renderDiscordMarkdown((post.subtitle || post.body || "").slice(0, 900)); content.append(body); }
     const dimension = post.dimension || post.eventData?.dimension || null;
     const coords = post.coordinates || post.eventData?.coordinates || null;
