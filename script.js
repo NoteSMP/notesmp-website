@@ -553,7 +553,39 @@ window.setInterval(fetchServerStatus, 60_000);
     posts.forEach(post => feed.append(makeCard(post)));
     target.append(feed);
   }
-  async function loadPage() {
+  let newsCountdownTimer = null;
+function renderNewsBanner(post) {
+  const bar = document.querySelector("#critical-announcement");
+  if (!bar) return;
+  if (newsCountdownTimer) window.clearInterval(newsCountdownTimer);
+  if (!post) { bar.hidden = true; bar.replaceChildren(); return; }
+  const type = post.event?.type || post.group || "info";
+  const title = safeText(post.title || "News");
+  const subtitle = safeText(post.subtitle || post.body || "");
+  const expiry = type === "maintenance" ? Date.parse(post.event?.expiryAt || "") : NaN;
+  if (Number.isFinite(expiry) && expiry <= Date.now()) { bar.hidden = true; return; }
+  bar.className = "notice-bar news-" + (["maintenance","warning","info"].includes(type) ? type : "info");
+  bar.innerHTML = '<div class="news-copy"><strong>' + title + '</strong><span>' + subtitle + '</span></div>' + (Number.isFinite(expiry) ? '<div class="news-countdown" id="news-countdown" aria-live="polite"></div>' : "");
+  bar.hidden = false;
+  if (Number.isFinite(expiry)) {
+    const tick = () => {
+      const remaining = Math.max(0, expiry - Date.now());
+      const hours = Math.floor(remaining / 3600000);
+      const minutes = Math.floor((remaining % 3600000) / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      const counter = bar.querySelector("#news-countdown");
+      if (counter) counter.textContent = hours + "h " + String(minutes).padStart(2,"0") + "m " + String(seconds).padStart(2,"0") + "s";
+      if (remaining <= 0) { bar.hidden = true; window.clearInterval(newsCountdownTimer); }
+    };
+    tick(); newsCountdownTimer = window.setInterval(tick,1000);
+  }
+}
+async function refreshNewsBanner() {
+  try { const response = await fetch(API + "/content/posts?category=news&limit=5", { cache: "no-store" }); const data = response.ok ? await response.json() : {posts:[]}; renderNewsBanner((data.posts || [])[0] || null); }
+  catch { renderNewsBanner(null); }
+}
+
+async function loadPage() {
     const path = location.pathname.replace(/\/$/, "") || "/";
     let key = path;
     if (path === "/gallery") {
@@ -563,6 +595,7 @@ window.setInterval(fetchServerStatus, 60_000);
     if (key === lastKey) return;
     lastKey = key;
     try {
+      if (path === "/") await refreshNewsBanner();
       if (path === "/gallery") {
         const active = app.querySelector("[data-gallery-group][aria-pressed='true']");
         const label = active ? active.dataset.galleryGroup : "Events";
