@@ -448,7 +448,7 @@ window.setInterval(fetchServerStatus, 60_000);
       const aside = element("div", "scheduled-event-aside");
       const cover = resolveEventCover(post, images);
       if (cover) {
-        aside.style.backgroundImage = 'url("' + cover.replace(/["\\]/g, "") + '")';
+        aside.style.setProperty("--event-cover-image", 'url("' + cover.replace(/["\\]/g, "") + '")');
         aside.classList.add("has-event-cover");
       }
       if (Number.isFinite(start)) {
