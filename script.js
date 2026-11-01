@@ -352,24 +352,37 @@ window.setInterval(fetchServerStatus, 60_000);
     box.append(element("strong", "", title), document.createTextNode(message));
     return box;
   }
+  function renderDiscordMarkdown(source) {
+    const emojiHtml = [];
+    let text = String(source || "").replace(/<(a?):([A-Za-z0-9_]+):(\d+)>/g, (_, animated, name, id) => {
+      const token = "DISCORD_EMOJI_TOKEN_" + emojiHtml.length + "_X";
+      emojiHtml.push('<img class="discord-custom-emoji" src="https://cdn.discordapp.com/emojis/' + id + "." + (animated ? "gif" : "webp") + '?size=48&quality=lossless" alt=":' + name + ':" title=":' + name + ':" loading="lazy">'); return token;
+    });
+    text = text.replace(/\\([\\*_~|>#])/g, "$1").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\x27/g, "&#39;");
+    text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    text = text.replace(/\*\*(.+?)\*\*/gs, "<strong>$1</strong>").replace(/__(.+?)__/gs, "<u>$1</u>").replace(/\*(.+?)\*/gs, "<em>$1</em>").replace(/_(.+?)_/gs, "<em>$1</em>").replace(/~~(.+?)~~/gs, "<del>$1</del>").replace(/\x60([^\x60]+)\x60/g, "<code>$1</code>");
+    text = text.split("\\n").map(line => {
+      const heading = line.match(/^#{1,3}\s+(.*)$/); if (heading) return "<h4>" + heading[1] + "</h4>";
+      if (/^\s*[-*]\s+/.test(line)) return "<li>" + line.replace(/^\s*[-*]\s+/, "") + "</li>";
+      if (/^&gt;\s?/.test(line)) return "<blockquote>" + line.replace(/^&gt;\s?/, "") + "</blockquote>";
+      return line ? "<p>" + line + "</p>" : "";
+    }).join("");
+    return text.replace(/DISCORD_EMOJI_TOKEN_(\d+)_X/g, (_, index) => emojiHtml[Number(index)] || "");
+  }
   function makeCard(post) {
     const card = element("article", "post-card panel");
-    const imageUrl = safeUrl(post.images && post.images[0]);
-    if (imageUrl) {
-      const media = element("div", "post-card-media");
-      const image = element("img", "post-card-image");
-      image.src = imageUrl;
-      image.alt = post.title || "NoteSMP gallery image";
-      image.loading = "lazy";
-      media.append(image);
-      const expand = element("button", "post-image-expand");
-      expand.type = "button";
-      expand.setAttribute("aria-label", "View full image");
-      expand.title = "View full image";
-      expand.textContent = "⛶";
-      expand.addEventListener("click", () => openImageViewer(imageUrl, image.alt));
-      media.append(expand);
-      card.append(media);
+    const images = (Array.isArray(post.images) ? post.images : []).map(safeUrl).filter(Boolean);
+    if (images.length) {
+      const media = element("div", "post-card-media"); const image = element("img", "post-card-image"); let active = 0;
+      image.src = images[active]; image.alt = post.title || "NoteSMP gallery image"; image.loading = "lazy"; media.append(image); let counter = null;
+      const show = index => { active = (index + images.length) % images.length; image.src = images[active]; if (counter) counter.textContent = (active + 1) + " / " + images.length; };
+      if (images.length > 1) {
+        counter = element("span", "post-image-counter", "1 / " + images.length); media.append(counter);
+        const prev = element("button", "post-image-nav post-image-prev", "‹"); prev.type = "button"; prev.setAttribute("aria-label", "Previous image"); prev.addEventListener("click", event => { event.stopPropagation(); show(active - 1); });
+        const next = element("button", "post-image-nav post-image-next", "›"); next.type = "button"; next.setAttribute("aria-label", "Next image"); next.addEventListener("click", event => { event.stopPropagation(); show(active + 1); }); media.append(prev, next);
+        const timer = setInterval(() => show(active + 1), 4500); media.addEventListener("mouseenter", () => clearInterval(timer), { once: true });
+      }
+      const expand = element("button", "post-image-expand"); expand.type = "button"; expand.setAttribute("aria-label", "Open photo selection"); expand.title = "Open photo selection"; expand.textContent = "⛶"; expand.addEventListener("click", () => openImageViewer(images, image.alt, active)); media.append(expand); card.append(media);
     }
     const content = element("div", "post-card-content");
     const meta = element("div", "post-card-meta");
@@ -378,7 +391,7 @@ window.setInterval(fetchServerStatus, 60_000);
     meta.append(element("span", "", date && !Number.isNaN(Date.parse(date)) ? new Date(date).toLocaleString(undefined,{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}) : ""));
     content.append(meta);
     content.append(element("h3", "", post.title || (post.body || "NoteSMP post").split("\\n")[0].slice(0, 120)));
-    if (post.subtitle || post.body) content.append(element("p", "", (post.subtitle || post.body || "").slice(0, 900)));
+    if (post.subtitle || post.body) { const body = element("div", "post-card-body"); body.innerHTML = renderDiscordMarkdown((post.subtitle || post.body || "").slice(0, 900)); content.append(body); }
     const dimension = post.dimension || post.eventData?.dimension || null;
     const coords = post.coordinates || post.eventData?.coordinates || null;
     if (dimension || coords) {
@@ -397,25 +410,19 @@ window.setInterval(fetchServerStatus, 60_000);
     card.append(content);
     return card;
   }
-  function openImageViewer(url, alt) {
-    const overlay = element("div", "image-viewer");
-    overlay.setAttribute("role", "dialog");
-    overlay.setAttribute("aria-modal", "true");
-    overlay.setAttribute("aria-label", "Full image view");
-    const close = element("button", "image-viewer-close");
-    close.type = "button";
-    close.setAttribute("aria-label", "Close image viewer");
-    close.textContent = "×";
-    const image = element("img", "image-viewer-image");
-    image.src = url;
-    image.alt = alt || "Full gallery image";
-    overlay.append(close,image);
-    const dismiss = () => overlay.remove();
-    close.addEventListener("click",dismiss);
-    overlay.addEventListener("click",event => { if(event.target === overlay) dismiss(); });
-    document.addEventListener("keydown",function onKey(event){ if(event.key === "Escape"){dismiss();document.removeEventListener("keydown",onKey);} });
-    document.body.append(overlay);
-    close.focus();
+  function openImageViewer(urls, alt, startIndex = 0) {
+    const images = (Array.isArray(urls) ? urls : [urls]).filter(Boolean); if (!images.length) return;
+    let active = Math.max(0, Math.min(startIndex, images.length - 1));
+    const overlay = element("div", "image-viewer"); overlay.setAttribute("role", "dialog"); overlay.setAttribute("aria-modal", "true"); overlay.setAttribute("aria-label", "Full image view");
+    const close = element("button", "image-viewer-close"); close.type = "button"; close.setAttribute("aria-label", "Close image viewer"); close.textContent = "×";
+    const image = element("img", "image-viewer-image"); image.alt = alt || "Full gallery image"; const counter = element("span", "image-viewer-counter", "");
+    const update = () => { image.src = images[active]; counter.textContent = (active + 1) + " / " + images.length; };
+    const prev = element("button", "image-viewer-nav image-viewer-prev", "‹"); prev.type = "button"; prev.setAttribute("aria-label", "Previous photo"); prev.addEventListener("click", () => { active = (active + images.length - 1) % images.length; update(); });
+    const next = element("button", "image-viewer-nav image-viewer-next", "›"); next.type = "button"; next.setAttribute("aria-label", "Next photo"); next.addEventListener("click", () => { active = (active + 1) % images.length; update(); });
+    overlay.append(close, prev, image, next); if (images.length > 1) overlay.append(counter);
+    const dismiss = () => { overlay.remove(); document.removeEventListener("keydown", onKey); }; close.addEventListener("click", dismiss); overlay.addEventListener("click", event => { if (event.target === overlay) dismiss(); });
+    function onKey(event) { if (event.key === "Escape") dismiss(); else if (event.key === "ArrowLeft" && images.length > 1) { active = (active + images.length - 1) % images.length; update(); } else if (event.key === "ArrowRight" && images.length > 1) { active = (active + 1) % images.length; update(); } }
+    document.addEventListener("keydown", onKey); update(); document.body.append(overlay); close.focus();
   }
   async function getPosts(category, group = "") {
     const params = new URLSearchParams({ category, limit: "100" });
