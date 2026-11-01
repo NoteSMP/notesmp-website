@@ -523,9 +523,17 @@ window.setInterval(fetchServerStatus, 60_000);
         const target = app.querySelector(".page-content");
         const posts = await getPosts("events");
         const now = Date.now();
+        // Classify only by the event's scheduled start. This makes Upcoming and Past
+        // mutually exclusive, and keeps old synced rows in Past after Discord deletes them.
+        const seenEventIds = new Set();
         const filtered = posts.filter(post => {
-          const date = post.event && post.event.scheduledStartTime ? Date.parse(post.event.scheduledStartTime) : Date.parse(post.publishedAt);
-          return period === "past" ? date < now : date >= now;
+          const rawStart = post.event?.scheduledStartTime;
+          const start = rawStart ? Date.parse(rawStart) : NaN;
+          if (!Number.isFinite(start)) return false;
+          const id = String(post.id || post.event?.id || "");
+          if (id && seenEventIds.has(id)) return false;
+          if (id) seenEventIds.add(id);
+          return period === "past" ? start < now : start >= now;
         });
         replaceFeed(target, filtered, "No events in this period", "New Discord events will appear here automatically.");
       } else if (path === "/devlog" || path === "/rules") {
