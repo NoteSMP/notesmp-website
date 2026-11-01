@@ -448,7 +448,7 @@ window.setInterval(fetchServerStatus, 60_000);
       const aside = element("div", "scheduled-event-aside");
       const cover = resolveEventCover(post, images);
       if (cover) {
-        aside.style.backgroundImage = 'linear-gradient(90deg, rgba(8,14,10,.28), rgba(8,14,10,.82)), url("' + cover.replace(/["\\]/g, "") + '")';
+        aside.style.backgroundImage = 'linear-gradient(90deg, rgba(8,14,10,.88) 0%, rgba(8,14,10,.38) 38%, rgba(8,14,10,0) 78%), url("' + cover.replace(/["\\]/g, "") + '")';
         aside.classList.add("has-event-cover");
       }
       if (Number.isFinite(start)) {
