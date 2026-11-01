@@ -389,6 +389,7 @@ window.setInterval(fetchServerStatus, 60_000);
     closeList(); closeQuote();
     return output.join("").replace(/\uE000(\d+)\uE001/g, (_, i) => fragments[Number(i)] || "");
   }
+  function makeCard(post) {
     const isScheduledEvent = Boolean(post.event?.scheduledStartTime);
     const images = (Array.isArray(post.images) ? post.images : []).map(safeUrl).filter(Boolean);
     const card = element("article", "post-card panel" + (isScheduledEvent ? " scheduled-event-card" : ""));
