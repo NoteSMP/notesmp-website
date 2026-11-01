@@ -50,3 +50,14 @@
 .page-content .post-feed:has(.scheduled-event-card) { display:flex; flex-direction:column; gap:16px; }
 .home-layout .main-column .post-feed > .post-card,
 .page-content .post-feed:has(.scheduled-event-card) > .post-card { width:100%; }
+
+/* Scheduled Discord events: event time/countdown at right, optionally backed by Discord cover art. */
+.scheduled-event-details{display:grid;grid-template-columns:minmax(0,1fr) minmax(150px,34%);align-items:stretch;gap:14px;margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+.scheduled-event-copy{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:9px;min-width:0}
+.scheduled-event-aside{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;gap:8px;min-height:94px;padding:12px;border:1px solid #ffffff20;border-radius:6px;background-color:#111b14;background-position:center;background-size:cover;text-align:right;overflow:hidden}
+.scheduled-event-aside.has-event-cover{color:#fff;text-shadow:0 1px 3px #000}
+.scheduled-event-start{font-size:12px;color:#aab9ad;line-height:1.5}
+.scheduled-event-countdown{display:inline-flex;align-items:center;justify-content:center;padding:7px 10px;border-radius:5px;background:rgba(17,29,20,.88);border:1px solid #ffffff26;color:#d6f2dc;font-size:12px;font-weight:700;white-space:nowrap}
+.scheduled-event-place{font-size:12px;color:#a8c5ae;text-decoration:none;overflow-wrap:anywhere}
+a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
+@media(max-width:520px){.scheduled-event-details{grid-template-columns:1fr}.scheduled-event-aside{align-items:flex-start;min-height:78px}}
