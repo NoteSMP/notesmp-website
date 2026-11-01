@@ -61,3 +61,13 @@
 .scheduled-event-place{font-size:12px;color:#a8c5ae;text-decoration:none;overflow-wrap:anywhere}
 a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 @media(max-width:520px){.scheduled-event-details{grid-template-columns:1fr}.scheduled-event-aside{align-items:flex-start;min-height:78px}}
+
+/* Event cards keep the name and description on the left; time/countdown overlay the cover on the right. */
+.scheduled-event-copy .scheduled-event-title{margin:0;font-size:clamp(18px,2vw,25px);line-height:1.2;overflow-wrap:anywhere}
+.scheduled-event-description{color:var(--text);line-height:1.6;overflow-wrap:anywhere}
+.scheduled-event-description p:first-child{margin-top:0}
+.scheduled-event-description p:last-child{margin-bottom:0}
+.scheduled-event-aside{position:relative;isolation:isolate;background-image:linear-gradient(135deg,rgba(8,14,10,.3),rgba(8,14,10,.78));}
+.scheduled-event-aside.has-event-cover{background-blend-mode:normal;color:#fff}
+.scheduled-event-aside .scheduled-event-start{color:#fff;font-weight:650}
+@media(max-width:520px){.scheduled-event-details{grid-template-columns:minmax(0,1fr)}.scheduled-event-aside{align-items:flex-start;text-align:left}}
