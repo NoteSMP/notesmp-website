@@ -389,78 +389,78 @@ window.setInterval(fetchServerStatus, 60_000);
     closeList(); closeQuote();
     return output.join("").replace(/\uE000(\d+)\uE001/g, (_, i) => fragments[Number(i)] || "");
   }
-  function makeCard(post) {
-    const card = element("article", "post-card panel");
+    const isScheduledEvent = Boolean(post.event?.scheduledStartTime);
     const images = (Array.isArray(post.images) ? post.images : []).map(safeUrl).filter(Boolean);
-    if (images.length) {
-      const media = element("div", "post-card-media"); const image = element("img", "post-card-image"); let active = 0;
-      image.src = images[active]; image.alt = post.title || "NoteSMP gallery image"; image.loading = "lazy"; media.append(image); let counter = null;
-      const show = index => { active = (index + images.length) % images.length; image.src = images[active]; if (counter) counter.textContent = (active + 1) + " / " + images.length; };
-      if (images.length > 1) {
-        counter = element("span", "post-image-counter", "1 / " + images.length); media.append(counter);
-        const prev = element("button", "post-image-nav post-image-prev", "‹"); prev.type = "button"; prev.setAttribute("aria-label", "Previous image"); prev.addEventListener("click", event => { event.stopPropagation(); show(active - 1); });
-        const next = element("button", "post-image-nav post-image-next", "›"); next.type = "button"; next.setAttribute("aria-label", "Next image"); next.addEventListener("click", event => { event.stopPropagation(); show(active + 1); }); media.append(prev, next);
-        const timer = setInterval(() => show(active + 1), 4500); media.addEventListener("mouseenter", () => clearInterval(timer), { once: true });
+    const card = element("article", "post-card panel" + (isScheduledEvent ? " scheduled-event-card" : ""));
+    if (isScheduledEvent) {
+      const layout = element("div", "scheduled-event-layout");
+      if (images.length) {
+        const media = element("div", "scheduled-event-cover");
+        const image = element("img", "post-card-image");
+        image.src = images[0]; image.alt = post.title || "Event cover"; image.loading = "lazy";
+        media.append(image); layout.append(media);
       }
-      const expand = element("button", "post-image-expand"); expand.type = "button"; expand.setAttribute("aria-label", "Open photo selection"); expand.title = "Open photo selection"; expand.textContent = "⛶"; expand.addEventListener("click", () => openImageViewer(images, image.alt, active)); media.append(expand); card.append(media);
+      const content = element("div", "post-card-content scheduled-event-main");
+      const title = element("h2", "scheduled-event-title", post.title || "Community event");
+      content.append(title);
+      const body = element("div", "post-card-body");
+      body.innerHTML = renderDiscordMarkdown(String(post.subtitle || post.body || "").slice(0, 900));
+      if (post.subtitle || post.body) content.append(body);
+      const channelId = post.event?.channelId || post.event?.channel_id || "";
+      const channelName = post.event?.channelName || post.event?.channel_name || "";
+      const channelLink = channelId && post.event?.guildId
+        ? "https://discord.com/channels/" + encodeURIComponent(post.event.guildId) + "/" + encodeURIComponent(channelId)
+        : "";
+      const place = post.event?.location || channelName || "";
+      if (place) {
+        const location = element("a", "scheduled-event-place", place);
+        if (channelLink) { location.href = channelLink; location.target = "_blank"; location.rel = "noopener noreferrer"; }
+        else if (!post.event?.location) location.textContent = place;
+        content.append(location);
+      }
+      layout.append(content);
+      const side = element("aside", "scheduled-event-sidebar");
+      const start = Date.parse(post.event.scheduledStartTime);
+      if (Number.isFinite(start)) {
+        side.append(element("span", "scheduled-event-label", "EVENT START"));
+        side.append(element("strong", "scheduled-event-start", new Date(start).toLocaleString(undefined,{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})));
+        const countdown = element("span", "scheduled-event-countdown", "");
+        const updateCountdown = () => {
+          const remaining = start - Date.now();
+          if (remaining <= 0) { countdown.textContent = "Started"; return; }
+          const days = Math.floor(remaining / 86400000);
+          const hours = Math.floor((remaining % 86400000) / 3600000);
+          const minutes = Math.floor((remaining % 3600000) / 60000);
+          countdown.textContent = "In " + (days ? days + "d " + hours + "h" : hours ? hours + "h " + minutes + "m" : minutes + "m");
+        };
+        updateCountdown();
+        side.append(countdown);
+        const timer = setInterval(updateCountdown, 60000);
+        window.addEventListener("pagehide", () => clearInterval(timer), { once: true });
+      }
+      layout.append(side);
+      card.append(layout);
+      const footer = element("div", "post-card-footer");
+      footer.append(element("span", "", "POST ID · " + post.id));
+      card.append(footer);
+      return card;
     }
     const content = element("div", "post-card-content");
-    const isScheduledEvent = Boolean(post.event?.scheduledStartTime);
     const meta = element("div", "post-card-meta");
     meta.append(element("span", "", post.category || "update"));
-    const date = post.event && post.event.scheduledStartTime ? post.event.scheduledStartTime : post.publishedAt;
+    const date = post.publishedAt;
     meta.append(element("span", "", date && !Number.isNaN(Date.parse(date)) ? new Date(date).toLocaleString(undefined,{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}) : ""));
     content.append(meta);
     const postBody = String(post.subtitle || post.body || "");
     const postTitle = String(post.title || "").trim();
-    // Scheduled-event titles are presented as a proper heading, not body-sized text.
-    if (isScheduledEvent && postTitle) content.append(element("h2", "scheduled-event-title", postTitle));
-    else {
-      const titleDuplicatesBody = postTitle && postBody.trim().startsWith(postTitle);
-      const titleLooksLikeMarkdown = /^#{1,6}\\s|<a?:[A-Za-z0-9_]+:\\d+>|\\*\\*|__|~~/.test(postTitle);
-      if (postTitle && !titleDuplicatesBody && !titleLooksLikeMarkdown) content.append(element("h3", "", postTitle));
-    }
-    if (post.subtitle || post.body) { const body = element("div", "post-card-body"); body.innerHTML = renderDiscordMarkdown((post.subtitle || post.body || "").slice(0, 900)); content.append(body); }
-    if (isScheduledEvent) {
-      const start = Date.parse(post.event.scheduledStartTime);
-      const eventInfo = element("div", "scheduled-event-details");
-      if (Number.isFinite(start)) {
-        eventInfo.append(element("span", "scheduled-event-start", "Starts " + new Date(start).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})));
-        const countdown = element("span", "scheduled-event-countdown", "");
-        const updateCountdown = () => {
-          const remaining = start - Date.now();
-          if (remaining <= 0) { countdown.textContent = "Starting now"; return; }
-          const days = Math.floor(remaining / 86400000);
-          const hours = Math.floor((remaining % 86400000) / 3600000);
-          const minutes = Math.floor((remaining % 3600000) / 60000);
-          countdown.textContent = days ? "In " + days + "d " + hours + "h" : hours ? "In " + hours + "h " + minutes + "m" : "In " + minutes + "m";
-        };
-        updateCountdown();
-        eventInfo.append(countdown);
-        const timer = setInterval(updateCountdown, 60000);
-        window.addEventListener("pagehide", () => clearInterval(timer), { once: true });
-      }
-      const place = post.event.location || (post.event.entityType === 2 ? "Discord voice channel" : post.event.entityType === 3 ? "Discord stage channel" : "");
-      if (place) eventInfo.append(element("span", "scheduled-event-place", place));
-      content.append(eventInfo);
-    }
-    const dimension = post.dimension || post.eventData?.dimension || null;
-    const coords = post.coordinates || post.eventData?.coordinates || null;
-    if (dimension || coords) {
-      const location = element("div", "post-card-location");
-      if (dimension) location.append(element("span", "post-dimension", dimension));
-      if (coords && [coords.x,coords.y,coords.z].every(value => value !== undefined && value !== null && Number.isFinite(Number(value)))) {
-        location.append(element("span", "post-coordinates", coords.x + " " + coords.y + " " + coords.z));
-      }
-      content.append(location);
-    }
-    if (post.event && post.event.location) content.append(element("p", "post-card-location", post.event.location));
+    const titleDuplicatesBody = postTitle && postBody.trim().startsWith(postTitle);
+    const titleLooksLikeMarkdown = /^#{1,6}\\s|<a?:[A-Za-z0-9_]+:\\d+>|\\*\\*|__|~~/.test(postTitle);
+    if (postTitle && !titleDuplicatesBody && !titleLooksLikeMarkdown) content.append(element("h3", "", postTitle));
+    if (post.subtitle || post.body) { const body = element("div", "post-card-body"); body.innerHTML = renderDiscordMarkdown(postBody.slice(0, 900)); content.append(body); }
     const footer = element("div", "post-card-footer");
     footer.append(element("span", "", "POST ID · " + post.id));
     if (post.authorMinecraftName) footer.append(element("span", "", "By " + post.authorMinecraftName));
-    content.append(footer);
-    card.append(content);
-    return card;
+    content.append(footer); card.append(content); return card;
   }
   function openImageViewer(urls, alt, startIndex = 0) {
     const images = (Array.isArray(urls) ? urls : [urls]).filter(Boolean); if (!images.length) return;
