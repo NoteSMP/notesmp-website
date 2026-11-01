@@ -531,7 +531,7 @@ window.setInterval(fetchServerStatus, 60_000);
           const rawStart = post.event?.scheduledStartTime;
           const start = rawStart ? Date.parse(rawStart) : NaN;
           if (!Number.isFinite(start)) return false;
-          const id = String(post.id || post.event?.id || "");
+          const id = String(post.event?.eventId || post.event?.event_id || post.event?.id || post.id || "");
           if (id && seenEventIds.has(id)) return false;
           if (id) seenEventIds.add(id);
           return period === "past" ? start < now : start >= now;
