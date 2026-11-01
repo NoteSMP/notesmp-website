@@ -526,16 +526,20 @@ window.setInterval(fetchServerStatus, 60_000);
         const now = Date.now();
         // Classify only by the event's scheduled start. This makes Upcoming and Past
         // mutually exclusive, and keeps old synced rows in Past after Discord deletes them.
-        const seenEventIds = new Set();
-        const filtered = posts.filter(post => {
-          const rawStart = post.event?.scheduledStartTime;
-          const start = rawStart ? Date.parse(rawStart) : NaN;
-          if (!Number.isFinite(start)) return false;
-          const id = String(post.event?.eventId || post.event?.event_id || post.event?.id || post.id || "");
-          if (id && seenEventIds.has(id)) return false;
-          if (id) seenEventIds.add(id);
-          return period === "past" ? start < now : start >= now;
-        });
+        // Deduplicate the complete feed before splitting into time periods.
+        // This prevents stale duplicate rows from appearing in both groups.
+        const uniqueEvents = new Map();
+        for (const post of posts) {
+          const rawStart = post.event?.scheduledStartTime || post.event?.scheduled_start_time;
+          const startTime = rawStart ? Date.parse(rawStart) : NaN;
+          if (!Number.isFinite(startTime)) continue;
+          const id = String(post.event?.eventId || post.event?.event_id || post.event?.id || post.eventId || post.id || "");
+          const key = id || ("title:" + String(post.title || "").toLowerCase() + ":" + startTime);
+          if (!uniqueEvents.has(key)) uniqueEvents.set(key, { post, startTime });
+        }
+        const filtered = [...uniqueEvents.values()]
+          .filter(({ startTime }) => period === "past" ? startTime < now : startTime >= now)
+          .map(({ post }) => post);
         replaceFeed(target, filtered, "No events in this period", "New Discord events will appear here automatically.");
       } else if (path === "/devlog" || path === "/rules") {
         const category = path === "/rules" ? "rules" : "updates";
