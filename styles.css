@@ -74,7 +74,7 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 
 
 /* Event archive: keep each time group vertically stacked, with newest/soonest first. */
-.page-content .event-period-section{margin:0 0:28px}
+.page-content .event-period-section{margin:0 0 28px}
 .event-period-heading{margin:0 0:14px;font-size:clamp(20px,2vw,27px);line-height:1.25}
 #upcoming-events-feed,#past-events-feed{display:flex;flex-direction:column;gap:16px}
 #upcoming-events-feed>.post-feed,#past-events-feed>.post-feed{display:flex;flex-direction:column;gap:16px;width:100%}
