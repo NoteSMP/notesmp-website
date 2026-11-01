@@ -29,8 +29,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .portal-nav a { position: relative; display: flex; align-items: center; height: 100%; color: var(--muted); font-size: 12px; font-weight: 700; }
 .portal-nav a:hover, .portal-nav a[aria-current="page"] { color: var(--text); }
 .portal-nav a[aria-current="page"]::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; background: var(--lime); content: ''; }
-.header-join { display: inline-flex; align-items: center; gap: 10px; padding: 10px 13px; border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 800; white-space: nowrap; }
-.header-join span { font-size: 9px; font-weight: 500; }
+.header-join { display: inline-flex; align-items: center; gap: 10px; padding: 10px 13px; border: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 800; white-space: nowrap; text-decoration: none; cursor: pointer; }
+.header-join strong { font-size: 14px; font-weight: 800; }
 .nav-toggle { display: none; }
 #app { min-height: 70vh; }
 .page-shell { max-width: 1260px; padding: 0 34px; margin: auto; }
@@ -175,3 +175,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .post-card-location { color: var(--text) !important; }
 .post-card-footer { padding-top: 12px; border-top: 1px solid var(--line); }
 .post-card.is-compact .post-card-image { max-height: 180px; }
+
+/* Server link icon placement */
+.resource-link-content{display:inline-flex;align-items:center;gap:11px;min-width:0}
+.resource-link-icon{display:inline-flex;width:19px;height:19px;align-items:center;justify-content:center;flex:none;color:var(--lime)}
+.resource-link-icon svg{width:19px;height:19px;display:block}
+.resource-link-arrow{font-size:12px;color:var(--muted);font-weight:800}
+.header-join[aria-disabled="true"]{pointer-events:none;opacity:.65}
