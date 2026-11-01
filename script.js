@@ -337,7 +337,7 @@ window.setInterval(fetchServerStatus, 60_000);
     const meta = element("div", "post-card-meta");
     meta.append(element("span", "", post.category || "update"));
     const date = post.event && post.event.scheduledStartTime ? post.event.scheduledStartTime : post.publishedAt;
-    meta.append(element("span", "", date && !Number.isNaN(Date.parse(date)) ? new Date(date).toLocaleString() : ""));
+    meta.append(element("span", "", date && !Number.isNaN(Date.parse(date)) ? new Date(date).toLocaleString(undefined,{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}) : ""));
     content.append(meta);
     content.append(element("h3", "", post.title || (post.body || "NoteSMP post").split("\\n")[0].slice(0, 120)));
     if (post.subtitle || post.body) content.append(element("p", "", (post.subtitle || post.body || "").slice(0, 900)));
@@ -345,9 +345,9 @@ window.setInterval(fetchServerStatus, 60_000);
     const coords = post.coordinates || post.eventData?.coordinates || null;
     if (dimension || coords) {
       const location = element("div", "post-card-location");
-      if (dimension) location.append(element("span", "post-dimension", "Dimension · " + dimension));
+      if (dimension) location.append(element("span", "post-dimension", dimension));
       if (coords && [coords.x,coords.y,coords.z].every(value => value !== undefined && value !== null && Number.isFinite(Number(value)))) {
-        location.append(element("span", "post-coordinates", "X: " + coords.x + " · Y: " + coords.y + " · Z: " + coords.z));
+        location.append(element("span", "post-coordinates", coords.x + " " + coords.y + " " + coords.z));
       }
       content.append(location);
     }
