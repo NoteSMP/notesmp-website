@@ -83,7 +83,7 @@ function resourceLink(label, url, hint = 'Open') {
 
 function homePage() {
   const onlineNames = (serverData?.onlinePlayers || []).map(player => safeText(typeof player === 'string' ? player : player.name || player.username)).filter(Boolean);
-  return `<div class="page-shell"><section class="home-hero" aria-labelledby="home-title"><div class="home-hero-content"><span class="eyebrow">NOTE SMP · JAVA EDITION 26.3</span><h1 id="home-title">Your world.<br>Your people.</h1><p>Everything happening on NoteSMP, in one place. Check the server, find your next event, and see what the community is building.</p><div class="hero-buttons"><a class="button-primary" href="/players">Explore players <span aria-hidden="true">→</span></a><a class="button-secondary" href="/events">See events <span aria-hidden="true">↗</span></a></div></div></section><div class="home-layout"><div class="main-column">${serverStatusMarkup()}<section class="panel"><div class="panel-heading"><div><span class="overline">SERVER UPDATES</span><h2>Announcements</h2></div><a class="text-link" href="/devlog">All updates ↗</a></div><div class="empty-state"><strong>Announcement feed not connected yet</strong>Critical maintenance alerts and server news will appear here once connected.</div></section><section><div class="home-section-heading"><div><span class="overline">COMMUNITY CALENDAR</span><h2>Upcoming Events</h2></div><a class="text-link" href="/events">View all ↗</a></div><div class="panel"><div class="empty-state"><strong>Events are on the way</strong>Upcoming and past events will appear here when the Discord event feed is connected.</div></div></section></div><aside class="side-column"><section class="panel"><div class="panel-heading"><div><span class="overline">SERVER LINKS</span><h2>Find your way in</h2></div></div><div class="link-list">${resourceLink('Discord', null, 'Invite not set')}${resourceLink('YouTube', null, 'Link not set')}${resourceLink('Modpack', null, 'Link not set')}${resourceLink('BlueMap', null, 'Link not set')}</div></section><section class="panel"><div class="panel-heading"><div><span class="overline">ONLINE NOW</span><h2>Players in the world</h2></div><a class="text-link" href="/players">Players ↗</a></div><div class="empty-state" id="online-players">${onlineNames.length ? onlineNames.join(', ') : 'Live player names will show here when the server reports them.'}</div></section><section class="panel"><div class="panel-heading"><div><span class="overline">COMMUNITY</span><h2>Creators</h2></div></div><div class="link-list"><div class="resource-link is-disabled" aria-disabled="true"><span>Creator roster</span><span>Coming soon</span></div><div class="resource-link is-disabled" aria-disabled="true"><span>Live streams</span><span>Coming soon</span></div></div></aside></div></div>`;
+  return `<div class="page-shell"><section class="home-hero" aria-labelledby="home-title"><div class="home-hero-content"><span class="eyebrow">NOTE SMP · JAVA EDITION 26.3</span><h1 id="home-title">Your world.<br>Your people.</h1><p>Everything happening on NoteSMP, in one place. Check the server, find your next event, and see what the community is building.</p><div class="hero-buttons"><a class="button-primary" href="/players">Explore players <span aria-hidden="true">→</span></a><a class="button-secondary" href="/events">See events <span aria-hidden="true">↗</span></a></div></div></section><section class="home-news-section panel" id="home-news" hidden aria-labelledby="home-news-title"><div class="panel-heading"><div><span class="overline">LIVE COMMUNITY NEWS</span><h2 id="home-news-title">News</h2></div></div><div id="home-news-feed" class="home-news-feed"></div></section><div class="home-layout"><div class="main-column">${serverStatusMarkup()}<section class="panel"><div class="panel-heading"><div><span class="overline">SERVER UPDATES</span><h2>Announcements</h2></div><a class="text-link" href="/devlog">All updates ↗</a></div><div class="empty-state"><strong>Announcement feed not connected yet</strong>Critical maintenance alerts and server news will appear here once connected.</div></section><section><div class="home-section-heading"><div><span class="overline">COMMUNITY CALENDAR</span><h2>Upcoming Events</h2></div><a class="text-link" href="/events">View all ↗</a></div><div class="panel"><div class="empty-state"><strong>Events are on the way</strong>Upcoming and past events will appear here when the Discord event feed is connected.</div></div></section></div><aside class="side-column"><section class="panel"><div class="panel-heading"><div><span class="overline">SERVER LINKS</span><h2>Find your way in</h2></div></div><div class="link-list">${resourceLink('Discord', null, 'Invite not set')}${resourceLink('YouTube', null, 'Link not set')}${resourceLink('Modpack', null, 'Link not set')}${resourceLink('BlueMap', null, 'Link not set')}</div></section><section class="panel"><div class="panel-heading"><div><span class="overline">ONLINE NOW</span><h2>Players in the world</h2></div><a class="text-link" href="/players">Players ↗</a></div><div class="empty-state" id="online-players">${onlineNames.length ? onlineNames.join(', ') : 'Live player names will show here when the server reports them.'}</div></section><section class="panel"><div class="panel-heading"><div><span class="overline">COMMUNITY</span><h2>Creators</h2></div></div><div class="link-list"><div class="resource-link is-disabled" aria-disabled="true"><span>Creator roster</span><span>Coming soon</span></div><div class="resource-link is-disabled" aria-disabled="true"><span>Live streams</span><span>Coming soon</span></div></div></aside></div></div>`;
 }
 
 function pageHeading(title, description, eyebrow) {
@@ -554,35 +554,44 @@ window.setInterval(fetchServerStatus, 60_000);
     target.append(feed);
   }
   let newsCountdownTimer = null;
-function renderNewsBanner(post) {
-  const bar = document.querySelector("#critical-announcement");
-  if (!bar) return;
+function renderNewsBanner(posts) {
+  const section = document.querySelector("#home-news");
+  const target = document.querySelector("#home-news-feed");
+  if (!section || !target) return;
   if (newsCountdownTimer) window.clearInterval(newsCountdownTimer);
-  if (!post) { bar.hidden = true; bar.replaceChildren(); return; }
-  const type = post.event?.type || post.group || "info";
-  const title = safeText(post.title || "News");
-  const subtitle = safeText(post.subtitle || post.body || "");
-  const expiry = type === "maintenance" ? Date.parse(post.event?.expiryAt || "") : NaN;
-  if (Number.isFinite(expiry) && expiry <= Date.now()) { bar.hidden = true; return; }
-  bar.className = "notice-bar news-" + (["maintenance","warning","info"].includes(type) ? type : "info");
-  bar.innerHTML = '<div class="news-copy"><strong>' + title + '</strong><span>' + subtitle + '</span></div>' + (Number.isFinite(expiry) ? '<div class="news-countdown" id="news-countdown" aria-live="polite"></div>' : "");
-  bar.hidden = false;
+  const list = Array.isArray(posts) ? posts : (posts ? [posts] : []);
+  const now = Date.now();
+  const active = list.filter(post => {
+    const type = post.event?.type || post.group || "";
+    const expiry = type === "maintenance" ? Date.parse(post.event?.expiryAt || "") : NaN;
+    return !Number.isFinite(expiry) || expiry > now;
+  });
+  target.replaceChildren();
+  if (!active.length) { section.hidden = true; return; }
+  section.hidden = false;
+  const feed = element("div", "post-feed");
+  active.forEach(post => feed.append(makeCard(post)));
+  target.append(feed);
+  const maintenance = active.find(post => (post.event?.type || post.group) === "maintenance");
+  const expiry = maintenance ? Date.parse(maintenance.event?.expiryAt || "") : NaN;
   if (Number.isFinite(expiry)) {
     const tick = () => {
       const remaining = Math.max(0, expiry - Date.now());
-      const hours = Math.floor(remaining / 3600000);
-      const minutes = Math.floor((remaining % 3600000) / 60000);
-      const seconds = Math.floor((remaining % 60000) / 1000);
-      const counter = bar.querySelector("#news-countdown");
-      if (counter) counter.textContent = hours + "h " + String(minutes).padStart(2,"0") + "m " + String(seconds).padStart(2,"0") + "s";
-      if (remaining <= 0) { bar.hidden = true; window.clearInterval(newsCountdownTimer); }
+      const h = Math.floor(remaining / 3600000), m = Math.floor((remaining % 3600000) / 60000), s = Math.floor((remaining % 60000) / 1000);
+      let counter = feed.querySelector(".news-countdown");
+      if (!counter) { counter = element("div", "news-countdown"); feed.querySelector(".post-card")?.append(counter); }
+      if (counter) counter.textContent = "Maintenance ends in " + h + "h " + String(m).padStart(2,"0") + "m " + String(s).padStart(2,"0") + "s";
+      if (remaining <= 0) { window.clearInterval(newsCountdownTimer); refreshNewsBanner([]); }
     };
     tick(); newsCountdownTimer = window.setInterval(tick,1000);
   }
 }
-async function refreshNewsBanner() {
-  try { const response = await fetch(API + "/content/posts?category=news&limit=5", { cache: "no-store" }); const data = response.ok ? await response.json() : {posts:[]}; renderNewsBanner((data.posts || [])[0] || null); }
-  catch { renderNewsBanner(null); }
+async function refreshNewsBanner(extra = []) {
+  try {
+    const response = await fetch(API + "/content/posts?category=news&limit=5", {cache:"no-store"});
+    const data = response.ok ? await response.json() : {posts:[]};
+    renderNewsBanner([...(data.posts || []), ...extra]);
+  } catch { renderNewsBanner(extra); }
 }
 
 async function loadPage() {
@@ -637,6 +646,14 @@ async function loadPage() {
       } else if (path === "/") {
         const panels = app.querySelectorAll(".main-column .panel");
         if (panels[1]) replaceFeed(panels[1], await getPosts("updates").then(items => items.slice(0,2)), "No announcements yet", "New NoteSMP announcements will appear here.");
+        const startedEvents = (await getPosts("events")).filter(post => {
+          const raw = post.event?.status ?? post.event?.eventStatus ?? post.event?.discordStatus;
+          const status = String(raw ?? "").toLowerCase();
+          return status.includes("started") || status.includes("active") || Number(raw) === 2;
+        });
+        const newsResponse = await fetch(API + "/content/posts?category=news&limit=5", {cache:"no-store"});
+        const newsData = newsResponse.ok ? await newsResponse.json() : {posts:[]};
+        renderNewsBanner([...(newsData.posts || []), ...startedEvents]);
         const eventHeading = app.querySelector(".home-section-heading");
         const eventPanel = eventHeading?.nextElementSibling;
         if (eventPanel?.classList.contains("panel")) {
