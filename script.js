@@ -66,6 +66,16 @@ function serverStatusMarkup() {
   return `<section class="panel" aria-labelledby="status-heading"><div class="panel-heading"><div><span class="overline">LIVE SERVER</span><h2 id="status-heading">Server status</h2></div><span class="status-meta">${safeText(version)}</span></div><div class="panel-body"><div class="status-top"><span class="status-indicator ${serverData && !serverData.unavailable ? (online ? 'is-online' : 'is-offline') : ''}"><span class="status-dot"></span><span>${statusText}</span></span><span class="status-meta">${safeText(playerText)}</span></div><div class="address-row"><div><span class="overline">JAVA SERVER ADDRESS</span><strong class="server-ip">${SERVER_ADDRESS}</strong></div><button class="copy-button" id="copy-address" type="button">Copy IP</button></div><p class="motd">${motdText}</p><div class="quick-stats"><div class="quick-stat"><span class="metric-label">Edition</span><strong class="metric-value">Java</strong></div><div class="quick-stat"><span class="metric-label">Version</span><strong class="metric-value">${safeText(version)}</strong></div><div class="quick-stat"><span class="metric-label">Players</span><strong class="metric-value">${serverData && !serverData.unavailable && online ? formatNumber(count) : '—'}</strong></div></div></div></section>`;
 }
 
+function linkIcon(key) {
+  const attrs = 'viewBox="0 0 24 24" aria-hidden="true" focusable="false"';
+  const paths = {
+    discord: '<path fill="currentColor" d="M19.7 5.2a18 18 0 0 0-4.4-1.4l-.6 1.2a16 16 0 0 0-5.4 0l-.6-1.2a18 18 0 0 0-4.4 1.4C1.5 9.3.8 13.3 1.2 17.2a18 18 0 0 0 5.4 2.7l1.2-1.9-1.9-.9.5-.4a13 13 0 0 0 11.2 0l.5.4-1.9.9 1.2 1.9a18 18 0 0 0 5.4-2.7c.5-4.5-.8-8.4-3.1-12ZM8.7 14.8c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/>',
+    youtube: '<path fill="currentColor" d="M23 7.1a3 3 0 0 0-2.1-2.1C19 4.5 12 4.5 12 4.5s-7 0-8.9.5A3 3 0 0 0 1 7.1 31 31 0 0 0 .5 12s0 3.4.5 4.9a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.5-1.5.5-4.9.5-4.9s0-3.4-.5-4.9ZM9.7 15.5v-7l6 3.5-6 3.5Z"/>',
+    modpack: '<path fill="currentColor" d="M12 2 2.5 7v10L12 22l9.5-5V7L12 2Zm0 2.5 6.8 3.6-6.8 3.5L5.2 8.1 12 4.5Zm-7 5.3 6 3.1v6.1l-6-3.2V9.8Zm8 9.2v-6.1l6-3.1v6l-6 3.2Z"/>',
+    bluemap: '<path fill="currentColor" d="M3 3h18v18H3V3Zm3 3v12h12V6H6Zm2 2h8v2H8V8Zm0 4h8v2H8v-2Z"/>'
+  };
+  return '<svg ' + attrs + '>' + (paths[key] || paths.bluemap) + '</svg>';
+}
 function resourceLink(label, url, hint = 'Open') {
   if (!url) return `<div class="resource-link is-disabled" aria-disabled="true"><span>${safeText(label)}</span><span>${safeText(hint)}</span></div>`;
   return `<a class="resource-link" href="${safeText(url)}" target="_blank" rel="noreferrer"><span>${safeText(label)}</span><span aria-hidden="true">↗</span></a>`;
@@ -151,6 +161,7 @@ function render() {
   if (knownRoute === '/players' && !profileMatch) loadPlayers();
   if (knownRoute === '/commands') filterCommands();
   if (profileMatch) renderPlayerProfile(profileMatch[1]);
+  window.dispatchEvent(new Event("notesmp:render"));
 }
 
 function navigate(path) {
@@ -300,9 +311,9 @@ window.setInterval(fetchServerStatus, 60_000);
       if (!response.ok) return;
       const data = await response.json();
       const discord = (data.links || []).find(item => item.link_key === "discord");
-      const url = discord && safeUrl(discord.url);
+      const url = discord && safeWebUrl(discord.url);
       if (!url) {
-        button.innerHTML = 'Discord <span>Invite link needed</span>';
+        button.innerHTML = 'Join Discord <strong aria-hidden="true">↗</strong>';
         button.removeAttribute("href");
         button.removeAttribute("target");
         button.removeAttribute("rel");
@@ -313,7 +324,7 @@ window.setInterval(fetchServerStatus, 60_000);
       button.target = "_blank";
       button.rel = "noreferrer";
       button.removeAttribute("aria-disabled");
-      button.innerHTML = 'Discord <span>Join server ↗</span>';
+      button.innerHTML = 'Join Discord <strong aria-hidden="true">↗</strong>';
     } catch (error) {
       console.warn("Could not load configured Discord link", error);
     }
@@ -443,14 +454,13 @@ window.setInterval(fetchServerStatus, 60_000);
       if (path === "/gallery") {
         const active = app.querySelector("[data-gallery-group][aria-pressed='true']");
         const label = active ? active.dataset.galleryGroup : "Events";
-        const category = ({Events:"events",Buildings:"buildings",Places:"places","In Progress":"inprogress"})[label] || "events";
         const target = app.querySelector(".page-content");
-        replaceFeed(target, await getPosts(category), label + " gallery is empty", "Published Discord posts will appear here.");
+        replaceFeed(target, await getPosts("gallery", label.toLowerCase()), label + " gallery is empty", "Published Discord posts will appear here.");
       } else if (path === "/events") {
         const active = app.querySelector("[data-event-period][aria-pressed='true']");
         const period = active ? active.dataset.eventPeriod : "upcoming";
         const target = app.querySelector(".page-content");
-        const posts = await getPosts("gallery", "events");
+        const posts = await getPosts("events");
         const now = Date.now();
         const filtered = posts.filter(post => {
           const date = post.event && post.event.scheduledStartTime ? Date.parse(post.event.scheduledStartTime) : Date.parse(post.publishedAt);
@@ -476,9 +486,12 @@ window.setInterval(fetchServerStatus, 60_000);
           const links = Object.fromEntries((data.links || []).map(item => [item.link_key, item.url]));
           sideLists[0].replaceChildren();
           ["discord","youtube","modpack","bluemap"].forEach(key => {
-            const url = safeUrl(links[key]);
+            const url = safeWebUrl(links[key]);
             const item = url ? element("a","resource-link") : element("div","resource-link is-disabled");
-            item.append(element("span","",key[0].toUpperCase()+key.slice(1)),element("span","",url ? "↗" : "Link not set"));
+            const content = element("span","resource-link-content");
+            const icon = element("span","resource-link-icon"); icon.innerHTML = linkIcon(key);
+            content.append(icon,element("span","",key[0].toUpperCase()+key.slice(1)));
+            item.append(content,element("strong","resource-link-arrow",url ? "↗" : "Link not set"));
             if (url) { item.href=url; item.target="_blank"; item.rel="noreferrer"; } else item.setAttribute("aria-disabled","true");
             sideLists[0].append(item);
           });
@@ -534,6 +547,7 @@ window.setInterval(fetchServerStatus, 60_000);
       setTimeout(loadPage,120);
     }
   });
+  window.addEventListener("notesmp:render", () => { lastKey = ""; schedule(); });
   schedule();
 })();
 
