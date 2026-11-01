@@ -424,8 +424,15 @@ window.setInterval(fetchServerStatus, 60_000);
     if (isScheduledEvent) {
       const start = Date.parse(post.event.scheduledStartTime);
       const eventInfo = element("div", "scheduled-event-details");
+      const details = element("div", "scheduled-event-copy");
+      const aside = element("div", "scheduled-event-aside");
+      const cover = safeUrl(post.event.coverImage) || images[0] || "";
+      if (cover) {
+        aside.style.backgroundImage = 'linear-gradient(90deg, rgba(8,14,10,.28), rgba(8,14,10,.82)), url("' + cover.replace(/["\\]/g, "") + '")';
+        aside.classList.add("has-event-cover");
+      }
       if (Number.isFinite(start)) {
-        eventInfo.append(element("span", "scheduled-event-start", "Starts " + new Date(start).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})));
+        details.append(element("span", "scheduled-event-start", "Starts " + new Date(start).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})));
         const countdown = element("span", "scheduled-event-countdown", "");
         const updateCountdown = () => {
           const remaining = start - Date.now();
@@ -436,12 +443,23 @@ window.setInterval(fetchServerStatus, 60_000);
           countdown.textContent = days ? "In " + days + "d " + hours + "h" : hours ? "In " + hours + "h " + minutes + "m" : "In " + minutes + "m";
         };
         updateCountdown();
-        eventInfo.append(countdown);
+        aside.append(countdown);
         const timer = setInterval(updateCountdown, 60000);
         window.addEventListener("pagehide", () => clearInterval(timer), { once: true });
       }
-      const place = post.event.location || (post.event.entityType === 2 ? "Discord voice channel" : post.event.entityType === 3 ? "Discord stage channel" : "");
-      if (place) eventInfo.append(element("span", "scheduled-event-place", place));
+      const channelId = String(post.event.channelId || "");
+      const guildId = String(post.event.guildId || "");
+      const channelName = String(post.event.channelName || "").trim();
+      if (channelId && guildId && channelName) {
+        const channel = element("a", "scheduled-event-place", channelName);
+        channel.href = "https://discord.com/channels/" + encodeURIComponent(guildId) + "/" + encodeURIComponent(channelId);
+        channel.target = "_blank";
+        channel.rel = "noopener noreferrer";
+        details.append(channel);
+      } else if (post.event.location) {
+        details.append(element("span", "scheduled-event-place", post.event.location));
+      }
+      eventInfo.append(details, aside);
       content.append(eventInfo);
     }
     const dimension = post.dimension || post.eventData?.dimension || null;
