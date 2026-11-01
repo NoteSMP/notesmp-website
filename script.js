@@ -450,12 +450,48 @@ window.setInterval(fetchServerStatus, 60_000);
       card.append(footer);
       return card;
     }
+    // Gallery cards display every image from the published Discord message.
+    if (post.category && post.category !== "events" && images.length) {
+      const galleryMedia = element("div", "post-card-media");
+      const mainImage = element("img", "post-card-image");
+      mainImage.src = images[0]; mainImage.alt = post.title || "Gallery image"; mainImage.loading = "lazy";
+      mainImage.addEventListener("error", () => { mainImage.style.display = "none"; }, { once: true });
+      galleryMedia.append(mainImage);
+      if (images.length > 1) {
+        const counter = element("span", "post-image-counter", "1 / " + images.length);
+        galleryMedia.append(counter);
+        const previous = element("button", "post-image-nav post-image-prev", "‹");
+        const next = element("button", "post-image-nav post-image-next", "›");
+        previous.type = next.type = "button";
+        let activeImage = 0;
+        const showImage = index => {
+          activeImage = (index + images.length) % images.length;
+          mainImage.src = images[activeImage]; counter.textContent = (activeImage + 1) + " / " + images.length;
+        };
+        previous.addEventListener("click", () => showImage(activeImage - 1));
+        next.addEventListener("click", () => showImage(activeImage + 1));
+        galleryMedia.append(previous, next);
+      }
+      mainImage.style.cursor = "zoom-in";
+      mainImage.addEventListener("click", () => openImageViewer(images, post.title || "Gallery image", 0));
+      card.append(galleryMedia);
+    }
     const content = element("div", "post-card-content");
     const meta = element("div", "post-card-meta");
     meta.append(element("span", "", post.category || "update"));
     const date = post.publishedAt;
     meta.append(element("span", "", date && !Number.isNaN(Date.parse(date)) ? new Date(date).toLocaleString(undefined,{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false}) : ""));
     content.append(meta);
+    if (post.category && post.category !== "events") {
+      const tags = element("div", "post-card-location");
+      const dimension = post.dimension || post.event?.dimension;
+      const coords = post.coordinates || post.event?.coordinates;
+      if (dimension) tags.append(element("span", "post-dimension", String(dimension).replace(/^./, c => c.toUpperCase())));
+      if (coords && typeof coords === "object" && [coords.x, coords.y, coords.z].every(value => Number.isFinite(Number(value)))) {
+        tags.append(element("span", "post-coordinates", "X: " + coords.x + ", Y: " + coords.y + ", Z: " + coords.z));
+      }
+      if (tags.childElementCount) content.append(tags);
+    }
     const postBody = String(post.subtitle || post.body || "");
     const postTitle = String(post.title || "").trim();
     const titleDuplicatesBody = postTitle && postBody.trim().startsWith(postTitle);
@@ -537,8 +573,10 @@ window.setInterval(fetchServerStatus, 60_000);
           const rawStart = post.event?.scheduledStartTime || post.event?.scheduled_start_time;
           const startTime = rawStart ? Date.parse(rawStart) : NaN;
           if (!Number.isFinite(startTime)) continue;
-          const id = String(post.event?.eventId || post.event?.event_id || post.event?.id || post.eventId || post.id || "");
-          const key = id || ("title:" + String(post.title || "").toLowerCase() + ":" + startTime);
+          // Database rows can have distinct post IDs for the same Discord event.
+          // Event title + exact scheduled timestamp is the stable identity for grouping.
+          const normalizedTitle = String(post.title || "").trim().toLowerCase().replace(/\\s+/g, " ");
+          const key = normalizedTitle; + ":" + startTime;
           if (!uniqueEvents.has(key)) uniqueEvents.set(key, { post, startTime });
         }
         const filtered = [...uniqueEvents.values()]
