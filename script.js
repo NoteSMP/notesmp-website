@@ -405,6 +405,7 @@ window.setInterval(fetchServerStatus, 60_000);
       const expand = element("button", "post-image-expand"); expand.type = "button"; expand.setAttribute("aria-label", "Open photo selection"); expand.title = "Open photo selection"; expand.textContent = "⛶"; expand.addEventListener("click", () => openImageViewer(images, image.alt, active)); media.append(expand); card.append(media);
     }
     const content = element("div", "post-card-content");
+    const isScheduledEvent = Boolean(post.event?.scheduledStartTime);
     const meta = element("div", "post-card-meta");
     meta.append(element("span", "", post.category || "update"));
     const date = post.event && post.event.scheduledStartTime ? post.event.scheduledStartTime : post.publishedAt;
@@ -412,14 +413,37 @@ window.setInterval(fetchServerStatus, 60_000);
     content.append(meta);
     const postBody = String(post.subtitle || post.body || "");
     const postTitle = String(post.title || "").trim();
-    // Discord-derived titles may be the same raw Markdown heading already rendered in the body.
-    // Suppress that duplicate/raw title instead of showing a second, unformatted copy.
-    const titleDuplicatesBody = postTitle && postBody.trim().startsWith(postTitle);
-    const titleLooksLikeMarkdown = /^#{1,6}\\s|<a?:[A-Za-z0-9_]+:\\d+>|\\*\\*|__|~~/.test(postTitle);
-    if (postTitle && !titleDuplicatesBody && !titleLooksLikeMarkdown) {
-      content.append(element("h3", "", postTitle));
+    // Scheduled-event titles are presented as a proper heading, not body-sized text.
+    if (isScheduledEvent && postTitle) content.append(element("h2", "scheduled-event-title", postTitle));
+    else {
+      const titleDuplicatesBody = postTitle && postBody.trim().startsWith(postTitle);
+      const titleLooksLikeMarkdown = /^#{1,6}\\s|<a?:[A-Za-z0-9_]+:\\d+>|\\*\\*|__|~~/.test(postTitle);
+      if (postTitle && !titleDuplicatesBody && !titleLooksLikeMarkdown) content.append(element("h3", "", postTitle));
     }
     if (post.subtitle || post.body) { const body = element("div", "post-card-body"); body.innerHTML = renderDiscordMarkdown((post.subtitle || post.body || "").slice(0, 900)); content.append(body); }
+    if (isScheduledEvent) {
+      const start = Date.parse(post.event.scheduledStartTime);
+      const eventInfo = element("div", "scheduled-event-details");
+      if (Number.isFinite(start)) {
+        eventInfo.append(element("span", "scheduled-event-start", "Starts " + new Date(start).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})));
+        const countdown = element("span", "scheduled-event-countdown", "");
+        const updateCountdown = () => {
+          const remaining = start - Date.now();
+          if (remaining <= 0) { countdown.textContent = "Starting now"; return; }
+          const days = Math.floor(remaining / 86400000);
+          const hours = Math.floor((remaining % 86400000) / 3600000);
+          const minutes = Math.floor((remaining % 3600000) / 60000);
+          countdown.textContent = days ? "In " + days + "d " + hours + "h" : hours ? "In " + hours + "h " + minutes + "m" : "In " + minutes + "m";
+        };
+        updateCountdown();
+        eventInfo.append(countdown);
+        const timer = setInterval(updateCountdown, 60000);
+        window.addEventListener("pagehide", () => clearInterval(timer), { once: true });
+      }
+      const place = post.event.location || (post.event.entityType === 2 ? "Discord voice channel" : post.event.entityType === 3 ? "Discord stage channel" : "");
+      if (place) eventInfo.append(element("span", "scheduled-event-place", place));
+      content.append(eventInfo);
+    }
     const dimension = post.dimension || post.eventData?.dimension || null;
     const coords = post.coordinates || post.eventData?.coordinates || null;
     if (dimension || coords) {
@@ -463,6 +487,8 @@ window.setInterval(fetchServerStatus, 60_000);
   function replaceFeed(target, posts, title, message) {
     if (!target) return;
     const old = target.querySelector(".empty-state, .post-feed");
+    // Preserve the last successful feed if a refresh returns an empty list transiently.
+    if (!posts.length && target.querySelector(".post-feed")) return;
     if (old) old.remove();
     if (!posts.length) {
       target.append(empty(title, message));
@@ -509,8 +535,9 @@ window.setInterval(fetchServerStatus, 60_000);
       } else if (path === "/") {
         const panels = app.querySelectorAll(".main-column .panel");
         if (panels[1]) replaceFeed(panels[1], await getPosts("updates").then(items => items.slice(0,3)), "No announcements yet", "New NoteSMP announcements will appear here.");
-        const eventPanel = app.querySelector(".main-column > section .panel");
-        if (eventPanel) {
+        const eventHeading = app.querySelector(".home-section-heading");
+        const eventPanel = eventHeading?.nextElementSibling;
+        if (eventPanel?.classList.contains("panel")) {
           const events = await getPosts("events");
           replaceFeed(eventPanel, events.filter(post => post.event?.scheduledStartTime && Date.parse(post.event.scheduledStartTime) >= Date.now()).slice(0,3), "No upcoming events", "New Discord events will appear here automatically.");
         }
