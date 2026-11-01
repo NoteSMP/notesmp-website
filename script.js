@@ -398,7 +398,7 @@ window.setInterval(fetchServerStatus, 60_000);
     const eventId = String(event.id || event.eventId || post?.discordEventId || "");
     if (hash && /^\d+$/.test(guildId) && /^\d+$/.test(eventId)) {
       const extension = hash.startsWith("a_") ? "gif" : "png";
-      return safeUrl("https://cdn.discordapp.com/guild-events/" + guildId + "/" + eventId + "/" + hash + "." + extension + "?size=1024");
+      return safeUrl("https://cdn.discordapp.com/guild-events/" + eventId + "/" + hash + "." + extension + "?size=1024");
     }
     return images[0] || "";
   }
