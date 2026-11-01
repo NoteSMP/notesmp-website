@@ -292,6 +292,33 @@ window.setInterval(fetchServerStatus, 60_000);
 
 (() => {
   const API = "https://notesmp-api.notesmp-de.workers.dev/v1";
+  async function updateHeaderDiscordLink() {
+    const button = document.querySelector(".header-join");
+    if (!button) return;
+    try {
+      const response = await fetch(API + "/content/links", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json();
+      const discord = (data.links || []).find(item => item.link_key === "discord");
+      const url = discord && safeUrl(discord.url);
+      if (!url) {
+        button.innerHTML = 'Discord <span>Invite link needed</span>';
+        button.removeAttribute("href");
+        button.removeAttribute("target");
+        button.removeAttribute("rel");
+        button.setAttribute("aria-disabled", "true");
+        return;
+      }
+      button.href = url;
+      button.target = "_blank";
+      button.rel = "noreferrer";
+      button.removeAttribute("aria-disabled");
+      button.innerHTML = 'Discord <span>Join server ↗</span>';
+    } catch (error) {
+      console.warn("Could not load configured Discord link", error);
+    }
+  }
+  updateHeaderDiscordLink();
   const app = document.querySelector("#app");
   if (!app) return;
   let lastKey = "";
@@ -379,8 +406,10 @@ window.setInterval(fetchServerStatus, 60_000);
     document.body.append(overlay);
     close.focus();
   }
-  async function getPosts(category) {
-    const response = await fetch(API + "/content/posts?category=" + encodeURIComponent(category) + "&limit=100");
+  async function getPosts(category, group = "") {
+    const params = new URLSearchParams({ category, limit: "100" });
+    if (group) params.set("group", group);
+    const response = await fetch(API + "/content/posts?" + params.toString(), { cache: "no-store" });
     if (!response.ok) throw new Error("Feed request failed");
     const data = await response.json();
     return data.posts || [];
@@ -421,7 +450,7 @@ window.setInterval(fetchServerStatus, 60_000);
         const active = app.querySelector("[data-event-period][aria-pressed='true']");
         const period = active ? active.dataset.eventPeriod : "upcoming";
         const target = app.querySelector(".page-content");
-        const posts = await getPosts("events");
+        const posts = await getPosts("gallery", "events");
         const now = Date.now();
         const filtered = posts.filter(post => {
           const date = post.event && post.event.scheduledStartTime ? Date.parse(post.event.scheduledStartTime) : Date.parse(post.publishedAt);
@@ -438,11 +467,11 @@ window.setInterval(fetchServerStatus, 60_000);
         const eventPanel = app.querySelector(".main-column > section .panel");
         if (eventPanel) {
           const events = await getPosts("events");
-          replaceFeed(eventPanel, events.filter(post => !post.event || !post.event.scheduledStartTime || Date.parse(post.event.scheduledStartTime) >= Date.now()).slice(0,3), "No upcoming events", "New Discord events will appear here automatically.");
+          replaceFeed(eventPanel, events.filter(post => post.event?.scheduledStartTime && Date.parse(post.event.scheduledStartTime) >= Date.now()).slice(0,3), "No upcoming events", "New Discord events will appear here automatically.");
         }
         const sideLists = app.querySelectorAll(".side-column .link-list");
         if (sideLists[0]) {
-          const response = await fetch(API + "/content/links");
+          const response = await fetch(API + "/content/links", { cache: "no-store" });
           const data = response.ok ? await response.json() : {links:[]};
           const links = Object.fromEntries((data.links || []).map(item => [item.link_key, item.url]));
           sideLists[0].replaceChildren();
@@ -455,25 +484,31 @@ window.setInterval(fetchServerStatus, 60_000);
           });
         }
         if (sideLists[1]) {
-          const response = await fetch(API + "/creators");
-          const data = response.ok ? await response.json() : {creators:[]};
+          const response = await fetch(API + "/creators", { cache: "no-store" });
+          if (!response.ok) throw new Error("Creator roster unavailable");
+          const data = await response.json();
           const creators = (data.creators || []).slice().sort((a,b) => Number(Boolean(b.live)) - Number(Boolean(a.live)) || String(a.twitch_login).localeCompare(String(b.twitch_login)));
-          sideLists[1].replaceChildren();
-          if (!creators.length) sideLists[1].append(element("div","resource-link is-disabled","No creators added yet"));
-          creators.forEach(item => {
+          // Do not replace a populated roster with a transient empty response.
+          if (!creators.length && sideLists[1].querySelector(".creator-card")) {
+            console.warn("Creator API returned an empty roster; keeping the currently displayed creators.");
+          } else {
+            sideLists[1].replaceChildren();
+            if (!creators.length) sideLists[1].append(element("div","resource-link is-disabled","No creators added yet"));
+          }
+          if (creators.length) creators.forEach(item => {
             const isLive = Boolean(item.live);
             const link = element("a", "creator-card" + (isLive ? " is-live" : " is-offline"));
             const twitchUrl = safeUrl(item.live_url) || safeUrl("https://www.twitch.tv/" + item.twitch_login);
             link.href = twitchUrl; link.target = "_blank"; link.rel = "noreferrer";
             const avatar = element("img", "creator-avatar");
-            avatar.src = safeUrl(item.avatar_url) || "https://static-cdn.jtvnw.net/jtv_user_pictures/xarth/ profile_image-70x70.png".replace("xarth/ profile", "xarth/profile");
+            avatar.src = safeUrl(item.avatar_url) || "https://static-cdn.jtvnw.net/jtv_user_pictures/default-user.png";
             avatar.alt = "";
             avatar.loading = "lazy";
             avatar.onerror = () => { avatar.onerror = null; avatar.src = "https://static-cdn.jtvnw.net/jtv_user_pictures/default-user.png"; };
             const info = element("span", "creator-info");
             info.append(element("strong", "creator-name", item.twitch_login));
             if (isLive && item.live_title) info.append(element("span", "creator-stream-title", item.live_title));
-            const badge = element("span", "creator-status" + (isLive ? " live" : " offline"), isLive ? (/notesmp/i.test(item.live_title || "") ? "LIVE ON NOTESMP" : "LIVE") : "OFFLINE");
+            const badge = element("span", "creator-status" + (isLive ? " live" : " offline"), isLive ? (/notesmp/i.test(item.live_title || "") ? "Live on NoteSMP" : "Live") : "Offline");
             link.append(avatar, info, badge);
             sideLists[1].append(link);
           });
