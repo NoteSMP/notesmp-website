@@ -354,14 +354,17 @@ window.setInterval(fetchServerStatus, 60_000);
   }
   function renderDiscordMarkdown(source) {
     const emojiHtml = [];
-    let text = String(source || "").replace(/<(a?):([A-Za-z0-9_]+):(\d+)>/g, (_, animated, name, id) => {
+    // Unescape copied Discord markdown first so headings and custom emoji syntax are recognized.
+    let text = String(source || "").replace(/\\([\\*_~|>#])/g, "$1");
+    text = text.replace(/<(a?):([A-Za-z0-9_]+):(\d+)>/g, (_, animated, name, id) => {
       const token = "DISCORD_EMOJI_TOKEN_" + emojiHtml.length + "_X";
-      emojiHtml.push('<img class="discord-custom-emoji" src="https://cdn.discordapp.com/emojis/' + id + "." + (animated ? "gif" : "webp") + '?size=48&quality=lossless" alt=":' + name + ':" title=":' + name + ':" loading="lazy">'); return token;
+      emojiHtml.push('<img class="discord-custom-emoji" src="https://cdn.discordapp.com/emojis/' + id + "." + (animated ? "gif" : "webp") + '?size=48&quality=lossless" alt=":' + name + ':" title=":' + name + ':" loading="lazy">');
+      return token;
     });
-    text = text.replace(/\\([\\*_~|>#])/g, "$1").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\x27/g, "&#39;");
+    text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\x27/g, "&#39;");
     text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
     text = text.replace(/\*\*(.+?)\*\*/gs, "<strong>$1</strong>").replace(/__(.+?)__/gs, "<u>$1</u>").replace(/\*(.+?)\*/gs, "<em>$1</em>").replace(/_(.+?)_/gs, "<em>$1</em>").replace(/~~(.+?)~~/gs, "<del>$1</del>").replace(/\x60([^\x60]+)\x60/g, "<code>$1</code>");
-    text = text.split("\\n").map(line => {
+    text = text.split(/\r?\n/).map(line => {
       const heading = line.match(/^#{1,3}\s+(.*)$/); if (heading) return "<h4>" + heading[1] + "</h4>";
       if (/^\s*[-*]\s+/.test(line)) return "<li>" + line.replace(/^\s*[-*]\s+/, "") + "</li>";
       if (/^&gt;\s?/.test(line)) return "<blockquote>" + line.replace(/^&gt;\s?/, "") + "</blockquote>";
