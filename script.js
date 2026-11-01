@@ -457,13 +457,24 @@ window.setInterval(fetchServerStatus, 60_000);
         if (sideLists[1]) {
           const response = await fetch(API + "/creators");
           const data = response.ok ? await response.json() : {creators:[]};
-          const live = (data.creators || []).filter(item => item.live && safeUrl(item.live_url));
+          const creators = (data.creators || []).slice().sort((a,b) => Number(Boolean(b.live)) - Number(Boolean(a.live)) || String(a.twitch_login).localeCompare(String(b.twitch_login)));
           sideLists[1].replaceChildren();
-          if (!live.length) sideLists[1].append(element("div","resource-link is-disabled","No live NoteSMP streams"));
-          live.forEach(item => {
-            const link=element("a","resource-link");
-            link.href=safeUrl(item.live_url); link.target="_blank"; link.rel="noreferrer";
-            link.append(element("span","",item.twitch_login+" · "+item.live_title),element("span","","LIVE ↗"));
+          if (!creators.length) sideLists[1].append(element("div","resource-link is-disabled","No creators added yet"));
+          creators.forEach(item => {
+            const isLive = Boolean(item.live);
+            const link = element("a", "creator-card" + (isLive ? " is-live" : " is-offline"));
+            const twitchUrl = safeUrl(item.live_url) || safeUrl("https://www.twitch.tv/" + item.twitch_login);
+            link.href = twitchUrl; link.target = "_blank"; link.rel = "noreferrer";
+            const avatar = element("img", "creator-avatar");
+            avatar.src = safeUrl(item.avatar_url) || "https://static-cdn.jtvnw.net/jtv_user_pictures/xarth/ profile_image-70x70.png".replace("xarth/ profile", "xarth/profile");
+            avatar.alt = "";
+            avatar.loading = "lazy";
+            avatar.onerror = () => { avatar.onerror = null; avatar.src = "https://static-cdn.jtvnw.net/jtv_user_pictures/default-user.png"; };
+            const info = element("span", "creator-info");
+            info.append(element("strong", "creator-name", item.twitch_login));
+            if (isLive && item.live_title) info.append(element("span", "creator-stream-title", item.live_title));
+            const badge = element("span", "creator-status" + (isLive ? " live" : " offline"), isLive ? (/notesmp/i.test(item.live_title || "") ? "LIVE ON NOTESMP" : "LIVE") : "OFFLINE");
+            link.append(avatar, info, badge);
             sideLists[1].append(link);
           });
         }
