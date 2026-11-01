@@ -452,13 +452,14 @@ window.setInterval(fetchServerStatus, 60_000);
         aside.classList.add("has-event-cover");
       }
       if (Number.isFinite(start)) {
-        aside.append(element("span", "scheduled-event-start", "Starts " + new Date(start).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})));
-        const rawStatus = post.event.status ?? post.event.eventStatus ?? post.event.discordStatus;
-        const statusText = String(rawStatus ?? "").toLowerCase();
+        aside.append(element("span", "scheduled-event-start", "Starts " + new Date(start).toLocaleString(undefined,{weekday:"long",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})));
+        const rawStatus = post.event.status ?? post.event.eventStatus ?? post.event.discordStatus ?? post.event.event_status;
+        const statusText = String(rawStatus ?? "").toLowerCase().trim();
         const statusNumber = Number(rawStatus);
-        const eventState = statusText.includes("cancel") || statusNumber === 4 ? "cancelled"
-          : statusText.includes("complet") || statusText.includes("ended") || statusNumber === 3 ? "ended"
-          : statusText.includes("active") || statusText.includes("started") || statusNumber === 2 ? "started" : "scheduled";
+        // Discord Scheduled Event status: 1 scheduled, 2 active, 3 completed, 4 cancelled.
+        const eventState = statusText.includes("cancel") || statusText === "4" || statusNumber === 4 ? "cancelled"
+          : statusText.includes("complet") || statusText.includes("ended") || statusText === "3" || statusNumber === 3 ? "ended"
+          : statusText.includes("active") || statusText.includes("started") || statusText === "2" || statusNumber === 2 ? "started" : "scheduled";
         const countdown = element("span", "scheduled-event-countdown", "");
         const showState = (label, stateClass) => {
           countdown.textContent = label;
