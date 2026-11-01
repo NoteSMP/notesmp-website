@@ -404,8 +404,11 @@ window.setInterval(fetchServerStatus, 60_000);
   }
   function makeCard(post) {
     const card = element("article", "post-card panel");
+    const isScheduledEvent = Boolean(post.event?.scheduledStartTime);
     const images = (Array.isArray(post.images) ? post.images : []).map(safeUrl).filter(Boolean);
-    if (images.length) {
+    // Event covers are rendered only in the dedicated event layout below;
+    // keep gallery media/lightbox controls exclusive to non-event posts.
+    if (!isScheduledEvent && images.length) {
       const media = element("div", "post-card-media"); const image = element("img", "post-card-image"); let active = 0;
       image.src = images[active]; image.alt = post.title || "NoteSMP gallery image"; image.loading = "lazy"; media.append(image); let counter = null;
       const show = index => { active = (index + images.length) % images.length; image.src = images[active]; if (counter) counter.textContent = (active + 1) + " / " + images.length; };
@@ -418,7 +421,6 @@ window.setInterval(fetchServerStatus, 60_000);
       const expand = element("button", "post-image-expand"); expand.type = "button"; expand.setAttribute("aria-label", "Open photo selection"); expand.title = "Open photo selection"; expand.textContent = "⛶"; expand.addEventListener("click", () => openImageViewer(images, image.alt, active)); media.append(expand); card.append(media);
     }
     const content = element("div", "post-card-content");
-    const isScheduledEvent = Boolean(post.event?.scheduledStartTime);
     const meta = element("div", "post-card-meta");
     meta.append(element("span", "", post.category || "update"));
     const date = post.event && post.event.scheduledStartTime ? post.event.scheduledStartTime : post.publishedAt;
