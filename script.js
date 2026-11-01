@@ -95,7 +95,7 @@ function emptyPage(title, message) {
 }
 
 function eventsPage() {
-  return `<div class="page-shell">${pageHeading('Events', 'Upcoming plans and moments from the NoteSMP community, with past events kept close by.', 'COMMUNITY CALENDAR')}<div class="page-content"><div class="gallery-groups" aria-label="Event time period"><button class="gallery-group" type="button" data-event-period="upcoming" aria-pressed="true">Upcoming</button><button class="gallery-group" type="button" data-event-period="past" aria-pressed="false">Past Events</button></div>${emptyPage('Event feed not connected yet', 'Events will be synced from the NoteSMP Discord bot. Events with photos will link directly to their gallery collection.')}</div></div>`;
+  return `<div class="page-shell">${pageHeading('Events', 'Upcoming plans and moments from the NoteSMP community, with past events kept close by.', 'COMMUNITY CALENDAR')}<div class="page-content"><section class="event-period-section"><h2 class="event-period-heading">Upcoming</h2><div id="upcoming-events-feed">${emptyPage('Loading upcoming events', 'Fetching the Discord event schedule…')}</div></section><section class="event-period-section"><h2 class="event-period-heading">Past events</h2><div id="past-events-feed">${emptyPage('Loading past events', 'Fetching previous Discord events…')}</div></section></div></div>`;
 }
 
 function galleryPage() {
@@ -450,7 +450,7 @@ window.setInterval(fetchServerStatus, 60_000);
         aside.classList.add("has-event-cover");
       }
       if (Number.isFinite(start)) {
-        details.append(element("span", "scheduled-event-start", "Starts " + new Date(start).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})));
+        aside.append(element("span", "scheduled-event-start", "Starts " + new Date(start).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})));
         const countdown = element("span", "scheduled-event-countdown", "");
         const updateCountdown = () => {
           const remaining = start - Date.now();
@@ -473,9 +473,9 @@ window.setInterval(fetchServerStatus, 60_000);
         channel.href = "https://discord.com/channels/" + encodeURIComponent(guildId) + "/" + encodeURIComponent(channelId);
         channel.target = "_blank";
         channel.rel = "noopener noreferrer";
-        details.append(channel);
+        aside.append(channel);
       } else if (post.event.location) {
-        details.append(element("span", "scheduled-event-place", post.event.location));
+        aside.append(element("span", "scheduled-event-place", post.event.location));
       }
       eventInfo.append(details, aside);
       content.append(eventInfo);
@@ -541,10 +541,6 @@ window.setInterval(fetchServerStatus, 60_000);
       const active = app.querySelector("[data-gallery-group][aria-pressed='true']");
       key += ":" + (active ? active.dataset.galleryGroup : "Events");
     }
-    if (path === "/events") {
-      const active = app.querySelector("[data-event-period][aria-pressed='true']");
-      key += ":" + (active ? active.dataset.eventPeriod : "upcoming");
-    }
     if (key === lastKey) return;
     lastKey = key;
     try {
@@ -554,30 +550,25 @@ window.setInterval(fetchServerStatus, 60_000);
         const target = app.querySelector(".page-content");
         replaceFeed(target, await getPosts("gallery", label.toLowerCase()), label + " gallery is empty", "Published Discord posts will appear here.");
       } else if (path === "/events") {
-        const active = app.querySelector("[data-event-period][aria-pressed='true']");
-        const period = active ? active.dataset.eventPeriod : "upcoming";
-        const target = app.querySelector(".page-content");
+        const targetUpcoming = app.querySelector("#upcoming-events-feed");
+        const targetPast = app.querySelector("#past-events-feed");
         const posts = await getPosts("events");
         const now = Date.now();
-        // Classify only by the event's scheduled start. This makes Upcoming and Past
-        // mutually exclusive, and keeps old synced rows in Past after Discord deletes them.
-        // Deduplicate the complete feed before splitting into time periods.
-        // This prevents stale duplicate rows from appearing in both groups.
         const uniqueEvents = new Map();
         for (const post of posts) {
           const rawStart = post.event?.scheduledStartTime || post.event?.scheduled_start_time;
           const startTime = rawStart ? Date.parse(rawStart) : NaN;
           if (!Number.isFinite(startTime)) continue;
-          // Database rows can have distinct post IDs for the same Discord event.
-          // Event title + exact scheduled timestamp is the stable identity for grouping.
+          const eventId = String(post.event?.id || post.event?.eventId || post.discordEventId || "");
           const normalizedTitle = String(post.title || "").trim().toLowerCase().replace(/\\s+/g, " ");
-          const key = normalizedTitle + ":" + startTime;
-          if (!uniqueEvents.has(key)) uniqueEvents.set(key, { post, startTime });
+          const identity = eventId || normalizedTitle + ":" + startTime;
+          if (!uniqueEvents.has(identity)) uniqueEvents.set(identity, { post, startTime });
         }
-        const filtered = [...uniqueEvents.values()]
-          .filter(({ startTime }) => period === "past" ? startTime < now : startTime >= now)
-          .map(({ post }) => post);
-        replaceFeed(target, filtered, "No events in this period", "New Discord events will appear here automatically.");
+        const events = [...uniqueEvents.values()];
+        const upcoming = events.filter(({startTime}) => startTime >= now).sort((a,b) => a.startTime-b.startTime).map(({post})=>post);
+        const past = events.filter(({startTime}) => startTime < now).sort((a,b) => b.startTime-a.startTime).map(({post})=>post);
+        replaceFeed(targetUpcoming, upcoming, "No upcoming events", "New Discord events will appear here automatically.");
+        replaceFeed(targetPast, past, "No past events yet", "Completed Discord events will be collected here.");
       } else if (path === "/devlog" || path === "/rules") {
         const category = path === "/rules" ? "rules" : "updates";
         const target = app.querySelector(".page-content");
