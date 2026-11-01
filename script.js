@@ -318,11 +318,20 @@ window.setInterval(fetchServerStatus, 60_000);
     const card = element("article", "post-card panel");
     const imageUrl = safeUrl(post.images && post.images[0]);
     if (imageUrl) {
+      const media = element("div", "post-card-media");
       const image = element("img", "post-card-image");
       image.src = imageUrl;
-      image.alt = "";
+      image.alt = post.title || "NoteSMP gallery image";
       image.loading = "lazy";
-      card.append(image);
+      media.append(image);
+      const expand = element("button", "post-image-expand");
+      expand.type = "button";
+      expand.setAttribute("aria-label", "View full image");
+      expand.title = "View full image";
+      expand.textContent = "⛶";
+      expand.addEventListener("click", () => openImageViewer(imageUrl, image.alt));
+      media.append(expand);
+      card.append(media);
     }
     const content = element("div", "post-card-content");
     const meta = element("div", "post-card-meta");
@@ -330,8 +339,18 @@ window.setInterval(fetchServerStatus, 60_000);
     const date = post.event && post.event.scheduledStartTime ? post.event.scheduledStartTime : post.publishedAt;
     meta.append(element("span", "", date && !Number.isNaN(Date.parse(date)) ? new Date(date).toLocaleString() : ""));
     content.append(meta);
-    content.append(element("h3", "", post.title || (post.body || "NoteSMP post").split("\n")[0].slice(0, 120)));
+    content.append(element("h3", "", post.title || (post.body || "NoteSMP post").split("\\n")[0].slice(0, 120)));
     if (post.subtitle || post.body) content.append(element("p", "", (post.subtitle || post.body || "").slice(0, 900)));
+    const dimension = post.dimension || post.eventData?.dimension || null;
+    const coords = post.coordinates || post.eventData?.coordinates || null;
+    if (dimension || coords) {
+      const location = element("div", "post-card-location");
+      if (dimension) location.append(element("span", "post-dimension", "Dimension · " + dimension));
+      if (coords && [coords.x,coords.y,coords.z].every(value => value !== undefined && value !== null && Number.isFinite(Number(value)))) {
+        location.append(element("span", "post-coordinates", "X: " + coords.x + " · Y: " + coords.y + " · Z: " + coords.z));
+      }
+      content.append(location);
+    }
     if (post.event && post.event.location) content.append(element("p", "post-card-location", post.event.location));
     const footer = element("div", "post-card-footer");
     footer.append(element("span", "", "POST ID · " + post.id));
@@ -339,6 +358,26 @@ window.setInterval(fetchServerStatus, 60_000);
     content.append(footer);
     card.append(content);
     return card;
+  }
+  function openImageViewer(url, alt) {
+    const overlay = element("div", "image-viewer");
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label", "Full image view");
+    const close = element("button", "image-viewer-close");
+    close.type = "button";
+    close.setAttribute("aria-label", "Close image viewer");
+    close.textContent = "×";
+    const image = element("img", "image-viewer-image");
+    image.src = url;
+    image.alt = alt || "Full gallery image";
+    overlay.append(close,image);
+    const dismiss = () => overlay.remove();
+    close.addEventListener("click",dismiss);
+    overlay.addEventListener("click",event => { if(event.target === overlay) dismiss(); });
+    document.addEventListener("keydown",function onKey(event){ if(event.key === "Escape"){dismiss();document.removeEventListener("keydown",onKey);} });
+    document.body.append(overlay);
+    close.focus();
   }
   async function getPosts(category) {
     const response = await fetch(API + "/content/posts?category=" + encodeURIComponent(category) + "&limit=100");
