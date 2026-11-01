@@ -124,3 +124,10 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 .scheduled-event-aside.has-event-cover{background-position:center;background-size:cover}
 .scheduled-event-details .scheduled-event-aside::before{content:none}
 @media(max-width:520px){.scheduled-event-aside{border-radius:6px}}
+
+/* Info page News: directly below the hero, full hero width. */
+.home-news-section{margin:22px 0 28px;width:100%;box-sizing:border-box}
+.home-news-section[hidden]{display:none}
+.home-news-feed .post-feed{display:flex;flex-direction:column;gap:14px}
+.home-news-feed .post-card{width:100%;max-width:none}
+.news-countdown{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;color:var(--text);font:500 12px "DM Mono",monospace}
