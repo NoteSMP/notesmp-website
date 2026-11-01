@@ -562,29 +562,35 @@ function renderNewsBanner(posts) {
   const list = Array.isArray(posts) ? posts : (posts ? [posts] : []);
   const now = Date.now();
   const active = list.filter(post => {
-    const type = post.event?.type || post.group || "";
-    const expiry = type === "maintenance" ? Date.parse(post.event?.expiryAt || "") : NaN;
+    const kind = post.event?.type || post.group || "";
+    const expiry = kind === "maintenance" ? Date.parse(post.event?.expiryAt || "") : NaN;
     return !Number.isFinite(expiry) || expiry > now;
   }).sort((a,b) => Date.parse(b.publishedAt || b.updatedAt || 0) - Date.parse(a.publishedAt || a.updatedAt || 0)).slice(0,1);
   target.replaceChildren();
   if (!active.length) { section.hidden = true; return; }
-  section.hidden = false;
-  const feed = element("div", "post-feed");
-  active.forEach(post => feed.append(makeCard(post)));
-  target.append(feed);
-  const maintenance = active.find(post => (post.event?.type || post.group) === "maintenance");
-  const expiry = maintenance ? Date.parse(maintenance.event?.expiryAt || "") : NaN;
+  const post = active[0];
+  const kind = post.event?.type || post.group || "info";
+  const banner = element("div", "notice-bar news-" + (["maintenance","warning","info"].includes(kind) ? kind : "info"));
+  const copy = element("div", "news-copy");
+  copy.append(element("strong", "", post.title || "News"), element("span", "", post.subtitle || post.body || ""));
+  banner.append(copy);
+  const expiry = kind === "maintenance" ? Date.parse(post.event?.expiryAt || "") : NaN;
   if (Number.isFinite(expiry)) {
+    const counter = element("div", "news-countdown");
+    banner.append(counter);
     const tick = () => {
       const remaining = Math.max(0, expiry - Date.now());
-      const h = Math.floor(remaining / 3600000), m = Math.floor((remaining % 3600000) / 60000), s = Math.floor((remaining % 60000) / 1000);
-      let counter = feed.querySelector(".news-countdown");
-      if (!counter) { counter = element("div", "news-countdown"); feed.querySelector(".post-card")?.append(counter); }
-      if (counter) counter.textContent = "Maintenance ends in " + h + "h " + String(m).padStart(2,"0") + "m " + String(s).padStart(2,"0") + "s";
-      if (remaining <= 0) { window.clearInterval(newsCountdownTimer); refreshNewsBanner([]); }
+      const days = Math.floor(remaining / 86400000);
+      const h = Math.floor((remaining % 86400000) / 3600000);
+      const m = Math.floor((remaining % 3600000) / 60000);
+      const s = Math.floor((remaining % 60000) / 1000);
+      counter.textContent = (days ? days + "d " : "") + h + "h " + String(m).padStart(2,"0") + "m " + String(s).padStart(2,"0") + "s";
+      if (!remaining) { window.clearInterval(newsCountdownTimer); refreshNewsBanner(); }
     };
     tick(); newsCountdownTimer = window.setInterval(tick,1000);
   }
+  target.append(banner);
+  section.hidden = false;
 }
 async function refreshNewsBanner(extra = []) {
   try {
@@ -699,7 +705,7 @@ async function loadPage() {
             avatar.loading = "lazy";
             avatar.onerror = () => { avatar.onerror = null; avatar.removeAttribute("src"); avatar.classList.add("avatar-unavailable"); };
             const info = element("span", "creator-info");
-            info.append(element("strong", "creator-name", item.twitch_login));
+            info.append(element("strong", "creator-name", item.display_name || item.twitch_login));
             if (isLive && item.live_title) info.append(element("span", "creator-stream-title", item.live_title));
             const badge = element("span", "creator-status" + (isLive ? " live" : " offline"), isLive ? (/notesmp/i.test(item.live_title || "") ? "Live on NoteSMP" : "Live") : "Offline");
             link.append(avatar, info, badge);
