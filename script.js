@@ -353,24 +353,41 @@ window.setInterval(fetchServerStatus, 60_000);
     return box;
   }
   function renderDiscordMarkdown(source) {
-    const emojiHtml = [];
-    // Unescape copied Discord markdown first so headings and custom emoji syntax are recognized.
-    let text = String(source || "").replace(/\\([\\*_~|>#])/g, "$1");
-    text = text.replace(/<(a?):([A-Za-z0-9_]+):(\d+)>/g, (_, animated, name, id) => {
-      const token = "DISCORD_EMOJI_TOKEN_" + emojiHtml.length + "_X";
-      emojiHtml.push('<img class="discord-custom-emoji" src="https://cdn.discordapp.com/emojis/' + id + "." + (animated ? "gif" : "webp") + '?size=48&quality=lossless" alt=":' + name + ':" title=":' + name + ':" loading="lazy">');
-      return token;
-    });
-    text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/\x27/g, "&#39;");
-    text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-    text = text.replace(/\*\*(.+?)\*\*/gs, "<strong>$1</strong>").replace(/__(.+?)__/gs, "<u>$1</u>").replace(/\*(.+?)\*/gs, "<em>$1</em>").replace(/_(.+?)_/gs, "<em>$1</em>").replace(/~~(.+?)~~/gs, "<del>$1</del>").replace(/\x60([^\x60]+)\x60/g, "<code>$1</code>");
-    text = text.split(/\r?\n/).map(line => {
-      const heading = line.match(/^#{1,3}\s+(.*)$/); if (heading) return "<h4>" + heading[1] + "</h4>";
-      if (/^\s*[-*]\s+/.test(line)) return "<li>" + line.replace(/^\s*[-*]\s+/, "") + "</li>";
-      if (/^&gt;\s?/.test(line)) return "<blockquote>" + line.replace(/^&gt;\s?/, "") + "</blockquote>";
-      return line ? "<p>" + line + "</p>" : "";
-    }).join("");
-    return text.replace(/DISCORD_EMOJI_TOKEN_(\d+)_X/g, (_, index) => emojiHtml[Number(index)] || "");
+    const fragments = [];
+    const hold = html => { const token = "\uE000" + fragments.length + "\uE001"; fragments.push(html); return token; };
+    const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[c]);
+    let text = String(source ?? "").replace(/\r\n?/g, "\n");
+
+    // Hold code and custom emoji outside Markdown processing.
+    text = text.replace(/```([^\n]*)\n?([\s\S]*?)```/g, (_, language, code) =>
+      hold('<pre><code' + (language.trim() ? ' class="language-' + escapeHtml(language.trim().replace(/[^a-zA-Z0-9_-]/g, "")) + '"' : '') + '>' + escapeHtml(code.replace(/\n$/, "")) + '</code></pre>'));
+    text = text.replace(/`([^`\n]+)`/g, (_, code) => hold("<code>" + escapeHtml(code) + "</code>"));
+    text = text.replace(/<(a?):([A-Za-z0-9_]+):(\d+)>/g, (_, animated, name, id) =>
+      hold('<img class="discord-custom-emoji" src="https://cdn.discordapp.com/emojis/' + id + "." + (animated ? "gif" : "webp") + '?size=48&quality=lossless" alt=":' + escapeHtml(name) + ':" title=":' + escapeHtml(name) + ':" loading="lazy">'));
+
+    text = escapeHtml(text).replace(/\\([\\*_~|>#])/g, "$1");
+    text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, (_, label, url) =>
+      '<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">' + label + "</a>");
+    text = text.replace(/\*\*(.+?)\*\*/gs, "<strong>$1</strong>")
+      .replace(/__(.+?)__/gs, "<u>$1</u>").replace(/~~(.+?)~~/gs, "<del>$1</del>")
+      .replace(/\*(.+?)\*/gs, "<em>$1</em>").replace(/_(.+?)_/gs, "<em>$1</em>");
+
+    const output = [];
+    let listOpen = false, quoteOpen = false;
+    const closeList = () => { if (listOpen) { output.push("</ul>"); listOpen = false; } };
+    const closeQuote = () => { if (quoteOpen) { output.push("</blockquote>"); quoteOpen = false; } };
+    for (const line of text.split("\n")) {
+      const heading = line.match(/^(#{1,6})\s+(.+)$/);
+      const bullet = line.match(/^\s*[-*]\s+(.+)$/);
+      const numbered = line.match(/^\s*\d+[.)]\s+(.+)$/);
+      const quote = line.match(/^&gt;\s?(.*)$/);
+      if (heading) { closeList(); closeQuote(); const n=heading[1].length; output.push("<h"+n+">"+heading[2]+"</h"+n+">"); }
+      else if (bullet || numbered) { closeQuote(); if(!listOpen){output.push("<ul>");listOpen=true;} output.push("<li>"+(bullet?bullet[1]:numbered[1])+"</li>"); }
+      else if (quote) { closeList(); if(!quoteOpen){output.push("<blockquote>");quoteOpen=true;} output.push("<p>"+quote[1]+"</p>"); }
+      else { closeList(); closeQuote(); if(line.trim()) output.push("<p>"+line+"</p>"); }
+    }
+    closeList(); closeQuote();
+    return output.join("").replace(/\uE000(\d+)\uE001/g, (_, i) => fragments[Number(i)] || "");
   }
   function makeCard(post) {
     const card = element("article", "post-card panel");
