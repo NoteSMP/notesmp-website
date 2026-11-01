@@ -504,7 +504,7 @@ window.setInterval(fetchServerStatus, 60_000);
             avatar.src = safeUrl(item.avatar_url) || "https://static-cdn.jtvnw.net/jtv_user_pictures/default-user.png";
             avatar.alt = "";
             avatar.loading = "lazy";
-            avatar.onerror = () => { avatar.onerror = null; avatar.src = "https://static-cdn.jtvnw.net/jtv_user_pictures/default-user.png"; };
+            avatar.onerror = () => { avatar.onerror = null; avatar.removeAttribute("src"); avatar.classList.add("avatar-unavailable"); };
             const info = element("span", "creator-info");
             info.append(element("strong", "creator-name", item.twitch_login));
             if (isLive && item.live_title) info.append(element("span", "creator-stream-title", item.live_title));
