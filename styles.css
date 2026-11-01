@@ -37,3 +37,10 @@
 .creator-status{flex:none;font-size:9px;font-weight:800;letter-spacing:.06em;padding:6px 8px;border-radius:4px}
 .creator-status.live{color:#a5edb1;background:#1b3824;border:1px solid #376a43}
 .creator-status.offline{color:#95a399;background:#17201a;border:1px solid var(--line)}
+
+/* Gallery multi-image carousel and Discord-formatted content */
+.post-image-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:2;border:0;border-radius:50%;width:30px;height:30px;background:rgba(8,12,18,.78);color:#fff;font-size:25px;line-height:1;display:grid;place-items:center;cursor:pointer}.post-image-prev{left:10px}.post-image-next{right:10px}
+.post-image-counter{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:2;padding:4px 9px;border-radius:999px;background:rgba(8,12,18,.78);color:#fff;font-size:12px}
+.image-viewer-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:4;border:0;border-radius:50%;width:48px;height:48px;background:rgba(8,12,18,.78);color:#fff;font-size:38px;line-height:1;display:grid;place-items:center;cursor:pointer}.image-viewer-prev{left:clamp(12px,4vw,48px)}.image-viewer-next{right:clamp(12px,4vw,48px)}
+.image-viewer-counter{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:4;color:#fff;background:rgba(8,12,18,.78);padding:6px 12px;border-radius:999px}
+.discord-custom-emoji{height:1.35em;width:1.35em;vertical-align:-.28em;object-fit:contain}.post-card-body p{margin:.4em 0}.post-card-body h4{margin:.55em 0;font-size:1.05em}.post-card-body li{margin-left:1.25em;list-style:disc}.post-card-body blockquote{border-left:3px solid var(--lime);padding-left:.8em;margin:.5em 0}
