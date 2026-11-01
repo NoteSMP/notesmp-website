@@ -99,3 +99,21 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 .scheduled-event-countdown.event-state-started{color:#8de5a0;background:rgba(17,39,23,.9);border-color:#4e9d62}
 .scheduled-event-countdown.event-state-ended{color:#aeb5b0;background:rgba(28,32,29,.9);border-color:#646d67}
 .scheduled-event-countdown.event-state-cancelled{color:#ff8585;background:rgba(48,17,17,.92);border-color:#bd4f4f}
+
+
+/* Clean event cover; fade the artwork into the event text column from the left. */
+.scheduled-event-aside.has-event-cover{
+  background-image:var(--event-cover-image) !important;
+  border-color:transparent;
+  position:relative;
+  overflow:hidden;
+}
+.scheduled-event-aside.has-event-cover::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:0 auto 0 -1px;
+  width:58%;
+  background:linear-gradient(90deg,var(--panel) 0%,rgba(16,25,21,.82) 34%,rgba(16,25,21,.24) 76%,transparent 100%);
+  pointer-events:none;
+}
