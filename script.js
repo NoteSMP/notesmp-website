@@ -390,8 +390,12 @@ window.setInterval(fetchServerStatus, 60_000);
     return output.join("").replace(/\uE000(\d+)\uE001/g, (_, i) => fragments[Number(i)] || "");
   }
   function makeCard(post) {
-    const isScheduledEvent = Boolean(post.event?.scheduledStartTime);
+    const isScheduledEvent = Boolean(post.event?.scheduledStartTime || post.event?.scheduled_start_time);
     const images = (Array.isArray(post.images) ? post.images : []).map(safeUrl).filter(Boolean);
+    const coverHash = post.event?.coverImage || post.event?.cover_image || "";
+    const guildId = post.event?.guildId || post.event?.guild_id || "";
+    const eventId = post.event?.eventId || post.event?.event_id || post.event?.id || "";
+    if (!images.length && coverHash && guildId && eventId) images.push("https://cdn.discordapp.com/guild-events/" + encodeURIComponent(guildId) + "/" + encodeURIComponent(eventId) + "/" + encodeURIComponent(coverHash) + ".png?size=1024");
     const card = element("article", "post-card panel" + (isScheduledEvent ? " scheduled-event-card" : ""));
     if (isScheduledEvent) {
       const layout = element("div", "scheduled-event-layout");
