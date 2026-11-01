@@ -687,7 +687,7 @@ async function loadPage() {
           const response = await fetch(API + "/creators", { cache: "no-store" });
           if (!response.ok) throw new Error("Creator roster unavailable");
           const data = await response.json();
-          const creators = (data.creators || []).slice().sort((a,b) => Number(Boolean(b.live)) - Number(Boolean(a.live)) || String(a.twitch_login).localeCompare(String(b.twitch_login)));
+          const creators = (data.creators || []).slice().sort((a,b) => Number(/notesmp/i.test(b.live_title || "")) - Number(/notesmp/i.test(a.live_title || "")));
           // Do not replace a populated roster with a transient empty response.
           if (!creators.length && sideLists[1].querySelector(".creator-card")) {
             console.warn("Creator API returned an empty roster; keeping the currently displayed creators.");
