@@ -426,18 +426,23 @@ window.setInterval(fetchServerStatus, 60_000);
     content.append(meta);
     const postBody = String(post.subtitle || post.body || "");
     const postTitle = String(post.title || "").trim();
-    // Scheduled-event titles are presented as a proper heading, not body-sized text.
-    if (isScheduledEvent && postTitle) content.append(element("h2", "scheduled-event-title", postTitle));
-    else {
+    // Scheduled event title and description belong in the left column of the event layout.
+    if (!isScheduledEvent) {
       const titleDuplicatesBody = postTitle && postBody.trim().startsWith(postTitle);
       const titleLooksLikeMarkdown = /^#{1,6}\\s|<a?:[A-Za-z0-9_]+:\\d+>|\\*\\*|__|~~/.test(postTitle);
       if (postTitle && !titleDuplicatesBody && !titleLooksLikeMarkdown) content.append(element("h3", "", postTitle));
+      if (post.subtitle || post.body) { const body = element("div", "post-card-body"); body.innerHTML = renderDiscordMarkdown((post.subtitle || post.body || "").slice(0, 900)); content.append(body); }
     }
-    if (post.subtitle || post.body) { const body = element("div", "post-card-body"); body.innerHTML = renderDiscordMarkdown((post.subtitle || post.body || "").slice(0, 900)); content.append(body); }
     if (isScheduledEvent) {
       const start = Date.parse(post.event.scheduledStartTime);
       const eventInfo = element("div", "scheduled-event-details");
       const details = element("div", "scheduled-event-copy");
+      if (postTitle) details.append(element("h2", "scheduled-event-title", postTitle));
+      if (post.subtitle || post.body) {
+        const description = element("div", "post-card-body scheduled-event-description");
+        description.innerHTML = renderDiscordMarkdown((post.subtitle || post.body || "").slice(0, 900));
+        details.append(description);
+      }
       const aside = element("div", "scheduled-event-aside");
       const cover = resolveEventCover(post, images);
       if (cover) {
