@@ -453,19 +453,35 @@ window.setInterval(fetchServerStatus, 60_000);
       }
       if (Number.isFinite(start)) {
         aside.append(element("span", "scheduled-event-start", "Starts " + new Date(start).toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})));
+        const rawStatus = post.event.status ?? post.event.eventStatus ?? post.event.discordStatus;
+        const statusText = String(rawStatus ?? "").toLowerCase();
+        const statusNumber = Number(rawStatus);
+        const eventState = statusText.includes("cancel") || statusNumber === 4 ? "cancelled"
+          : statusText.includes("complet") || statusText.includes("ended") || statusNumber === 3 ? "ended"
+          : statusText.includes("active") || statusText.includes("started") || statusNumber === 2 ? "started" : "scheduled";
         const countdown = element("span", "scheduled-event-countdown", "");
-        const updateCountdown = () => {
-          const remaining = start - Date.now();
-          if (remaining <= 0) { countdown.textContent = "Starting now"; return; }
-          const days = Math.floor(remaining / 86400000);
-          const hours = Math.floor((remaining % 86400000) / 3600000);
-          const minutes = Math.floor((remaining % 3600000) / 60000);
-          countdown.textContent = days ? "In " + days + "d " + hours + "h" : hours ? "In " + hours + "h " + minutes + "m" : "In " + minutes + "m";
+        const showState = (label, stateClass) => {
+          countdown.textContent = label;
+          countdown.classList.add("event-state-" + stateClass);
         };
-        updateCountdown();
+        if (eventState === "cancelled") showState("Cancelled", "cancelled");
+        else if (eventState === "ended") showState("Ended", "ended");
+        else if (eventState === "started") showState("Started", "started");
+        else {
+          const updateCountdown = () => {
+            const remaining = start - Date.now();
+            if (remaining <= 0) { showState("Starting...", "starting"); return; }
+            countdown.className = "scheduled-event-countdown";
+            const days = Math.floor(remaining / 86400000);
+            const hours = Math.floor((remaining % 86400000) / 3600000);
+            const minutes = Math.floor((remaining % 3600000) / 60000);
+            countdown.textContent = days ? "In " + days + "d " + hours + "h" : hours ? "In " + hours + "h " + minutes + "m" : "In " + minutes + "m";
+          };
+          updateCountdown();
+          const timer = setInterval(updateCountdown, 60000);
+          window.addEventListener("pagehide", () => clearInterval(timer), { once: true });
+        }
         aside.append(countdown);
-        const timer = setInterval(updateCountdown, 60000);
-        window.addEventListener("pagehide", () => clearInterval(timer), { once: true });
       }
       const channelId = String(post.event.channelId || "");
       const guildId = String(post.event.guildId || "");
@@ -567,8 +583,17 @@ window.setInterval(fetchServerStatus, 60_000);
           if (!uniqueEvents.has(identity)) uniqueEvents.set(identity, { post, startTime });
         }
         const events = [...uniqueEvents.values()];
-        const upcoming = events.filter(({startTime}) => startTime >= now).sort((a,b) => a.startTime-b.startTime).map(({post})=>post);
-        const past = events.filter(({startTime}) => startTime < now).sort((a,b) => b.startTime-a.startTime).map(({post})=>post);
+        const eventStatus = post => {
+          const raw = post.event?.status ?? post.event?.eventStatus ?? post.event?.discordStatus;
+          const value = String(raw ?? "").toLowerCase();
+          const number = Number(raw);
+          if (value.includes("cancel") || number === 4) return "cancelled";
+          if (value.includes("complet") || value.includes("ended") || number === 3) return "ended";
+          if (value.includes("active") || value.includes("started") || number === 2) return "started";
+          return "scheduled";
+        };
+        const upcoming = events.filter(({post}) => !["cancelled","ended"].includes(eventStatus(post))).sort((a,b) => a.startTime-b.startTime).map(({post})=>post);
+        const past = events.filter(({post,startTime}) => ["cancelled","ended"].includes(eventStatus(post)) || (startTime < now && eventStatus(post) !== "started")).sort((a,b) => b.startTime-a.startTime).map(({post})=>post);
         replaceFeed(targetUpcoming, upcoming, "No upcoming events", "New Discord events will appear here automatically.");
         replaceFeed(targetPast, past, "No past events yet", "Completed Discord events will be collected here.");
       } else if (path === "/devlog" || path === "/rules") {
@@ -582,7 +607,13 @@ window.setInterval(fetchServerStatus, 60_000);
         const eventPanel = eventHeading?.nextElementSibling;
         if (eventPanel?.classList.contains("panel")) {
           const events = await getPosts("events");
-          replaceFeed(eventPanel, events.filter(post => post.event?.scheduledStartTime && Date.parse(post.event.scheduledStartTime) >= Date.now()).slice(0,3), "No upcoming events", "New Discord events will appear here automatically.");
+          replaceFeed(eventPanel, events.filter(post => {
+            const raw = post.event?.status ?? post.event?.eventStatus ?? post.event?.discordStatus;
+            const status = String(raw ?? "").toLowerCase();
+            const number = Number(raw);
+            const terminal = status.includes("cancel") || status.includes("complet") || status.includes("ended") || number === 3 || number === 4;
+            return post.event?.scheduledStartTime && !terminal;
+          }).sort((a,b) => Date.parse(a.event.scheduledStartTime)-Date.parse(b.event.scheduledStartTime)).slice(0,3), "No upcoming events", "New Discord events will appear here automatically.");
         }
         const sideLists = app.querySelectorAll(".side-column .link-list");
         if (sideLists[0]) {
