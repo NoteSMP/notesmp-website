@@ -182,3 +182,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .resource-link-icon svg{width:19px;height:19px;display:block}
 .resource-link-arrow{font-size:12px;color:var(--muted);font-weight:800}
 .header-join[aria-disabled="true"]{pointer-events:none;opacity:.65}
+
+/* Scheduled Discord event cards */
+.scheduled-event-card { overflow: hidden; }
+.scheduled-event-layout { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 1fr) minmax(150px, 205px); align-items: stretch; gap: 0; }
+.scheduled-event-cover { min-height: 180px; background: var(--bg); }
+.scheduled-event-cover .post-card-image { width: 100%; height: 100%; min-height: 180px; max-height: 260px; object-fit: cover; border: 0; }
+.scheduled-event-main { padding: 20px; min-width: 0; }
+.scheduled-event-title { margin: 0 0 12px; color: var(--text); font-size: 23px; line-height: 1.2; }
+.scheduled-event-main .post-card-body p { white-space: pre-wrap; }
+.scheduled-event-place { display: inline-block; margin-top: 12px; color: var(--lime); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+.scheduled-event-sidebar { display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 20px; border-left: 1px solid var(--line); background: var(--bg); }
+.scheduled-event-label { color: var(--muted); font: 10px var(--mono); letter-spacing: .08em; }
+.scheduled-event-start { color: var(--text); font-size: 15px; line-height: 1.4; }
+.scheduled-event-countdown { color: var(--lime); font-size: 13px; font-weight: 700; }
+.scheduled-event-card > .post-card-footer { margin: 0 18px; padding: 10px 0; }
+@media (max-width: 760px) { .scheduled-event-layout { grid-template-columns: minmax(0, 1fr) 130px; } .scheduled-event-cover { grid-column: 1 / -1; max-height: 220px; } .scheduled-event-cover .post-card-image { max-height: 220px; } .scheduled-event-main { padding: 16px; } .scheduled-event-sidebar { padding: 16px; border-left: 1px solid var(--line); } }
+@media (max-width: 480px) { .scheduled-event-layout { grid-template-columns: 1fr; } .scheduled-event-sidebar { border-left: 0; border-top: 1px solid var(--line); } }
