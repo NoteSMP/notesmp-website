@@ -535,7 +535,7 @@ window.setInterval(fetchServerStatus, 60_000);
           // Database rows can have distinct post IDs for the same Discord event.
           // Event title + exact scheduled timestamp is the stable identity for grouping.
           const normalizedTitle = String(post.title || "").trim().toLowerCase().replace(/\\s+/g, " ");
-          const key = normalizedTitle; + ":" + startTime;
+          const key = normalizedTitle + ":" + startTime;
           if (!uniqueEvents.has(key)) uniqueEvents.set(key, { post, startTime });
         }
         const filtered = [...uniqueEvents.values()]
