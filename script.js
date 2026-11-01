@@ -593,7 +593,7 @@ window.setInterval(fetchServerStatus, 60_000);
           return "scheduled";
         };
         const upcoming = events.filter(({post}) => !["cancelled","ended"].includes(eventStatus(post))).sort((a,b) => a.startTime-b.startTime).map(({post})=>post);
-        const past = events.filter(({post,startTime}) => ["cancelled","ended"].includes(eventStatus(post)) || (startTime < now && eventStatus(post) !== "started")).sort((a,b) => b.startTime-a.startTime).map(({post})=>post);
+        const past = events.filter(({post}) => ["cancelled","ended"].includes(eventStatus(post))).sort((a,b) => b.startTime-a.startTime).map(({post})=>post);
         replaceFeed(targetUpcoming, upcoming, "No upcoming events", "New Discord events will appear here automatically.");
         replaceFeed(targetPast, past, "No past events yet", "Completed Discord events will be collected here.");
       } else if (path === "/devlog" || path === "/rules") {
