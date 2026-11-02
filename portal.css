@@ -230,7 +230,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .home-news-feed .news-copy { text-align:left; }
 .home-hero { align-items:stretch; justify-content:space-between; gap:24px; }
 .home-hero-content { align-self:center; }
-.hero-event-slot:not([hidden]) { position:relative; z-index:1; align-self:stretch; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:stretch; gap:24px; flex:0 0 auto; width:min(560px,58%); min-width:0; aspect-ratio:16 / 9; padding:22px; border:1px solid rgba(255,255,255,.2); background-color:rgba(15,22,18,.75); background-position:center; background-size:cover; color:#fff; }
+.hero-event-slot:not([hidden]) { position:relative; z-index:1; align-self:stretch; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:stretch; gap:24px; flex:0 0 auto; width:min(800px,68%); min-width:0; aspect-ratio:5 / 2; padding:22px; border:1px solid rgba(255,255,255,.2); background-color:rgba(15,22,18,.75); background-position:center; background-size:cover; color:#fff; }
+.hero-event-slot:not([hidden])::before { content:"--------- Event ---------"; position:absolute; top:-25px; left:0; right:0; color:var(--lime); text-align:center; font:700 11px var(--mono); letter-spacing:.12em; white-space:nowrap; }
 .hero-event-content { min-width:0; display:flex; flex-direction:column; justify-content:flex-end; gap:9px; }
 .hero-event-title { font-size:22px; line-height:1.15; }
 .hero-event-subtitle { font-size:12px; line-height:1.6; }
@@ -241,4 +242,4 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .hero-event-status.is-in-progress { color:#8be0a2; }
 #section-server-updates .post-feed,#section-events .post-feed { display:grid; gap:14px; }
 #section-events .post-card.event-preview-faded { opacity:.45; }
-@media(max-width:760px){.home-hero{flex-direction:column}.hero-event-slot:not([hidden]){width:100%;min-width:0;aspect-ratio:16 / 9;gap:14px;padding:16px}.hero-event-details{min-width:95px}.hero-event-title{font-size:18px}}
+@media(max-width:760px){.home-hero{flex-direction:column}.hero-event-slot:not([hidden]){width:100%;min-width:0;aspect-ratio:5 / 2;gap:14px;padding:16px}.hero-event-details{min-width:95px}.hero-event-title{font-size:18px}}
