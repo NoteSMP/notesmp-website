@@ -83,7 +83,7 @@ function resourceLink(label, url, hint = 'Open') {
 
 function homePage() {
   const onlineNames = (serverData?.onlinePlayers || []).map(player => safeText(typeof player === 'string' ? player : player.name || player.username)).filter(Boolean);
-  return `<div class="page-shell"><section class="home-hero" aria-labelledby="home-title"><div class="home-hero-content"><span class="eyebrow">NOTE SMP · JAVA EDITION 26.3</span><h1 id="hero-title">Your world.<br>Your people.</h1><p>Everything happening on NoteSMP, in one place. Check the server, find your next event, and see what the community is building.</p><div class="hero-buttons"><a class="button-primary" href="/players">Explore players <span aria-hidden="true">→</span></a><a class="button-secondary" href="/events">See events <span aria-hidden="true">↗</span></a></div></div><div class="hero-event-slot" id="hero-event" hidden></div></section><section class="home-news-section panel" id="home-news" aria-label="News" hidden><div id="home-news-feed" class="home-news-feed"></div></section><div class="home-layout"><div class="main-column">${serverStatusMarkup()}<section class="panel" id="section-server-updates"><div class="panel-heading"><div><span class="overline">Server Updates</span><h2>Latest Update</h2></div><a class="text-link" href="/devlog">All updates ↗</a></div><div class="empty-state"><strong>Announcement feed not connected yet</strong>Critical maintenance alerts and server news will appear here once connected.</div></section><section id="section-events"><div class="home-section-heading"><div><span class="overline">Events</span><h2>Upcoming Events</h2></div><a class="text-link" href="/events">View all ↗</a></div><div class="panel"><div class="empty-state"><strong>Events are on the way</strong>Upcoming and past events will appear here when the Discord event feed is connected.</div></div></section></div><aside class="side-column"><section class="panel" id="section-server-links"><div class="panel-heading"><div><span class="overline">Server Links</span><h2>Find your way in</h2></div></div><div class="link-list">${resourceLink('Discord', null, 'Invite not set')}${resourceLink('YouTube', null, 'Link not set')}${resourceLink('Modpack', null, 'Link not set')}${resourceLink('BlueMap', null, 'Link not set')}</div></section><section class="panel" id="section-online-now"><div class="panel-heading"><div><span class="overline">Online Now</span><h2>Players in the world</h2></div><a class="text-link" href="/players">Players ↗</a></div><div class="empty-state" id="online-players">${onlineNames.length ? onlineNames.join(', ') : 'Live player names will show here when the server reports them.'}</div></section><section class="panel" id="section-creators"><div class="panel-heading"><div><span class="overline">Creators</span><h2>See who is live</h2></div></div><div class="link-list"><div class="resource-link is-disabled" aria-disabled="true"><span>Creator roster</span><span>Coming soon</span></div><div class="resource-link is-disabled" aria-disabled="true"><span>Live streams</span><span>Coming soon</span></div></div></aside></div></div>`;
+  return `<div class="page-shell"><section class="home-hero" aria-labelledby="home-title"><div class="home-hero-content"><span class="eyebrow">NOTE SMP · JAVA EDITION 26.3</span><h1 id="hero-title">Your world. Your people.</h1><p id="hero-subtitle">Everything happening on NoteSMP, in one place. Check the server, find your next event, and see what the community is building.</p><div class="hero-buttons"><a class="button-primary" href="/players">Explore players <span aria-hidden="true">→</span></a><a class="button-secondary" href="/events">See events <span aria-hidden="true">↗</span></a></div></div><div class="hero-event-slot" id="hero-event" hidden></div></section><section class="home-news-section panel" id="home-news" aria-label="News" hidden><div id="home-news-feed" class="home-news-feed"></div></section><div class="home-layout"><div class="main-column">${serverStatusMarkup()}<section class="panel" id="section-server-updates"><div class="panel-heading"><div><span class="overline">Server Updates</span><h2>Latest Update</h2></div><a class="text-link" href="/devlog">All updates ↗</a></div><div class="empty-state"><strong>Announcement feed not connected yet</strong>Critical maintenance alerts and server news will appear here once connected.</div></section><section id="section-events"><div class="home-section-heading"><div><span class="overline">Events</span><h2>Upcoming Events</h2></div><a class="text-link" href="/events">View all ↗</a></div><div class="panel"><div class="empty-state"><strong>Events are on the way</strong>Upcoming and past events will appear here when the Discord event feed is connected.</div></div></section></div><aside class="side-column"><section class="panel" id="section-server-links"><div class="panel-heading"><div><span class="overline">Server Links</span><h2>Find your way in</h2></div></div><div class="link-list">${resourceLink('Discord', null, 'Invite not set')}${resourceLink('YouTube', null, 'Link not set')}${resourceLink('Modpack', null, 'Link not set')}${resourceLink('BlueMap', null, 'Link not set')}</div></section><section class="panel" id="section-online-now"><div class="panel-heading"><div><span class="overline">Online Now</span><h2>Players in the world</h2></div><a class="text-link" href="/players">Players ↗</a></div><div class="empty-state" id="online-players">${onlineNames.length ? onlineNames.join(', ') : 'Live player names will show here when the server reports them.'}</div></section><section class="panel" id="section-creators"><div class="panel-heading"><div><span class="overline">Creators</span><h2>See who is live</h2></div></div><div class="link-list"><div class="resource-link is-disabled" aria-disabled="true"><span>Creator roster</span><span>Coming soon</span></div><div class="resource-link is-disabled" aria-disabled="true"><span>Live streams</span><span>Coming soon</span></div></div></aside></div></div>`;
 }
 
 function pageHeading(title, description, eyebrow) {
@@ -571,7 +571,8 @@ function renderNewsBanner(posts) {
   if (!active.length) { section.hidden = true; return; }
   active.forEach(post => {
     const kind = String(post.event?.type || post.group || "info").toLowerCase();
-    const banner = element("div", "notice-bar news-" + (["maintenance","warning","info"].includes(kind) ? kind : "info"));
+    const color = String(post.event?.color || "").toLowerCase();
+    const banner = element("div", "notice-bar news-" + (["maintenance","warning","info"].includes(kind) ? kind : "info") + (kind === "warning" && ["orange","red"].includes(color) ? "-" + color : ""));
     const copy = element("div", "news-copy");
     copy.append(element("strong", "", post.title || "News"), element("span", "", post.subtitle || post.body || ""));
     banner.append(copy);
@@ -591,6 +592,17 @@ function renderNewsBanner(posts) {
   });
   section.hidden = false;
 }
+async function refreshInfoHero() {
+  try {
+    const response = await fetch(API + "/content/hero", {cache:"no-store"});
+    if (!response.ok) return;
+    const data = await response.json();
+    const title = document.querySelector("#hero-title");
+    const subtitle = document.querySelector("#hero-subtitle");
+    if (title && typeof data.title === "string" && data.title.trim()) title.textContent = data.title;
+    if (subtitle && typeof data.subtitle === "string" && data.subtitle.trim()) subtitle.textContent = data.subtitle;
+  } catch (error) { console.warn("Info hero text could not be loaded", error); }
+}
 async function refreshNewsBanner(extra = []) {
   try {
     const response = await fetch(API + "/content/posts?category=news&limit=5", {cache:"no-store"});
@@ -609,7 +621,7 @@ async function loadPage() {
     if (key === lastKey) return;
     lastKey = key;
     try {
-      if (path === "/") await refreshNewsBanner();
+      if (path === "/") { await refreshNewsBanner(); await refreshInfoHero(); }
       if (path === "/gallery") {
         const active = app.querySelector("[data-gallery-group][aria-pressed='true']");
         const label = active ? active.dataset.galleryGroup : "Events";
@@ -650,6 +662,7 @@ async function loadPage() {
         replaceFeed(target, await getPosts(category), category === "rules" ? "Rules have not been published yet" : "No updates yet", "Publish messages from the configured Discord channel to show them here.");
       } else if (path === "/") {
         await refreshNewsBanner();
+        await refreshInfoHero();
         const updatesPanel = app.querySelector("#section-server-updates");
         if (updatesPanel) {
           const updates = await getPosts("updates");
