@@ -204,6 +204,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .notice-bar.news-maintenance,.notice-bar.news-warning,.notice-bar.news-info { display:flex; align-items:center; justify-content:space-between; gap:22px; padding:14px clamp(18px,4vw,56px); border:0; }
 .notice-bar.news-maintenance { background:#4a2025; color:#ffd0d4; }
 .notice-bar.news-warning { background:#4a3015; color:#ffe0a8; }
+.notice-bar.news-warning-red { background:#4a2025; color:#ffd0d4; }
+.notice-bar.news-warning-orange { background:#4a3015; color:#ffe0a8; }
 .notice-bar.news-info { background:#123c40; color:#a1f0ed; }
 .news-copy { display:flex; flex-direction:column; gap:3px; min-width:0; }
 .news-copy strong { font-size:15px; font-weight:800; }
