@@ -576,6 +576,7 @@ function renderNewsBanner(posts) {
     const copy = element("div", "news-copy");
     copy.append(element("strong", "", post.title || "News"), element("span", "", post.subtitle || post.body || ""));
     banner.append(copy);
+    if (post.id && kind !== "maintenance") banner.append(element("span", "notice-id", String(post.id)));
     const expiry = kind === "maintenance" ? Date.parse(post.event?.expiryAt || "") : NaN;
     if (Number.isFinite(expiry)) {
       const counter = element("div", "news-countdown");
@@ -621,7 +622,7 @@ async function loadPage() {
     if (key === lastKey) return;
     lastKey = key;
     try {
-      if (path === "/") { await refreshNewsBanner(); await refreshInfoHero(); }
+      if (path === "/") await refreshNewsBanner();
       if (path === "/gallery") {
         const active = app.querySelector("[data-gallery-group][aria-pressed='true']");
         const label = active ? active.dataset.galleryGroup : "Events";
