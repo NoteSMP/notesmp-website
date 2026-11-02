@@ -522,9 +522,9 @@ window.setInterval(fetchServerStatus, 60_000);
     }
     if (post.event && post.event.location) content.append(element("p", "post-card-location", post.event.location));
     const footer = element("div", "post-card-footer");
+    if (locationText) footer.append(element("span", "post-card-location post-card-location-coordinates", locationText));
     footer.append(element("span", "post-card-id", String(post.id ?? "")));
     content.append(footer);
-    if (locationText) content.append(element("span", "post-card-location post-card-location-coordinates", locationText));
     card.append(content);
     return card;
   }
