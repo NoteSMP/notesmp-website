@@ -392,3 +392,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .post-card-details { margin-top: 14px; padding: 0; border: 0; }
 .post-card-details .post-card-builders { width: 100%; text-align: right; }
 .post-card-location-coordinates { display: block; margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+
+/* Match the coordinate label baseline and line height to the post ID. */
+.post-card-location-coordinates { margin-top: 0; font: inherit; line-height: inherit; }
