@@ -649,20 +649,40 @@ async function loadPage() {
         const target = app.querySelector(".page-content");
         replaceFeed(target, await getPosts(category), category === "rules" ? "Rules have not been published yet" : "No updates yet", "Publish messages from the configured Discord channel to show them here.");
       } else if (path === "/") {
-        const panels = app.querySelectorAll(".main-column .panel");
-        if (panels[1]) replaceFeed(panels[1], await getPosts("updates").then(items => items.slice(0,2)), "No announcements yet", "New NoteSMP announcements will appear here.");
         await refreshNewsBanner();
-        const eventHeading = app.querySelector(".home-section-heading");
-        const eventPanel = eventHeading?.nextElementSibling;
-        if (eventPanel?.classList.contains("panel")) {
-          const events = await getPosts("events");
-          replaceFeed(eventPanel, events.filter(post => {
-            const raw = post.event?.status ?? post.event?.eventStatus ?? post.event?.discordStatus;
-            const status = String(raw ?? "").toLowerCase();
-            const number = Number(raw);
-            const terminal = status.includes("cancel") || status.includes("complet") || status.includes("ended") || number === 3 || number === 4;
-            return post.event?.scheduledStartTime && !terminal;
-          }).sort((a,b) => Date.parse(a.event.scheduledStartTime)-Date.parse(b.event.scheduledStartTime)).slice(0,3), "No upcoming events", "New Discord events will appear here automatically.");
+        const updatesPanel = app.querySelector("#section-server-updates");
+        if (updatesPanel) {
+          const updates = await getPosts("updates");
+          replaceFeed(updatesPanel, updates.slice(0,1), "No updates yet", "New NoteSMP updates will appear here.");
+        }
+        const eventPanel = app.querySelector("#section-events .panel");
+        const events = await getPosts("events");
+        const statusOf = post => {
+          const raw = post.event?.status ?? post.event?.eventStatus ?? post.event?.discordStatus;
+          const state = String(raw ?? "").toLowerCase(), num = Number(raw);
+          return state.includes("cancel") || num === 4 ? "cancelled" : state.includes("complet") || state.includes("ended") || num === 3 ? "ended" : state.includes("active") || state.includes("started") || num === 2 ? "started" : "scheduled";
+        };
+        const startOf = post => Date.parse(post.event?.scheduledStartTime || post.event?.scheduled_start_time || "");
+        const now = Date.now();
+        const upcoming = events.filter(post => Number.isFinite(startOf(post)) && startOf(post) >= now && !["cancelled","ended"].includes(statusOf(post))).sort((a,b)=>startOf(a)-startOf(b)).slice(0,2);
+        if (eventPanel) {
+          replaceFeed(eventPanel, upcoming, "No upcoming events", "New Discord events will appear here automatically.");
+          const eventCards = eventPanel.querySelectorAll(".post-card");
+          if (eventCards.length > 1) eventCards[1].classList.add("event-preview-faded");
+        }
+        const hero = app.querySelector("#hero-event");
+        const featured = events.filter(post => Number.isFinite(startOf(post)) && !["cancelled","ended"].includes(statusOf(post)) && (statusOf(post) === "started" || (startOf(post) >= now && startOf(post) <= now + 86400000))).sort((a,b)=>startOf(a)-startOf(b))[0];
+        if (hero) {
+          hero.replaceChildren();
+          if (featured) {
+            const cover = resolveEventCover(featured, (Array.isArray(featured.images) ? featured.images : []).map(safeUrl).filter(Boolean));
+            if (cover) hero.style.backgroundImage = 'linear-gradient(0deg,rgba(0,0,0,.86),rgba(0,0,0,.15)),url("' + cover.replace(/["\\]/g,"") + '")';
+            const title = element("strong","hero-event-title",featured.title || "Server event");
+            const desc = element("span","hero-event-subtitle",featured.subtitle || featured.body || "");
+            const time = element("span","hero-event-time",statusOf(featured) === "started" ? "Started" : "Starts " + new Date(startOf(featured)).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
+            const location = element("span","hero-event-place",featured.event?.location || featured.event?.channelName || featured.event?.channel || "");
+            hero.append(title,desc,time,location); hero.hidden = false;
+          } else { hero.hidden = true; hero.style.backgroundImage = ""; }
         }
         const sideLists = app.querySelectorAll(".side-column .link-list");
         if (sideLists[0]) {
@@ -681,34 +701,19 @@ async function loadPage() {
             sideLists[0].append(item);
           });
         }
-        if (sideLists[1]) {
+        if (sideLists[2]) {
           const response = await fetch(API + "/creators", { cache: "no-store" });
           if (!response.ok) throw new Error("Creator roster unavailable");
           const data = await response.json();
           const creators = (data.creators || []).slice().sort((a,b) => Number(/notesmp/i.test(b.live_title || "")) - Number(/notesmp/i.test(a.live_title || "")));
-          // Do not replace a populated roster with a transient empty response.
-          if (!creators.length && sideLists[1].querySelector(".creator-card")) {
-            console.warn("Creator API returned an empty roster; keeping the currently displayed creators.");
-          } else {
-            sideLists[1].replaceChildren();
-            if (!creators.length) sideLists[1].append(element("div","resource-link is-disabled","No creators added yet"));
-          }
-          if (creators.length) creators.forEach(item => {
-            const isLive = Boolean(item.live);
-            const link = element("a", "creator-card" + (isLive ? " is-live" : " is-offline"));
-            const twitchUrl = safeUrl(item.live_url) || safeUrl("https://www.twitch.tv/" + item.twitch_login);
-            link.href = twitchUrl; link.target = "_blank"; link.rel = "noreferrer";
-            const avatar = element("img", "creator-avatar");
-            avatar.src = safeUrl(item.avatar_url) || "https://static-cdn.jtvnw.net/jtv_user_pictures/default-user.png";
-            avatar.alt = "";
-            avatar.loading = "lazy";
-            avatar.onerror = () => { avatar.onerror = null; avatar.removeAttribute("src"); avatar.classList.add("avatar-unavailable"); };
-            const info = element("span", "creator-info");
-            info.append(element("strong", "creator-name", item.display_name || item.twitch_login));
-            if (isLive && item.live_title) info.append(element("span", "creator-stream-title", item.live_title));
-            const badge = element("span", "creator-status" + (isLive ? " live" : " offline"), isLive ? (/notesmp/i.test(item.live_title || "") ? "Live on NoteSMP" : "Live") : "Offline");
-            link.append(avatar, info, badge);
-            sideLists[1].append(link);
+          sideLists[2].replaceChildren();
+          if (!creators.length) sideLists[2].append(element("div","resource-link is-disabled","No creators added yet"));
+          creators.forEach(item => {
+            const live = Boolean(item.live), link = element("a","creator-card" + (live ? " is-live" : " is-offline"));
+            link.href = safeUrl(item.live_url) || safeUrl("https://www.twitch.tv/" + item.twitch_login); link.target="_blank"; link.rel="noreferrer";
+            const avatar=element("img","creator-avatar"); avatar.src=safeUrl(item.avatar_url)||"https://static-cdn.jtvnw.net/jtv_user_pictures/default-user.png"; avatar.alt=""; avatar.loading="lazy";
+            const info=element("span","creator-info"); info.append(element("strong","creator-name",item.display_name||item.twitch_login)); if(live&&item.live_title)info.append(element("span","creator-stream-title",item.live_title));
+            link.append(avatar,info,element("span","creator-status"+(live?" live":" offline"),live?(/notesmp/i.test(item.live_title||"")?"Live on NoteSMP":"Live"):"Offline")); sideLists[2].append(link);
           });
         }
       }
