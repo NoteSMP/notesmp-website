@@ -25,12 +25,11 @@ function formatNumber(value) {
 }
 
 function getDiscordEventState(event = {}) {
-  const rawStatus = event.status ?? event.eventStatus ?? event.discordStatus ?? event.event_status;
+  const rawStatus = event.status ?? event.eventStatus ?? event.discordStatus ?? event.event_status ?? event.statusText ?? event.status_text;
   const statusText = String(rawStatus ?? "").toLowerCase().trim();
   const statusNumber = Number(rawStatus);
-  if (statusText.includes("cancel") || statusNumber === 4) return "cancelled";
-  if (statusText.includes("complet") || statusText.includes("ended") || statusNumber === 3) return "ended";
-
+  // Completed, cancelled, or no longer listed by Discord all mean Ended here.
+  if (statusText.includes("cancel") || statusText.includes("complet") || statusText.includes("ended") || statusNumber === 3 || statusNumber === 4) return "ended";
   if (statusText.includes("active") || statusText.includes("started") || statusNumber === 2) return "started";
   return "scheduled";
 }
