@@ -606,7 +606,7 @@ async function refreshInfoHero() {
 }
 async function refreshNewsBanner(extra = []) {
   try {
-    const response = await fetch(API + "/content/posts?category=news&limit=5", {cache:"no-store"});
+    const response = await fetch(API + "/content/posts?category=news&limit=50", {cache:"no-store"});
     const data = response.ok ? await response.json() : {posts:[]};
     renderNewsBanner([...(data.posts || []), ...extra]);
   } catch { renderNewsBanner(extra); }
