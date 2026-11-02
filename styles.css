@@ -135,3 +135,8 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 /* Slightly soften the corners on News cards and the countdown frame. */
 .home-news-feed .post-card{border-radius:10px;overflow:hidden}
 .news-countdown{border-radius:9px}
+
+
+/* Event post cover art: keep a consistent fixed-height frame across every event card. */
+.scheduled-event-aside{height:180px;min-height:180px;flex:0 0 180px;box-sizing:border-box;background-position:center;background-size:cover}
+@media(max-width:680px){.scheduled-event-aside{height:180px;min-height:180px;flex-basis:180px}}
