@@ -375,3 +375,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   align-self: auto;
 }
 .home-news-feed .news-countdown { color: inherit !important; }
+
+/* Hero event detail hierarchy and alignment */
+.hero-event-details { justify-content: space-between; }
+.hero-event-countdown { color: #fff; font: 800 clamp(17px, 1.7vw, 23px) var(--mono); }
+.hero-event-status { color: #f3d28a; font: 11px var(--mono); }
+.hero-event-time { color: #fff; font: 700 clamp(13px, 1.25vw, 17px) var(--mono); }
+.hero-event-place { color: #fff; font-size: 11px; }
+
+/* Gallery location label: plain dimension/coordinates, on a separate line after the divider. */
+.post-card-details { display: flex; align-items: flex-start; flex-direction: column; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.post-card-details .post-card-location { order: 2; }
+.post-card-details .post-card-builders { order: 1; text-align: left; }
