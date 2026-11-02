@@ -221,3 +221,19 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 #section-events .post-feed { display: grid; gap: 14px; }
 #section-events .post-card.event-preview-faded { opacity: .45; }
 #section-events .post-card.event-preview-faded::after { content: ""; display: block; height: 20px; }
+
+
+/* Info page: keep each section/feed independently addressable; preserve existing card visuals. */
+.home-news-section { display:grid; gap:10px; margin:18px auto 0; }
+.home-news-feed { display:grid; gap:10px; }
+.home-news-feed .notice-bar { text-align:left; }
+.home-news-feed .news-copy { text-align:left; }
+.home-hero { align-items:stretch; justify-content:space-between; gap:24px; }
+.home-hero-content { align-self:center; }
+.hero-event-slot:not([hidden]) { position:relative; z-index:1; align-self:stretch; display:flex; flex:0 1 330px; flex-direction:column; justify-content:flex-end; gap:9px; min-width:230px; padding:22px; border:1px solid rgba(255,255,255,.2); background-color:rgba(15,22,18,.75); background-position:center; background-size:cover; color:#fff; }
+.hero-event-title { font-size:22px; line-height:1.15; }
+.hero-event-subtitle { font-size:12px; line-height:1.6; }
+.hero-event-time,.hero-event-place { color:#d9e6d9; font:11px var(--mono); }
+#section-server-updates .post-feed,#section-events .post-feed { display:grid; gap:14px; }
+#section-events .post-card.event-preview-faded { opacity:.45; }
+@media(max-width:760px){.home-hero{flex-direction:column}.hero-event-slot:not([hidden]){flex-basis:auto;min-width:0;min-height:180px}}
