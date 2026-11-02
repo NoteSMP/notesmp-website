@@ -439,7 +439,7 @@ window.setInterval(fetchServerStatus, 60_000);
     if (!isScheduledEvent) {
       const titleDuplicatesBody = postTitle && postBody.trim().startsWith(postTitle);
       const titleLooksLikeMarkdown = /^#{1,6}\\s|<a?:[A-Za-z0-9_]+:\\d+>|\\*\\*|__|~~/.test(postTitle);
-      if (postTitle && (String(post.category || "").toLowerCase() === "gallery" || (!titleDuplicatesBody && !titleLooksLikeMarkdown))) content.append(element("h3", "post-card-title", postTitle));
+      if (postTitle) content.append(element("h3", "post-card-title", postTitle));
       if (post.subtitle || post.body) { const body = element("div", "post-card-body"); body.innerHTML = renderDiscordMarkdown((post.subtitle || post.body || "").slice(0, 900)); content.append(body); }
     }
     if (isScheduledEvent) {
