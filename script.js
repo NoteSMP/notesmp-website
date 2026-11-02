@@ -677,11 +677,41 @@ async function loadPage() {
           if (featured) {
             const cover = resolveEventCover(featured, (Array.isArray(featured.images) ? featured.images : []).map(safeUrl).filter(Boolean));
             if (cover) hero.style.backgroundImage = 'linear-gradient(0deg,rgba(0,0,0,.86),rgba(0,0,0,.15)),url("' + cover.replace(/["\\]/g,"") + '")';
+            const content = element("div","hero-event-content");
             const title = element("strong","hero-event-title",featured.title || "Server event");
             const desc = element("span","hero-event-subtitle",featured.subtitle || featured.body || "");
-            const time = element("span","hero-event-time",statusOf(featured) === "started" ? "Started" : "Starts " + new Date(startOf(featured)).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
-            const location = element("span","hero-event-place",featured.event?.location || featured.event?.channelName || featured.event?.channel || "");
-            hero.append(title,desc,time,location); hero.hidden = false;
+            content.append(title,desc);
+            const details = element("div","hero-event-details");
+            const startAt = startOf(featured);
+            const startLabel = element("span","hero-event-time",(statusOf(featured) === "started" ? "Started " : "Starts ") + new Date(startAt).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
+            details.append(startLabel);
+            const state = statusOf(featured);
+            const status = element("span","hero-event-status" + (state === "started" ? " is-in-progress" : ""),state === "started" ? "In Progress" : "Scheduled");
+            details.append(status);
+            if (state !== "started") {
+              const countdown = element("span","hero-event-countdown","");
+              const updateCountdown = () => {
+                const remaining = Math.max(0,startAt-Date.now());
+                if (!remaining) { countdown.textContent = "Starting now"; return; }
+                const days=Math.floor(remaining/86400000),hours=Math.floor((remaining%86400000)/3600000),minutes=Math.floor((remaining%3600000)/60000),seconds=Math.floor((remaining%60000)/1000);
+                countdown.textContent = "Starts in " + (days ? days+"d " : "") + hours+"h "+String(minutes).padStart(2,"0")+"m "+String(seconds).padStart(2,"0")+"s";
+              };
+              updateCountdown();
+              const timer=setInterval(updateCountdown,1000);
+              window.addEventListener("pagehide",()=>clearInterval(timer),{once:true});
+              details.append(countdown);
+            }
+            const channelId = String(featured.event?.channelId || "");
+            const guildId = String(featured.event?.guildId || "");
+            const channelName = String(featured.event?.channelName || featured.event?.channel || featured.event?.location || "").trim();
+            if (channelName) {
+              const channel = element("a","hero-event-place",channelName);
+              if (channelId && guildId) channel.href = "https://discord.com/channels/" + encodeURIComponent(guildId) + "/" + encodeURIComponent(channelId);
+              else channel.href = "https://discord.com";
+              channel.target="_blank"; channel.rel="noopener noreferrer";
+              details.append(channel);
+            }
+            hero.append(content,details); hero.hidden = false;
           } else { hero.hidden = true; hero.style.backgroundImage = ""; }
         }
         const sideLists = app.querySelectorAll(".side-column .link-list");
