@@ -709,7 +709,7 @@ async function loadPage() {
             content.append(title,desc);
             const details = element("div","hero-event-details");
             const startAt = startOf(featured);
-            const startLabel = element("span","hero-event-time",(statusOf(featured) === "started" ? "Started " : "Starts ") + new Date(startAt).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
+            const startLabel = element("span","hero-event-time",new Date(startAt).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
             details.append(startLabel);
             const state = statusOf(featured);
             const status = element("span","hero-event-status" + (state === "started" ? " is-in-progress" : ""),state === "started" ? "In Progress" : "Scheduled");
