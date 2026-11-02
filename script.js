@@ -24,6 +24,22 @@ function formatNumber(value) {
   return Number(value || 0).toLocaleString();
 }
 
+function getDiscordEventState(event = {}) {
+  const rawStatus = event.status ?? event.eventStatus ?? event.discordStatus ?? event.event_status;
+  const statusText = String(rawStatus ?? "").toLowerCase().trim();
+  const statusNumber = Number(rawStatus);
+  if (statusText.includes("cancel") || statusNumber === 4) return "cancelled";
+  if (statusText.includes("complet") || statusText.includes("ended") || statusNumber === 3) return "ended";
+  if (statusText.includes("active") || statusText.includes("started") || statusNumber === 2) return "started";
+  // Discord's event list can lag or omit the completed state briefly. Use its
+  // published scheduled end time as a fallback so expired events leave Upcoming.
+  const rawEnd = event.scheduledEndTime || event.scheduled_end_time;
+  const endTime = rawEnd ? Date.parse(rawEnd) : NaN;
+  if (Number.isFinite(endTime) && endTime <= Date.now()) return "ended";
+  return "scheduled";
+}
+
+
 function formatDate(value) {
   if (!value) return 'Not recorded';
   const date = new Date(value);
@@ -460,13 +476,8 @@ window.setInterval(fetchServerStatus, 60_000);
       }
       if (Number.isFinite(start)) {
         aside.append(element("span", "scheduled-event-start", new Date(start).toLocaleString(undefined,{weekday:"long",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})));
-        const rawStatus = post.event.status ?? post.event.eventStatus ?? post.event.discordStatus ?? post.event.event_status;
-        const statusText = String(rawStatus ?? "").toLowerCase().trim();
-        const statusNumber = Number(rawStatus);
         // Discord Scheduled Event status: 1 scheduled, 2 active, 3 completed, 4 cancelled.
-        const eventState = statusText.includes("cancel") || statusText === "4" || statusNumber === 4 ? "cancelled"
-          : statusText.includes("complet") || statusText.includes("ended") || statusText === "3" || statusNumber === 3 ? "ended"
-          : statusText.includes("active") || statusText.includes("started") || statusText === "2" || statusNumber === 2 ? "started" : "scheduled";
+        const eventState = getDiscordEventState(post.event);
         const countdown = element("span", "scheduled-event-countdown", "");
         const showState = (label, stateClass) => {
           countdown.textContent = label;
@@ -656,15 +667,7 @@ async function loadPage() {
           if (!uniqueEvents.has(identity)) uniqueEvents.set(identity, { post, startTime });
         }
         const events = [...uniqueEvents.values()];
-        const eventStatus = post => {
-          const raw = post.event?.status ?? post.event?.eventStatus ?? post.event?.discordStatus;
-          const value = String(raw ?? "").toLowerCase();
-          const number = Number(raw);
-          if (value.includes("cancel") || number === 4) return "cancelled";
-          if (value.includes("complet") || value.includes("ended") || number === 3) return "ended";
-          if (value.includes("active") || value.includes("started") || number === 2) return "started";
-          return "scheduled";
-        };
+        const eventStatus = post => getDiscordEventState(post.event || {});
         const upcoming = events.filter(({post}) => !["cancelled","ended"].includes(eventStatus(post))).sort((a,b) => a.startTime-b.startTime).map(({post})=>post);
         const past = events.filter(({post}) => ["cancelled","ended"].includes(eventStatus(post))).sort((a,b) => b.startTime-a.startTime).map(({post})=>post);
         replaceFeed(targetUpcoming, upcoming, "No upcoming events", "New Discord events will appear here automatically.");
@@ -683,11 +686,7 @@ async function loadPage() {
         }
         const eventPanel = app.querySelector("#section-events .panel");
         const events = await getPosts("events");
-        const statusOf = post => {
-          const raw = post.event?.status ?? post.event?.eventStatus ?? post.event?.discordStatus;
-          const state = String(raw ?? "").toLowerCase(), num = Number(raw);
-          return state.includes("cancel") || num === 4 ? "cancelled" : state.includes("complet") || state.includes("ended") || num === 3 ? "ended" : state.includes("active") || state.includes("started") || num === 2 ? "started" : "scheduled";
-        };
+        const statusOf = post => getDiscordEventState(post.event || {});
         const startOf = post => Date.parse(post.event?.scheduledStartTime || post.event?.scheduled_start_time || "");
         const now = Date.now();
         const upcoming = events.filter(post => Number.isFinite(startOf(post)) && startOf(post) >= now && !["cancelled","ended"].includes(statusOf(post))).sort((a,b)=>startOf(a)-startOf(b)).slice(0,2);
