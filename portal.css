@@ -246,3 +246,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 #section-server-updates .post-feed,#section-events .post-feed { display:grid; gap:14px; }
 #section-events .post-card.event-preview-faded { opacity:.45; }
 @media(max-width:760px){.home-hero{flex-direction:column}.hero-event-slot:not([hidden]){align-self:center;width:80%;min-width:0;height:auto;aspect-ratio:5 / 2;gap:14px;padding:16px}.hero-event-details{min-width:95px}.hero-event-title{font-size:18px}}
+
+.notice-id { margin-left:auto; align-self:flex-end; flex:0 0 auto; font-size:11px; letter-spacing:.08em; opacity:.48; font-variant-numeric:tabular-nums; }
+@media(max-width:600px) { .notice-id { margin-left:0; align-self:flex-end; } }
