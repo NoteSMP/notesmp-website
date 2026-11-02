@@ -349,3 +349,29 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .post-card-details { align-items: flex-start; flex-direction: column; }
   .post-card-builders { text-align: left; }
 }
+
+/* Notice border correction: keep the rounded card shape, remove the pale outline. */
+.home-news-feed .notice-bar.news-maintenance,
+.home-news-feed .notice-bar.news-info,
+.home-news-feed .notice-bar.news-warning,
+.home-news-feed .notice-bar.news-warning-red,
+.home-news-feed .notice-bar.news-warning-orange {
+  border: 0 !important;
+  border-radius: 12px !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.home-news-feed .notice-bar.news-warning-red,
+.home-news-feed .notice-bar.news-warning-orange {
+  position: relative;
+  min-height: 72px;
+}
+.home-news-feed .notice-bar.news-warning-red .notice-id,
+.home-news-feed .notice-bar.news-warning-orange .notice-id {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  margin: 0;
+  align-self: auto;
+}
+.home-news-feed .news-countdown { color: inherit !important; }
