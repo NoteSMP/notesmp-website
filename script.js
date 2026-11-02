@@ -515,8 +515,8 @@ window.setInterval(fetchServerStatus, 60_000);
     if (dimension || validCoords || builders.length) {
       const details = element("div", "post-card-details");
       if (dimension || validCoords) {
-        const locationText = [dimension, validCoords ? [coords.x,coords.y,coords.z].join(" ") : ""].filter(Boolean).join(" · ");
-        details.append(element("span", "post-card-location", "⌖ " + locationText));
+        const locationText = [dimension, validCoords ? [coords.x,coords.y,coords.z].join(" ") : ""].filter(Boolean).join(" | ");
+        details.append(element("span", "post-card-location", locationText));
       }
       if (builders.length) details.append(element("span", "post-card-builders", "By " + builders.join(", ")));
       content.append(details);
