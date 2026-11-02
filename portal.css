@@ -210,3 +210,14 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .news-copy span { font-size:13px; line-height:1.45; }
 .news-countdown { flex:0 0 auto; font:800 clamp(24px,4vw,38px) var(--mono); white-space:nowrap; }
 @media(max-width:600px) { .notice-bar.news-maintenance,.notice-bar.news-warning,.notice-bar.news-info { align-items:flex-start; flex-direction:column; gap:8px; } }
+
+
+/* Separate notice entries and section-specific Info-page feed presentation. */
+.home-news-section { display: grid; gap: 10px; margin: 18px auto 0; }
+.home-news-feed { display: grid; gap: 10px; }
+.home-news-feed .notice-bar { text-align: left; }
+.home-news-feed .news-copy { text-align: left; }
+#section-server-updates .post-feed,
+#section-events .post-feed { display: grid; gap: 14px; }
+#section-events .post-card.event-preview-faded { opacity: .45; }
+#section-events .post-card.event-preview-faded::after { content: ""; display: block; height: 20px; }
