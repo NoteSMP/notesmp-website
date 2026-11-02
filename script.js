@@ -513,7 +513,7 @@ window.setInterval(fetchServerStatus, 60_000);
     const builders = (Array.isArray(builderValues) ? builderValues : String(builderValues).split(","))
       .map(value => typeof value === "string" ? value.trim() : String(value?.name || value?.username || "").trim()).filter(Boolean);
     const locationText = (dimension || validCoords)
-      ? [dimension, validCoords ? [coords.x,coords.y,coords.z].join(" | ") : ""].filter(Boolean).join(" | ")
+      ? [dimension, validCoords ? [coords.x,coords.y,coords.z].join("  ") : ""].filter(Boolean).join("   ")
       : "";
     if (builders.length) {
       const details = element("div", "post-card-details");
