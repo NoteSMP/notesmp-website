@@ -31,11 +31,6 @@ function getDiscordEventState(event = {}) {
   if (statusText.includes("cancel") || statusNumber === 4) return "cancelled";
   if (statusText.includes("complet") || statusText.includes("ended") || statusNumber === 3) return "ended";
 
-  // A scheduled end timestamp is authoritative over a stale "active" status.
-  const rawEnd = event.scheduledEndTime || event.scheduled_end_time;
-  const endTime = rawEnd ? Date.parse(rawEnd) : NaN;
-  if (Number.isFinite(endTime) && endTime <= Date.now()) return "ended";
-
   if (statusText.includes("active") || statusText.includes("started") || statusNumber === 2) return "started";
   return "scheduled";
 }
