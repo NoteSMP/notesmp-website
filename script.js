@@ -709,11 +709,7 @@ async function loadPage() {
             content.append(title,desc);
             const details = element("div","hero-event-details");
             const startAt = startOf(featured);
-            const startLabel = element("span","hero-event-time",new Date(startAt).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
-            details.append(startLabel);
             const state = statusOf(featured);
-            const status = element("span","hero-event-status" + (state === "started" ? " is-in-progress" : ""),state === "started" ? "In Progress" : "Scheduled");
-            details.append(status);
             if (state !== "started") {
               const countdown = element("span","hero-event-countdown","");
               const updateCountdown = () => {
@@ -727,6 +723,10 @@ async function loadPage() {
               window.addEventListener("pagehide",()=>clearInterval(timer),{once:true});
               details.append(countdown);
             }
+            const startLabel = element("span","hero-event-time",new Date(startAt).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
+            details.append(startLabel);
+            const status = element("span","hero-event-status" + (state === "started" ? " is-in-progress" : ""),state === "started" ? "In Progress" : "Scheduled");
+            details.append(status);
             const channelId = String(featured.event?.channelId || "");
             const guildId = String(featured.event?.guildId || "");
             const channelName = String(featured.event?.channelName || featured.event?.channel || featured.event?.location || "").trim();
@@ -734,7 +734,7 @@ async function loadPage() {
               const channel = element("a","hero-event-place",channelName);
               if (channelId && guildId) channel.href = "https://discord.com/channels/" + encodeURIComponent(guildId) + "/" + encodeURIComponent(channelId);
               else channel.href = "https://discord.com";
-              channel.target="_blank"; channel.rel="noopener noreferrer";
+              channel.target="\_blank"; channel.rel="noopener noreferrer";
               details.append(channel);
             }
             hero.append(content,details); hero.hidden = false;
