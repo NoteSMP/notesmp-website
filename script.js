@@ -512,19 +512,19 @@ window.setInterval(fetchServerStatus, 60_000);
     const builderValues = post.builders || post.eventData?.builders || post.event?.builders || [];
     const builders = (Array.isArray(builderValues) ? builderValues : String(builderValues).split(","))
       .map(value => typeof value === "string" ? value.trim() : String(value?.name || value?.username || "").trim()).filter(Boolean);
-    if (dimension || validCoords || builders.length) {
+    const locationText = (dimension || validCoords)
+      ? [dimension, validCoords ? [coords.x,coords.y,coords.z].join(" | ") : ""].filter(Boolean).join(" | ")
+      : "";
+    if (builders.length) {
       const details = element("div", "post-card-details");
-      if (dimension || validCoords) {
-        const locationText = [dimension, validCoords ? [coords.x,coords.y,coords.z].join(" ") : ""].filter(Boolean).join(" | ");
-        details.append(element("span", "post-card-location", locationText));
-      }
-      if (builders.length) details.append(element("span", "post-card-builders", "By " + builders.join(", ")));
+      details.append(element("span", "post-card-builders", "By " + builders.join(", ")));
       content.append(details);
     }
     if (post.event && post.event.location) content.append(element("p", "post-card-location", post.event.location));
     const footer = element("div", "post-card-footer");
     footer.append(element("span", "post-card-id", String(post.id ?? "")));
     content.append(footer);
+    if (locationText) content.append(element("span", "post-card-location post-card-location-coordinates", locationText));
     card.append(content);
     return card;
   }
