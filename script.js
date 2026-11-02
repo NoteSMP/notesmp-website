@@ -723,10 +723,10 @@ async function loadPage() {
               window.addEventListener("pagehide",()=>clearInterval(timer),{once:true});
               details.append(countdown);
             }
-            const startLabel = element("span","hero-event-time",new Date(startAt).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
-            details.append(startLabel);
             const status = element("span","hero-event-status" + (state === "started" ? " is-in-progress" : ""),state === "started" ? "In Progress" : "Scheduled");
             details.append(status);
+            const startLabel = element("span","hero-event-time",new Date(startAt).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
+            details.append(startLabel);
             const channelId = String(featured.event?.channelId || "");
             const guildId = String(featured.event?.guildId || "");
             const channelName = String(featured.event?.channelName || featured.event?.channel || featured.event?.location || "").trim();
