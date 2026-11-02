@@ -701,19 +701,20 @@ async function loadPage() {
             sideLists[0].append(item);
           });
         }
-        if (sideLists[2]) {
+        const creatorList = app.querySelector("#section-creators .link-list");
+        if (creatorList) {
           const response = await fetch(API + "/creators", { cache: "no-store" });
           if (!response.ok) throw new Error("Creator roster unavailable");
           const data = await response.json();
           const creators = (data.creators || []).slice().sort((a,b) => Number(/notesmp/i.test(b.live_title || "")) - Number(/notesmp/i.test(a.live_title || "")));
-          sideLists[2].replaceChildren();
-          if (!creators.length) sideLists[2].append(element("div","resource-link is-disabled","No creators added yet"));
+          creatorList.replaceChildren();
+          if (!creators.length) creatorList.append(element("div","resource-link is-disabled","No creators added yet"));
           creators.forEach(item => {
             const live = Boolean(item.live), link = element("a","creator-card" + (live ? " is-live" : " is-offline"));
             link.href = safeUrl(item.live_url) || safeUrl("https://www.twitch.tv/" + item.twitch_login); link.target="_blank"; link.rel="noreferrer";
             const avatar=element("img","creator-avatar"); avatar.src=safeUrl(item.avatar_url)||"https://static-cdn.jtvnw.net/jtv_user_pictures/default-user.png"; avatar.alt=""; avatar.loading="lazy";
             const info=element("span","creator-info"); info.append(element("strong","creator-name",item.display_name||item.twitch_login)); if(live&&item.live_title)info.append(element("span","creator-stream-title",item.live_title));
-            link.append(avatar,info,element("span","creator-status"+(live?" live":" offline"),live?(/notesmp/i.test(item.live_title||"")?"Live on NoteSMP":"Live"):"Offline")); sideLists[2].append(link);
+            link.append(avatar,info,element("span","creator-status"+(live?" live":" offline"),live?(/notesmp/i.test(item.live_title||"")?"Live on NoteSMP":"Live"):"Offline")); creatorList.append(link);
           });
         }
       }
