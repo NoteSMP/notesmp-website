@@ -387,3 +387,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .post-card-details { display: flex; align-items: flex-start; flex-direction: column; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .post-card-details .post-card-location { order: 2; }
 .post-card-details .post-card-builders { order: 1; text-align: left; }
+
+/* Gallery post refinement: builders right aligned; coordinates sit below the footer divider. */
+.post-card-details { margin-top: 14px; padding: 0; border: 0; }
+.post-card-details .post-card-builders { width: 100%; text-align: right; }
+.post-card-location-coordinates { display: block; margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
