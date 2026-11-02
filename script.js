@@ -185,7 +185,14 @@ async function fetchServerStatus() {
   } catch {
     serverData = { unavailable: true };
   }
-  if (currentPath() === '/') render();
+  if (currentPath() === '/') {
+    const existing = document.querySelector('#status-heading')?.closest('.panel');
+    if (existing) {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = serverStatusMarkup();
+      existing.replaceWith(wrapper.firstElementChild);
+    }
+  }
 }
 
 function getSortedPlayers() {
@@ -432,7 +439,7 @@ window.setInterval(fetchServerStatus, 60_000);
     if (!isScheduledEvent) {
       const titleDuplicatesBody = postTitle && postBody.trim().startsWith(postTitle);
       const titleLooksLikeMarkdown = /^#{1,6}\\s|<a?:[A-Za-z0-9_]+:\\d+>|\\*\\*|__|~~/.test(postTitle);
-      if (postTitle && !titleDuplicatesBody && !titleLooksLikeMarkdown) content.append(element("h3", "", postTitle));
+      if (postTitle && (String(post.category || "").toLowerCase() === "gallery" || (!titleDuplicatesBody && !titleLooksLikeMarkdown))) content.append(element("h3", "post-card-title", postTitle));
       if (post.subtitle || post.body) { const body = element("div", "post-card-body"); body.innerHTML = renderDiscordMarkdown((post.subtitle || post.body || "").slice(0, 900)); content.append(body); }
     }
     if (isScheduledEvent) {
@@ -501,18 +508,22 @@ window.setInterval(fetchServerStatus, 60_000);
     }
     const dimension = post.dimension || post.eventData?.dimension || null;
     const coords = post.coordinates || post.eventData?.coordinates || null;
-    if (dimension || coords) {
-      const location = element("div", "post-card-location");
-      if (dimension) location.append(element("span", "post-dimension", dimension));
-      if (coords && [coords.x,coords.y,coords.z].every(value => value !== undefined && value !== null && Number.isFinite(Number(value)))) {
-        location.append(element("span", "post-coordinates", coords.x + " " + coords.y + " " + coords.z));
+    const validCoords = coords && [coords.x,coords.y,coords.z].every(value => value !== undefined && value !== null && Number.isFinite(Number(value)));
+    const builderValues = post.builders || post.eventData?.builders || post.event?.builders || [];
+    const builders = (Array.isArray(builderValues) ? builderValues : String(builderValues).split(","))
+      .map(value => typeof value === "string" ? value.trim() : String(value?.name || value?.username || "").trim()).filter(Boolean);
+    if (dimension || validCoords || builders.length) {
+      const details = element("div", "post-card-details");
+      if (dimension || validCoords) {
+        const locationText = [dimension, validCoords ? [coords.x,coords.y,coords.z].join(" ") : ""].filter(Boolean).join(" · ");
+        details.append(element("span", "post-card-location", "⌖ " + locationText));
       }
-      content.append(location);
+      if (builders.length) details.append(element("span", "post-card-builders", "By " + builders.join(", ")));
+      content.append(details);
     }
     if (post.event && post.event.location) content.append(element("p", "post-card-location", post.event.location));
     const footer = element("div", "post-card-footer");
-    footer.append(element("span", "", "POST ID · " + post.id));
-    if (post.authorMinecraftName) footer.append(element("span", "", "By " + post.authorMinecraftName));
+    footer.append(element("span", "post-card-id", String(post.id ?? "")));
     content.append(footer);
     card.append(content);
     return card;
@@ -526,14 +537,15 @@ window.setInterval(fetchServerStatus, 60_000);
     const update = () => { image.src = images[active]; counter.textContent = (active + 1) + " / " + images.length; };
     const prev = element("button", "image-viewer-nav image-viewer-prev", "‹"); prev.type = "button"; prev.setAttribute("aria-label", "Previous photo"); prev.addEventListener("click", () => { active = (active + images.length - 1) % images.length; update(); });
     const next = element("button", "image-viewer-nav image-viewer-next", "›"); next.type = "button"; next.setAttribute("aria-label", "Next photo"); next.addEventListener("click", () => { active = (active + 1) % images.length; update(); });
-    overlay.append(close, prev, image, next); if (images.length > 1) overlay.append(counter);
+    overlay.append(close, image);
+    if (images.length > 1) overlay.append(prev, next, counter);
     const dismiss = () => { overlay.remove(); document.removeEventListener("keydown", onKey); }; close.addEventListener("click", dismiss); overlay.addEventListener("click", event => { if (event.target === overlay) dismiss(); });
     function onKey(event) { if (event.key === "Escape") dismiss(); else if (event.key === "ArrowLeft" && images.length > 1) { active = (active + images.length - 1) % images.length; update(); } else if (event.key === "ArrowRight" && images.length > 1) { active = (active + 1) % images.length; update(); } }
     document.addEventListener("keydown", onKey); update(); document.body.append(overlay); close.focus();
   }
   async function getPosts(category, group = "") {
     const params = new URLSearchParams({ category, limit: "100" });
-    if (group) params.set("group", group);
+    if (group) params.set("group", group.trim().toLowerCase().replace(/\\s+/g, "-"));
     const response = await fetch(API + "/content/posts?" + params.toString(), { cache: "no-store" });
     if (!response.ok) throw new Error("Feed request failed");
     const data = await response.json();
@@ -758,7 +770,10 @@ async function loadPage() {
             link.href = safeUrl(item.live_url) || safeUrl("https://www.twitch.tv/" + item.twitch_login); link.target="_blank"; link.rel="noreferrer";
             const avatar=element("img","creator-avatar"); avatar.src=safeUrl(item.avatar_url)||"https://static-cdn.jtvnw.net/jtv_user_pictures/default-user.png"; avatar.alt=""; avatar.loading="lazy";
             const info=element("span","creator-info"); info.append(element("strong","creator-name",item.display_name||item.twitch_login)); if(live&&item.live_title)info.append(element("span","creator-stream-title",item.live_title));
-            link.append(avatar,info,element("span","creator-status"+(live?" live":" offline"),live?(/notesmp/i.test(item.live_title||"")?"Live on NoteSMP":"Live"):"Offline")); creatorList.append(link);
+            const statusLabel = live ? (/notesmp/i.test(item.live_title||"") ? "Live on NoteSMP" : "Live") : "Offline";
+          const status = element("span","creator-status"+(live?" live":" offline"),statusLabel);
+          if (live) status.prepend(element("span","creator-status-dot"));
+          link.append(avatar,info,status); creatorList.append(link);
           });
         }
       }
