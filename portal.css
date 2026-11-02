@@ -395,3 +395,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 /* Match the coordinate label baseline and line height to the post ID. */
 .post-card-location-coordinates { margin-top: 0; font: inherit; line-height: inherit; }
+
+/* Keep gallery dimension/coordinates and post ID together on the footer row. */
+.post-card-footer { align-items: center; flex-wrap: nowrap; gap: 16px; }
+.post-card-footer .post-card-location-coordinates { margin: 0; flex: 1 1 auto; min-width: 0; white-space: pre-wrap; font: inherit; line-height: inherit; }
+.post-card-footer .post-card-id { flex: 0 0 auto; }
+@media(max-width:600px) { .post-card-footer { flex-wrap: wrap; } }
