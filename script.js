@@ -342,8 +342,12 @@ async function renderPlayerProfile(uuid) {
       if (!groupedStats.has(parsed.group)) groupedStats.set(parsed.group, []);
       groupedStats.get(parsed.group).push({ ...parsed, value: stat.stat_value, id: stat.stat_id });
     });
+    const groupOrder = ['General', 'Blocks Mined', 'Blocks Broken', 'Items Crafted', 'Items Used', 'Items Picked Up', 'Items Dropped', 'Kills', 'Kills by Entity', 'Deaths', 'Deaths by Entity', 'Combat', 'Movement', 'Survival', 'Time Played'];
     const statisticMarkup = groupedStats.size
-      ? [...groupedStats.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([group, entries]) =>
+      ? [...groupedStats.entries()].sort(([a], [b]) => {
+          const ai = groupOrder.indexOf(a), bi = groupOrder.indexOf(b);
+          return (ai < 0 ? groupOrder.length : ai) - (bi < 0 ? groupOrder.length : bi) || a.localeCompare(b);
+        }).map(([group, entries]) =>
           '<section class="player-stat-group"><h4>' + safeText(group) + '</h4><ul class="player-stat-list">' +
           entries.sort((a, b) => a.label.localeCompare(b.label)).map(stat =>
             '<li><img class="player-stat-icon" src="' + stat.icon + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://mcasset.cloud/26.3/assets/minecraft/textures/item/paper.png\'"><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
