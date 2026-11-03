@@ -381,7 +381,7 @@ async function renderPlayerProfile(uuid) {
     try {
       const [advResponse, postResponse] = await Promise.all([
         fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/advancements`, {cache:"no-store"}),
-        fetch(`${API_BASE}/content/posts?category=gallery&limit=100`, {cache:"no-store"})
+        fetch(`${API_BASE}/content/posts?category=gallery&builder=${encodeURIComponent(player.username)}&limit=1000`, {cache:"no-store"})
       ]);
       const advPayload = advResponse.ok ? await advResponse.json() : {advancements:[]};
       const earned = Array.isArray(advPayload.advancements) ? advPayload.advancements : [];
