@@ -174,3 +174,5 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 .profile-search-row strong { color:var(--text); }
 .profile-search-row span,.profile-search-row small { color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
 .player-stat-groups { min-width:0; }
+
+#hero-title[hidden],#hero-subtitle[hidden]{display:none!important}
