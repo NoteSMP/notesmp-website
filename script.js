@@ -303,10 +303,9 @@ async function renderPlayerProfile(uuid) {
       const value = String(raw || 'statistic').trim().toLowerCase().replace(/minecraft:/g, '');
       const titleWords = text => String(text || '').split(/[_\s]+/).filter(Boolean)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-      const version = '26.3';
+      const textureBase = 'https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/versions/26.3-0.20.1/assets/minecraft/textures/';
       const textureUrl = (kind, name) =>
-        'https://mcasset.cloud/' + version + '/assets/minecraft/textures/' + kind + '/' +
-        encodeURIComponent(String(name || '').toLowerCase()) + '.png';
+        textureBase + kind + '/' + encodeURIComponent(String(name || '').toLowerCase()) + '.png';
       const entity = value.match(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths)[.:]([a-z0-9_]+)$/);
       if (entity) {
         const name = entity[2];
