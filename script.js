@@ -303,14 +303,11 @@ async function renderPlayerProfile(uuid) {
       const value = String(raw || 'statistic').trim().toLowerCase().replace(/minecraft:/g, '');
       const titleWords = text => String(text || '').split(/[_\s]+/).filter(Boolean)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-      const textureBase = 'https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/versions/26.3-0.20.1/assets/minecraft/textures/';
-      const textureUrl = (kind, name) =>
-        textureBase + kind + '/' + encodeURIComponent(String(name || '').toLowerCase()) + '.png';
       const entity = value.match(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths)[.:]([a-z0-9_]+)$/);
       if (entity) {
         const name = entity[2];
         const group = entity[1] === 'killed_by_entity' || entity[1] === 'entity_deaths' ? 'Deaths by Entity' : 'Kills by Entity';
-        return { group, label: titleWords(name), icon: textureUrl('item', name + '_spawn_egg') };
+        return { group, label: titleWords(name) };
       }
       const parts = value.split(/[.:]/).filter(Boolean);
       const type = parts.shift() || 'other';
@@ -331,9 +328,7 @@ async function renderPlayerProfile(uuid) {
         fly_one_cm: 'Movement', swim_one_cm: 'Movement', climb_one_cm: 'Movement', crouch_one_cm: 'Movement',
         play_time: 'Time Played', total_world_time: 'Time Played', time_since_death: 'Survival', time_since_rest: 'Survival'
       };
-      const blockTypes = ['mined', 'mine_block', 'broken', 'break_block', 'place_block'];
-      const kind = blockTypes.includes(type) ? 'block' : 'item';
-      return { group: groups[type] || titleWords(type), label: specialLabels[itemName] || label, icon: textureUrl(kind, itemName) };
+      return { group: groups[type] || titleWords(type), label: specialLabels[itemName] || label };
     };
     const groupedStats = new Map();
     statistics.forEach(stat => {
@@ -349,7 +344,7 @@ async function renderPlayerProfile(uuid) {
         }).map(([group, entries]) =>
           '<section class="player-stat-group"><h4>' + safeText(group) + '</h4><ul class="player-stat-list">' +
           entries.sort((a, b) => a.label.localeCompare(b.label)).map(stat =>
-            '<li><img class="player-stat-icon" src="' + stat.icon + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://mcasset.cloud/26.3/assets/minecraft/textures/item/paper.png\'"><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
+            '<li><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
           ).join('') + '</ul></section>'
         ).join('')
       : '<p class="fine-print">No detailed game statistics have been synced for this player yet.</p>';
