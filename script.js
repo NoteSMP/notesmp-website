@@ -307,7 +307,7 @@ async function renderPlayerProfile(uuid) {
       if (entity) {
         const name = entity[2];
         const group = entity[1] === 'killed_by_entity' || entity[1] === 'entity_deaths' ? 'Deaths by Entity' : 'Kills by Entity';
-        return { group, label: titleWords(name) };
+        return { group, label: titleWords(name), icon: wikiIconUrl('mob', name) };
       }
       const parts = value.split(/[.:]/).filter(Boolean);
       const type = parts.shift() || 'other';
@@ -328,7 +328,9 @@ async function renderPlayerProfile(uuid) {
         fly_one_cm: 'Movement', swim_one_cm: 'Movement', climb_one_cm: 'Movement', crouch_one_cm: 'Movement',
         play_time: 'Time Played', total_world_time: 'Time Played', time_since_death: 'Survival', time_since_rest: 'Survival'
       };
-      return { group: groups[type] || titleWords(type), label: specialLabels[itemName] || label };
+      const blockTypes = ['mined', 'mine_block', 'broken', 'break_block', 'place_block'];
+      const iconType = blockTypes.includes(type) ? 'block' : 'item';
+      return { group: groups[type] || titleWords(type), label: specialLabels[itemName] || label, icon: wikiIconUrl(iconType, itemName) };
     };
     const groupedStats = new Map();
     statistics.forEach(stat => {
@@ -344,7 +346,7 @@ async function renderPlayerProfile(uuid) {
         }).map(([group, entries]) =>
           '<section class="player-stat-group"><h4>' + safeText(group) + '</h4><ul class="player-stat-list">' +
           entries.sort((a, b) => a.label.localeCompare(b.label)).map(stat =>
-            '<li><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
+            '<li><img class="player-stat-icon" data-wiki-icon="' + safeText(stat.icon || '') + '" alt="" loading="lazy"><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
           ).join('') + '</ul></section>'
         ).join('')
       : '<p class="fine-print">No detailed game statistics have been synced for this player yet.</p>';
@@ -376,6 +378,16 @@ async function renderPlayerProfile(uuid) {
       filterProfilePanel(active, profileSearch.value.trim().toLowerCase());
     });
     profile.querySelectorAll(".player-stat-group li").forEach(item => { item.dataset.profileSearch = item.textContent.toLowerCase(); });
+    profile.querySelectorAll('img.player-stat-icon[data-wiki-icon]').forEach(async image => {
+      try {
+        const response = await fetch(image.dataset.wikiIcon);
+        if (!response.ok) throw new Error('Wiki query failed');
+        const payload = await response.json();
+        const page = Object.values(payload?.query?.pages || {})[0];
+        if (!page?.thumbnail?.source) throw new Error('Wiki page image missing');
+        image.src = page.thumbnail.source;
+      } catch { image.remove(); }
+    });
     try {
       const [advResponse, postResponse] = await Promise.all([
         fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/advancements`, {cache:"no-store"}),
