@@ -299,7 +299,7 @@ async function renderPlayerProfile(uuid) {
     const statsResponse = await fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/statistics`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
     const statsPayload = statsResponse.ok ? await statsResponse.json() : { statistics: [] };
     const statistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
-    const wikiIconUrl = (kind, id) => {
+    const wikiIconKey = (kind, id) => {
       const normalized = String(id || '').replace(/^minecraft:/i, '').toLowerCase().replace(/[.\\/-]+/g, '_');
       const specialPages = {
         white_wool: 'Wool', red_wool: 'Wool', red_bed: 'Bed',
@@ -309,8 +309,7 @@ async function renderPlayerProfile(uuid) {
       const pageTitle = specialPages[normalized] || normalized.split(/[_]+/).filter(Boolean)
         .map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
       const fileTitle = normalized === 'mutton' ? 'Raw Mutton' : normalized.split('_').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
-      const titles = ['File:' + fileTitle + '.png', 'File:' + fileTitle.replace(/ /g, '_') + '.png', pageTitle].join('|');
-      return 'https://minecraft.wiki/api.php?action=query&format=json&prop=imageinfo|pageimages&iiprop=url&piprop=thumbnail&pithumbsize=64&origin=*&titles=' + encodeURIComponent(titles);
+      return ['File:' + fileTitle + '.png', 'File:' + fileTitle.replace(/ /g, '_') + '.png', pageTitle];
     };
     const prettyStatName = raw => {
       const value = String(raw || 'statistic').trim().toLowerCase().replace(/minecraft:/g, '');
@@ -321,7 +320,7 @@ async function renderPlayerProfile(uuid) {
         const name = entity[2];
         const group = entity[1] === 'killed_by_entity' || entity[1] === 'entity_deaths' || entity[1] === 'killed_by'
           ? 'Deaths by Entity' : 'Kills by Entity';
-        return { group, label: titleWords(name), icon: wikiIconUrl('mob', name) };
+        return { group, label: titleWords(name), icon: wikiIconKey('mob', name) };
       }
       const parts = value.split(/[.:]/).filter(Boolean);
       const type = parts.shift() || 'other';
@@ -350,7 +349,7 @@ async function renderPlayerProfile(uuid) {
         : (type === 'custom' && itemName === 'mob_kills' ? 'Kills'
           : type === 'custom' && itemName === 'player_kills' ? 'Kills'
             : groups[type] || 'General');
-      return { group, label: specialLabels[itemName] || label, icon: wikiIconUrl(iconType, iconItem) };
+      return { group, label: specialLabels[itemName] || label, icon: wikiIconKey(iconType, iconItem) };
     };
     const groupedStats = new Map();
     statistics.forEach(stat => {
@@ -366,7 +365,7 @@ async function renderPlayerProfile(uuid) {
         }).map(([group, entries]) =>
           '<section class="player-stat-group"><h4>' + safeText(group) + '</h4><ul class="player-stat-list">' +
           entries.sort((a, b) => a.label.localeCompare(b.label)).map(stat =>
-            '<li><img class="player-stat-icon" data-wiki-icon="' + safeText(stat.icon || '') + '" alt="" loading="lazy"><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
+            '<li><img class="player-stat-icon" data-wiki-icon="' + safeText(JSON.stringify(stat.icon || [])) + '" alt="" loading="lazy"><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
           ).join('') + '</ul></section>'
         ).join('')
       : '<p class="fine-print">No detailed game statistics have been synced for this player yet.</p>';
@@ -398,18 +397,33 @@ async function renderPlayerProfile(uuid) {
       filterProfilePanel(active, profileSearch.value.trim().toLowerCase());
     });
     profile.querySelectorAll(".player-stat-group li").forEach(item => { item.dataset.profileSearch = item.textContent.toLowerCase(); });
-    profile.querySelectorAll('img.player-stat-icon[data-wiki-icon]').forEach(async image => {
+    // Batch Wiki lookups; a zero-inclusive profile can have hundreds of statistic rows.
+    const iconImages = [...profile.querySelectorAll('img.player-stat-icon[data-wiki-icon]')];
+    const iconLookup = new Map();
+    const iconTitles = new Set();
+    iconImages.forEach(image => {
+      try { JSON.parse(image.dataset.wikiIcon || '[]').forEach(title => iconTitles.add(title)); } catch {}
+    });
+    const titles = [...iconTitles];
+    for (let offset = 0; offset < titles.length; offset += 40) {
+      const batch = titles.slice(offset, offset + 40);
       try {
-        const response = await fetch(image.dataset.wikiIcon);
-        if (!response.ok) throw new Error('Wiki query failed');
+        const url = 'https://minecraft.wiki/api.php?action=query&format=json&prop=imageinfo|pageimages&iiprop=url&piprop=thumbnail&pithumbsize=64&origin=*&titles=' + encodeURIComponent(batch.join('|'));
+        const response = await fetch(url);
+        if (!response.ok) continue;
         const payload = await response.json();
-        const pages = Object.values(payload?.query?.pages || {});
-        const filePage = pages.find(page => page?.imageinfo?.[0]?.url);
-        const articlePage = pages.find(page => page?.thumbnail?.source);
-        const iconUrl = filePage?.imageinfo?.[0]?.url || articlePage?.thumbnail?.source;
-        if (!iconUrl) throw new Error('Wiki image missing');
-        image.src = iconUrl;
-      } catch { image.remove(); }
+        Object.values(payload?.query?.pages || {}).forEach(page => {
+          const imageUrl = page?.imageinfo?.[0]?.url || page?.thumbnail?.source;
+          if (page?.title && imageUrl) iconLookup.set(page.title, imageUrl);
+        });
+      } catch {}
+    }
+    iconImages.forEach(image => {
+      let candidates = [];
+      try { candidates = JSON.parse(image.dataset.wikiIcon || '[]'); } catch {}
+      const iconUrl = candidates.map(title => iconLookup.get(title)).find(Boolean);
+      if (iconUrl) image.src = iconUrl;
+      else image.remove();
     });
     try {
       const [advResponse, postResponse] = await Promise.all([
