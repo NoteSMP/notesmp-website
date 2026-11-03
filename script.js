@@ -524,7 +524,9 @@ window.setInterval(fetchServerStatus, 60_000);
         anchor.href = url;
         anchor.target = "_blank";
         anchor.rel = "noreferrer";
-        anchor.innerHTML = row.innerHTML.replace(/<span>[^<]*<\\/span>$/, '<span aria-hidden="true">↗</span>');
+        anchor.innerHTML = row.innerHTML;
+        const arrow = anchor.querySelector("span:last-child");
+        if (arrow) { arrow.textContent = "↗"; arrow.setAttribute("aria-hidden", "true"); }
         row.replaceWith(anchor);
       });
     } catch (error) { console.warn("Could not load configured server links", error); }
