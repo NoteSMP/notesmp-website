@@ -163,3 +163,14 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
   .status-top { top: 18px; right: 16px; }
   .online-player > span { font-size: 1.6em; }
 }
+
+
+/* Player profile section navigation and searchable result rows */
+.player-profile-tabs { display:flex; flex-wrap:wrap; gap:8px; margin:24px 0 14px; border-bottom:1px solid var(--line); padding-bottom:12px; }
+.profile-tab { border:1px solid var(--line); border-radius:5px; padding:10px 15px; background:transparent; color:var(--muted); font:inherit; cursor:pointer; }
+.profile-tab.is-active { border-color:var(--green); background:#183321; color:#d9f4df; }
+.profile-search { width:100%; margin:0 0 18px; }
+.profile-search-row { display:grid; gap:5px; padding:14px 16px; margin-bottom:8px; border:1px solid var(--line); border-radius:5px; background:var(--panel); }
+.profile-search-row strong { color:var(--text); }
+.profile-search-row span,.profile-search-row small { color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
+.player-stat-groups { min-width:0; }
