@@ -85,7 +85,7 @@ function serverStatusMarkup() {
   const playerText = serverData && !serverData.unavailable ? `${count}/${max || '—'}` : '—';
   const version = serverData?.version || '26.3';
   const motdText = serverData?.unavailable ? 'Server details could not be reached. Try again shortly.' : (serverData ? (motd ? motdHtml(motd) : 'No message of the day is configured.') : 'Fetching live server details…');
-  return `<section class="panel" aria-labelledby="status-heading"><div class="panel-heading"><div><span class="overline">LIVE SERVER</span><h2 id="status-heading">Server status</h2></div></div><div class="panel-body"><div class="status-top"><span class="status-indicator ${serverData && !serverData.unavailable ? (online ? 'is-online' : 'is-offline') : ''}"><span class="status-dot"></span><span>${statusText}</span></span></div><div class="address-row"><div><span class="overline">JAVA SERVER ADDRESS</span><strong class="server-ip">${SERVER_ADDRESS}</strong></div><button class="copy-button" id="copy-address" type="button">Copy IP</button></div><p class="motd">${motdText}</p><div class="quick-stats"><div class="quick-stat"><span class="metric-label">Edition</span><strong class="metric-value">Java</strong></div><div class="quick-stat"><span class="metric-label">Version</span><strong class="metric-value">${safeText(version)}</strong></div><div class="quick-stat"><span class="metric-label">Players</span><strong class="metric-value">${playerText}</strong></div></div></div></section>`;
+  return `<section class="panel" aria-labelledby="status-heading"><div class="panel-heading status-heading-row"><div><span class="overline">LIVE SERVER</span><div class="status-title-line"><h2 id="status-heading">Server status</h2><span class="status-indicator ${serverData && !serverData.unavailable ? (online ? 'is-online' : 'is-offline') : ''}"><span class="status-dot"></span><span>${statusText}</span></span></div></div></div><div class="panel-body"><div class="address-row"><div><span class="overline">JAVA SERVER ADDRESS</span><strong class="server-ip">${SERVER_ADDRESS}</strong></div><button class="copy-button" id="copy-address" type="button">Copy IP</button></div><p class="motd">${motdText}</p><div class="quick-stats"><div class="quick-stat"><span class="metric-label">Edition</span><strong class="metric-value">Java</strong></div><div class="quick-stat"><span class="metric-label">Version</span><strong class="metric-value">${safeText(version)}</strong></div><div class="quick-stat"><span class="metric-label">Players</span><strong class="metric-value">${playerText}</strong></div></div></div></section>`;
 }
 
 function linkIcon(key) {
@@ -126,7 +126,7 @@ function galleryPage() {
 }
 
 function playerListPage() {
-  return `<div class="page-shell">${pageHeading('Players', 'Search the player directory and compare the stats recorded by the server.', 'PLAYER DIRECTORY')}<div class="page-content"><div class="toolbar"><input class="search-input" id="player-search" type="search" placeholder="Search players…" aria-label="Search players"><select class="sort-select" id="player-sort" aria-label="Sort players"><option value="playtime_seconds">Most playtime</option><option value="blocks_placed">Blocks placed</option><option value="blocks_broken">Blocks broken</option><option value="kills">Kills</option><option value="deaths">Deaths</option></select><span class="player-count" id="player-count">Loading player list…</span></div><div id="player-results">${emptyPage('Loading players', 'Connecting to the NoteSMP player API…')}</div><p class="fine-print">Player records include playtime, blocks placed and broken, kills, deaths, and join activity. The current public API returns up to 100 players.</p></div></div>`;
+  return `<div class="page-shell">${pageHeading('Players', 'Search the player directory and compare the stats recorded by the server.', 'PLAYER DIRECTORY')}<div class="page-content"><div class="toolbar"><input class="search-input" id="player-search" type="search" aria-label="Search players" placeholder="Search by player name"><select class="sort-select" id="player-sort" aria-label="Sort players"><option value="playtime_seconds">Playtime</option><option value="blocks_placed">Blocks placed</option><option value="blocks_broken">Blocks broken</option><option value="kills">Kills</option><option value="deaths">Deaths</option></select><span class="player-count" id="player-count" aria-live="polite"></span></div><div id="player-results"></div></div></div>`;
 }
 
 function playerProfilePage(uuid) {
@@ -214,6 +214,38 @@ async function fetchServerStatus() {
       wrapper.innerHTML = serverStatusMarkup();
       existing.replaceWith(wrapper.firstElementChild);
     }
+  }
+}
+
+async function loadPlayers() {
+  playerLoadFailed = false;
+  const results = document.querySelector('#player-results');
+  const count = document.querySelector('#player-count');
+  if (results) results.innerHTML = '<div class="empty-state">Loading player data…</div>';
+  if (count) count.textContent = '';
+  try {
+    const response = await fetch(`${API_BASE}/players?limit=100`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    if (!response.ok) throw new Error('Player API request failed');
+    const payload = await response.json();
+    const records = Array.isArray(payload) ? payload : (payload.players || payload.data || payload.results || []);
+    if (!Array.isArray(records)) throw new Error('Unexpected player API response');
+    playerData = records.map(player => ({
+      ...player,
+      uuid: player.uuid || player.id || '',
+      username: player.username || player.name || player.player_name || ''
+    })).filter(player => player.username && player.uuid);
+    renderPlayers();
+    const params = new URLSearchParams(window.location.search);
+    const search = params.get('name');
+    const searchInput = document.querySelector('#player-search');
+    if (search && searchInput) {
+      searchInput.value = search;
+      renderPlayers();
+    }
+  } catch {
+    playerData = [];
+    playerLoadFailed = true;
+    renderPlayers();
   }
 }
 
