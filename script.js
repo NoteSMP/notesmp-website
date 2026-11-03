@@ -303,11 +303,12 @@ async function renderPlayerProfile(uuid) {
       const normalized = String(id || '').replace(/^minecraft:/i, '').toLowerCase().replace(/[.\\/-]+/g, '_');
       const specialPages = {
         white_wool: 'Wool', red_wool: 'Wool', red_bed: 'Bed',
-        birch_planks: 'Planks', mutton: 'Mutton', furnace: 'Furnace'
+        birch_planks: 'Planks', mutton: 'Raw Mutton', cooked_mutton: 'Cooked Mutton',
+        furnace: 'Furnace'
       };
       const pageTitle = specialPages[normalized] || normalized.split(/[_]+/).filter(Boolean)
         .map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
-      const fileTitle = normalized.split('_').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+      const fileTitle = normalized === 'mutton' ? 'Raw Mutton' : normalized.split('_').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
       const titles = ['File:' + fileTitle + '.png', 'File:' + fileTitle.replace(/ /g, '_') + '.png', pageTitle].join('|');
       return 'https://minecraft.wiki/api.php?action=query&format=json&prop=imageinfo|pageimages&iiprop=url&piprop=thumbnail&pithumbsize=64&origin=*&titles=' + encodeURIComponent(titles);
     };
@@ -315,10 +316,11 @@ async function renderPlayerProfile(uuid) {
       const value = String(raw || 'statistic').trim().toLowerCase().replace(/minecraft:/g, '');
       const titleWords = text => String(text || '').split(/[_\s]+/).filter(Boolean)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-      const entity = value.match(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths)[.:]([a-z0-9_]+)$/);
+      const entity = value.match(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths|killed|killed_by)[.:]([a-z0-9_]+)$/);
       if (entity) {
         const name = entity[2];
-        const group = entity[1] === 'killed_by_entity' || entity[1] === 'entity_deaths' ? 'Deaths by Entity' : 'Kills by Entity';
+        const group = entity[1] === 'killed_by_entity' || entity[1] === 'entity_deaths' || entity[1] === 'killed_by'
+          ? 'Deaths by Entity' : 'Kills by Entity';
         return { group, label: titleWords(name), icon: wikiIconUrl('mob', name) };
       }
       const parts = value.split(/[.:]/).filter(Boolean);
@@ -335,8 +337,8 @@ async function renderPlayerProfile(uuid) {
         mined: 'Blocks Mined', mine_block: 'Blocks Mined', broken: 'Blocks Broken', break_block: 'Blocks Broken',
         crafted: 'Items Crafted', craft_item: 'Items Crafted', used: 'Items Used', use_item: 'Items Used',
         picked_up: 'Items Picked Up', pickup: 'Items Picked Up', dropped: 'Items Dropped', drop: 'Items Dropped',
-        killed: 'Kills', killed_by: 'Deaths', custom: 'General',
-        damage_dealt: 'Combat', damage_taken: 'Combat',
+        killed: 'Kills by Entity', killed_by: 'Deaths by Entity', custom: 'General',
+        mob_kills: 'Kills', player_kills: 'Kills', damage_dealt: 'Combat', damage_taken: 'Combat',
         deaths: 'Survival', jump: 'Movement', walk_one_cm: 'Movement', sprint_one_cm: 'Movement',
         fly_one_cm: 'Movement', swim_one_cm: 'Movement', climb_one_cm: 'Movement', crouch_one_cm: 'Movement',
         play_time: 'Time Played', total_world_time: 'Time Played', time_since_death: 'Survival', time_since_rest: 'Survival'
@@ -344,7 +346,10 @@ async function renderPlayerProfile(uuid) {
       const blockTypes = ['mined', 'mine_block', 'broken', 'break_block', 'place_block'];
       const iconType = blockTypes.includes(type) ? 'block' : 'item';
       const iconItem = type === 'interact_with_furnace' || type === 'open_furnace' ? 'furnace' : itemName;
-      const group = itemName.startsWith('interact_with_') ? 'Interactions' : (groups[type] || 'General');
+      const group = itemName.startsWith('interact_with_') ? 'Interactions'
+        : (type === 'custom' && itemName === 'mob_kills' ? 'Kills'
+          : type === 'custom' && itemName === 'player_kills' ? 'Kills'
+            : groups[type] || 'General');
       return { group, label: specialLabels[itemName] || label, icon: wikiIconUrl(iconType, iconItem) };
     };
     const groupedStats = new Map();
