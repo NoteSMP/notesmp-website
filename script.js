@@ -343,7 +343,8 @@ async function renderPlayerProfile(uuid) {
       };
       const blockTypes = ['mined', 'mine_block', 'broken', 'break_block', 'place_block'];
       const iconType = blockTypes.includes(type) ? 'block' : 'item';
-      return { group: groups[type] || 'General', label: specialLabels[itemName] || label, icon: wikiIconUrl(iconType, itemName) };
+      const iconItem = type === 'interact_with_furnace' || type === 'open_furnace' ? 'furnace' : itemName;
+      return { group: groups[type] || 'General', label: specialLabels[itemName] || label, icon: wikiIconUrl(iconType, iconItem) };
     };
     const groupedStats = new Map();
     statistics.forEach(stat => {
