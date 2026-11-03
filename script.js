@@ -299,22 +299,20 @@ async function renderPlayerProfile(uuid) {
     const statsPayload = statsResponse.ok ? await statsResponse.json() : { statistics: [] };
     const statistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
     const prettyStatName = raw => {
-      // Normalize Bukkit/Minecraft keys such as minecraft:white_wool and
-      // minecraft:kill_entity:minecraft:sheep without leaking namespaces.
-      let value = String(raw || 'statistic').trim().toLowerCase();
-      value = value.replace(/^minecraft:/, '');
-      value = value.replace(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths)[.:_]/, '$1:');
-      const entity = value.match(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths):(?:minecraft:)?([a-z0-9_]+)$/);
-      const titleWords = text => String(text || '').split(/[_\s]+/).filter(Boolean)
+      // Bukkit stat keys may contain a namespace on both the statistic and value:
+      // minecraft:mined:minecraft:stone -> mined:stone.
+      const value = String(raw || 'statistic').trim().toLowerCase().replace(/minecraft:/g, '');
+      const entity = value.match(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths)[.:]([a-z0-9_]+)$/);
+      const titleWords = text => String(text || '').split(/[_\\s]+/).filter(Boolean)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-      const wikiImage = (kind, name) => {
-        const slug = String(name || '').replace(/^minecraft:/, '').replace(/:/g, '_').toLowerCase();
-        return 'https://minecraft.wiki/images/' + kind + '_' + encodeURIComponent(slug) + '.png';
-      };
+      const version = '26.3';
+      const textureUrl = (kind, name) =>
+        'https://mcasset.cloud/' + version + '/assets/minecraft/textures/' + kind + '/' +
+        encodeURIComponent(String(name || '').toLowerCase()) + '.png';
       if (entity) {
         const name = entity[2];
         const group = entity[1] === 'killed_by_entity' || entity[1] === 'entity_deaths' ? 'Deaths by Entity' : 'Kills';
-        return { group, label: titleWords(name), icon: wikiImage('EntitySprite', name) };
+        return { group, label: titleWords(name), icon: '' };
       }
       const parts = value.split(/[.:]/).filter(Boolean);
       const type = parts.shift() || 'other';
@@ -329,8 +327,8 @@ async function renderPlayerProfile(uuid) {
         total_world_time: 'Time Played', time_since_death: 'Survival', time_since_rest: 'Survival'
       };
       const group = groups[type] || titleWords(type);
-      const iconKind = ['mined', 'broken'].includes(type) ? 'BlockSprite' : 'ItemSprite';
-      return { group, label, icon: wikiImage(iconKind, itemName) };
+      const kind = ['mined', 'broken'].includes(type) ? 'block' : 'item';
+      return { group, label, icon: textureUrl(kind, itemName) };
     };
     const groupedStats = new Map();
     statistics.forEach(stat => {
