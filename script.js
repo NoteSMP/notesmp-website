@@ -298,13 +298,44 @@ async function renderPlayerProfile(uuid) {
     const statsResponse = await fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/statistics`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
     const statsPayload = statsResponse.ok ? await statsResponse.json() : { statistics: [] };
     const statistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
-    const statisticMarkup = statistics.length
-      ? statistics.map(stat => {
-          const label = String(stat.stat_id || 'Statistic').replace(/^minecraft:/, '').replace(/_/g, ' ').replace(/\\b\\w/g, char => char.toUpperCase());
-          return '<div class="detail-stat"><span>' + safeText(label) + '</span><strong>' + formatNumber(stat.stat_value) + '</strong></div>';
-        }).join('')
+    const prettyStatName = raw => {
+      let value = String(raw || 'statistic').replace(/^minecraft:/i, '').toLowerCase();
+      value = value.replace(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths)[.:_]/, '$1:');
+      const entity = value.match(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths):(?:minecraft:)?([a-z0-9_]+)$/);
+      if (entity) {
+        const name = entity[2].replace(/_/g, ' ').replace(/\\b\\w/g, char => char.toUpperCase());
+        return { group: entity[1] === 'killed_by_entity' || entity[1] === 'entity_deaths' ? 'Deaths by Entity' : 'Kills', label: name, icon: 'https://mc-heads.net/avatar/' + encodeURIComponent(entity[2]) + '/24' };
+      }
+      const parts = value.split(/[.:]/).filter(Boolean);
+      const type = parts.shift() || 'other';
+      const label = parts.join(' ').replace(/_/g, ' ').replace(/\\b\\w/g, char => char.toUpperCase()) || type.replace(/_/g, ' ').replace(/\\b\\w/g, char => char.toUpperCase());
+      const groups = {
+        mined: 'Blocks Mined', broken: 'Blocks Broken', crafted: 'Items Crafted', used: 'Items Used',
+        picked_up: 'Items Picked Up', dropped: 'Items Dropped', killed: 'Kills', killed_by: 'Deaths',
+        custom: 'General', damage_dealt: 'Combat', damage_taken: 'Combat', deaths: 'Survival',
+        jump: 'Movement', walk_one_cm: 'Movement', sprint_one_cm: 'Movement', fly_one_cm: 'Movement',
+        swim_one_cm: 'Movement', climb_one_cm: 'Movement', crouch_one_cm: 'Movement', play_time: 'Time Played',
+        total_world_time: 'Time Played', time_since_death: 'Survival', time_since_rest: 'Survival'
+      };
+      const group = groups[type] || type.replace(/_/g, ' ').replace(/\\b\\w/g, char => char.toUpperCase());
+      const iconName = parts[0] || type;
+      return { group, label, icon: 'https://mc-heads.net/item/' + encodeURIComponent(iconName) + '/24' };
+    };
+    const groupedStats = new Map();
+    statistics.forEach(stat => {
+      const parsed = prettyStatName(stat.stat_id);
+      if (!groupedStats.has(parsed.group)) groupedStats.set(parsed.group, []);
+      groupedStats.get(parsed.group).push({ ...parsed, value: stat.stat_value, id: stat.stat_id });
+    });
+    const statisticMarkup = groupedStats.size
+      ? [...groupedStats.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([group, entries]) =>
+          '<section class="player-stat-group"><h4>' + safeText(group) + '</h4><ul class="player-stat-list">' +
+          entries.sort((a, b) => a.label.localeCompare(b.label)).map(stat =>
+            '<li><img class="player-stat-icon" src="' + stat.icon + '" alt="" loading="lazy" onerror="this.hidden=true"><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
+          ).join('') + '</ul></section>'
+        ).join('')
       : '<p class="fine-print">No detailed game statistics have been synced for this player yet.</p>';
-    profile.innerHTML = `<a class="back-link" href="/players">← All players</a><div class="panel"><div class="panel-heading"><div><span class="overline">PLAYER PROFILE</span><h2 class="profile-name-with-head"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid || uuid)}/24" alt="" loading="lazy"><span>${safeText(player.username)}</span></h2></div><span class="status-meta">Updated ${safeText(formatDate(player.updated_at))}</span></div><div class="panel-body"><div class="detail-grid"><div class="detail-stat"><span>Playtime</span><strong>${safeText(formatPlaytime(player.playtime_seconds))}</strong></div><div class="detail-stat"><span>Blocks placed</span><strong>${formatNumber(player.blocks_placed)}</strong></div><div class="detail-stat"><span>Blocks broken</span><strong>${formatNumber(player.blocks_broken)}</strong></div><div class="detail-stat"><span>Kills</span><strong>${formatNumber(player.kills)}</strong></div><div class="detail-stat"><span>Deaths</span><strong>${formatNumber(player.deaths)}</strong></div><div class="detail-stat"><span>First joined</span><strong>${safeText(formatDate(player.first_join))}</strong></div><div class="detail-stat"><span>Last seen</span><strong>${safeText(formatDate(player.last_seen))}</strong></div></div><h3 class="section-heading">All game statistics</h3><div class="detail-grid">${statisticMarkup}</div></div></div>`;
+    profile.innerHTML = `<a class="back-link" href="/players">← All players</a><div class="panel"><div class="panel-heading"><div><span class="overline">PLAYER PROFILE</span><h2 class="profile-name-with-head"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid || uuid)}/24" alt="" loading="lazy"><span>${safeText(player.username)}</span></h2></div><span class="status-meta">Updated ${safeText(formatDate(player.updated_at))}</span></div><div class="panel-body"><div class="detail-grid"><div class="detail-stat"><span>Playtime</span><strong>${safeText(formatPlaytime(player.playtime_seconds))}</strong></div><div class="detail-stat"><span>Blocks placed</span><strong>${formatNumber(player.blocks_placed)}</strong></div><div class="detail-stat"><span>Blocks broken</span><strong>${formatNumber(player.blocks_broken)}</strong></div><div class="detail-stat"><span>Kills</span><strong>${formatNumber(player.kills)}</strong></div><div class="detail-stat"><span>Deaths</span><strong>${formatNumber(player.deaths)}</strong></div><div class="detail-stat"><span>First joined</span><strong>${safeText(formatDate(player.first_join))}</strong></div><div class="detail-stat"><span>Last seen</span><strong>${safeText(formatDate(player.last_seen))}</strong></div></div><h3 class="section-heading">All game statistics</h3><div class="player-stat-groups">${statisticMarkup}</div></div></div>`;
   } catch {
     profile.innerHTML = `<a class="back-link" href="/players">← All players</a>${emptyPage('Player profile unavailable', 'This player could not be found or the player API is unavailable.')}`;
   }
