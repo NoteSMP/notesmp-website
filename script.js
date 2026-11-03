@@ -349,7 +349,58 @@ async function renderPlayerProfile(uuid) {
           ).join('') + '</ul></section>'
         ).join('')
       : '<p class="fine-print">No detailed game statistics have been synced for this player yet.</p>';
-    profile.innerHTML = `<a class="back-link" href="/players">← All players</a><div class="panel"><div class="panel-heading"><div><span class="overline">PLAYER PROFILE</span><h2 class="profile-name-with-head"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid || uuid)}/24" alt="" loading="lazy"><span>${safeText(player.username)}</span></h2></div><span class="status-meta">Updated ${safeText(formatDate(player.updated_at))}</span></div><div class="panel-body"><div class="detail-grid"><div class="detail-stat"><span>Playtime</span><strong>${safeText(formatPlaytime(player.playtime_seconds))}</strong></div><div class="detail-stat"><span>Blocks placed</span><strong>${formatNumber(player.blocks_placed)}</strong></div><div class="detail-stat"><span>Blocks broken</span><strong>${formatNumber(player.blocks_broken)}</strong></div><div class="detail-stat"><span>Kills</span><strong>${formatNumber(player.kills)}</strong></div><div class="detail-stat"><span>Deaths</span><strong>${formatNumber(player.deaths)}</strong></div><div class="detail-stat"><span>First joined</span><strong>${safeText(formatDate(player.first_join))}</strong></div><div class="detail-stat"><span>Last seen</span><strong>${safeText(formatDate(player.last_seen))}</strong></div></div><h3 class="section-heading">All game statistics</h3><div class="player-stat-groups">${statisticMarkup}</div></div></div>`;
+    profile.innerHTML = `<a class="back-link" href="/players">← All players</a><div class="panel"><div class="panel-heading"><div><span class="overline">PLAYER PROFILE</span><h2 class="profile-name-with-head"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid || uuid)}/24" alt="" loading="lazy"><span>${safeText(player.username)}</span></h2></div><span class="status-meta">Updated ${safeText(formatDate(player.updated_at))}</span></div><div class="panel-body"><div class="detail-grid"><div class="detail-stat"><span>Playtime</span><strong>${safeText(formatPlaytime(player.playtime_seconds))}</strong></div><div class="detail-stat"><span>Blocks placed</span><strong>${formatNumber(player.blocks_placed)}</strong></div><div class="detail-stat"><span>Blocks broken</span><strong>${formatNumber(player.blocks_broken)}</strong></div><div class="detail-stat"><span>Kills</span><strong>${formatNumber(player.kills)}</strong></div><div class="detail-stat"><span>Deaths</span><strong>${formatNumber(player.deaths)}</strong></div><div class="detail-stat"><span>First joined</span><strong>${safeText(formatDate(player.first_join))}</strong></div><div class="detail-stat"><span>Last seen</span><strong>${safeText(formatDate(player.last_seen))}</strong></div></div><div class="player-profile-tabs" role="tablist" aria-label="Player profile sections"><button type="button" class="profile-tab is-active" role="tab" aria-selected="true" data-profile-tab="statistics">Statistics</button><button type="button" class="profile-tab" role="tab" aria-selected="false" data-profile-tab="advancements">Advancements</button><button type="button" class="profile-tab" role="tab" aria-selected="false" data-profile-tab="posts">Posts</button></div><input class="search-input profile-search" id="profile-search" type="search" placeholder="Search statistics…" aria-label="Search player profile data"><div class="player-profile-panel" data-profile-panel="statistics"><div class="player-stat-groups">${statisticMarkup}</div></div><div class="player-profile-panel" data-profile-panel="advancements" hidden><p class="fine-print">Loading earned advancements…</p></div><div class="player-profile-panel" data-profile-panel="posts" hidden><p class="fine-print">Loading posts mentioning this player as a builder…</p></div></div></div>`;
+    const profileTabs = [...profile.querySelectorAll("[data-profile-tab]")];
+    const profilePanels = [...profile.querySelectorAll("[data-profile-panel]")];
+    const profileSearch = profile.querySelector("#profile-search");
+    const filterProfilePanel = (tab, query) => {
+      const panel = profile.querySelector('[data-profile-panel="' + tab + '"]');
+      if (!panel) return;
+      const items = [...panel.querySelectorAll("[data-profile-search]")];
+      let visible = 0;
+      items.forEach(item => { const match = !query || item.dataset.profileSearch.includes(query); item.hidden = !match; if (match) visible++; });
+      const empty = panel.querySelector("[data-profile-empty]");
+      if (empty) empty.hidden = visible > 0;
+    };
+    const switchProfileTab = tab => {
+      profileTabs.forEach(button => { const active = button.dataset.profileTab === tab; button.classList.toggle("is-active", active); button.setAttribute("aria-selected", String(active)); });
+      profilePanels.forEach(panel => { panel.hidden = panel.dataset.profilePanel !== tab; });
+      if (profileSearch) { profileSearch.placeholder = tab === "statistics" ? "Search statistics…" : tab === "advancements" ? "Search advancements…" : "Search posts…"; profileSearch.value = ""; }
+      filterProfilePanel(tab, "");
+    };
+    profileTabs.forEach(button => button.addEventListener("click", () => switchProfileTab(button.dataset.profileTab)));
+    profileSearch?.addEventListener("input", () => {
+      const active = profile.querySelector("[data-profile-tab].is-active")?.dataset.profileTab || "statistics";
+      filterProfilePanel(active, profileSearch.value.trim().toLowerCase());
+    });
+    profile.querySelectorAll(".player-stat-group li").forEach(item => { item.dataset.profileSearch = item.textContent.toLowerCase(); });
+    try {
+      const [advResponse, postResponse] = await Promise.all([
+        fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/advancements`, {cache:"no-store"}),
+        fetch(`${API_BASE}/content/posts?category=gallery&limit=100`, {cache:"no-store"})
+      ]);
+      const advPayload = advResponse.ok ? await advResponse.json() : {advancements:[]};
+      const earned = Array.isArray(advPayload.advancements) ? advPayload.advancements : [];
+      const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
+      advPanel.innerHTML = earned.length ? earned.map(item => {
+        const title = item.advancement_title || item.advancement_id;
+        return '<article class="profile-search-row" data-profile-search="' + safeText((title + " " + item.advancement_id).toLowerCase()) + '"><strong>' + safeText(title) + '</strong><span>' + safeText(item.advancement_id) + '</span><small>' + safeText(formatDate(item.earned_at)) + '</small></article>';
+      }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
+      const postPayload = postResponse.ok ? await postResponse.json() : {posts:[]};
+      const playerName = String(player.username || "").toLowerCase();
+      const matchingPosts = (postPayload.posts || []).filter(post => {
+        const builders = post.event?.builders || post.builders || post.authorMinecraftName || "";
+        return String(Array.isArray(builders) ? builders.join(",") : builders).split(/[;,]/).some(name => name.trim().toLowerCase() === playerName);
+      });
+      const postsPanel = profile.querySelector('[data-profile-panel="posts"]');
+      postsPanel.innerHTML = matchingPosts.length ? matchingPosts.map(post => {
+        const builders = post.event?.builders || post.builders || post.authorMinecraftName || "";
+        const builderText = Array.isArray(builders) ? builders.join(", ") : String(builders);
+        const searchText = (post.title + " " + post.subtitle + " " + post.body + " " + builderText).toLowerCase();
+        return '<article class="profile-search-row" data-profile-search="' + safeText(searchText) + '"><strong>' + safeText(post.title || "Untitled post") + '</strong><span>Builders: ' + safeText(builderText) + '</span><small>' + safeText(formatDate(post.publishedAt)) + '</small></article>';
+      }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching posts.</p>' : '<p class="fine-print">No published builder posts found for this player.</p>';
+    } catch (error) { console.warn("Player profile supplemental data could not be loaded", error); }
+
   } catch {
     profile.innerHTML = `<a class="back-link" href="/players">← All players</a>${emptyPage('Player profile unavailable', 'This player could not be found or the player API is unavailable.')}`;
   }
