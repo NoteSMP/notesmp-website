@@ -299,16 +299,27 @@ async function renderPlayerProfile(uuid) {
     const statsPayload = statsResponse.ok ? await statsResponse.json() : { statistics: [] };
     const statistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
     const prettyStatName = raw => {
-      let value = String(raw || 'statistic').replace(/^minecraft:/i, '').toLowerCase();
+      // Normalize Bukkit/Minecraft keys such as minecraft:white_wool and
+      // minecraft:kill_entity:minecraft:sheep without leaking namespaces.
+      let value = String(raw || 'statistic').trim().toLowerCase();
+      value = value.replace(/^minecraft:/, '');
       value = value.replace(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths)[.:_]/, '$1:');
       const entity = value.match(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths):(?:minecraft:)?([a-z0-9_]+)$/);
+      const titleWords = text => String(text || '').split(/[_\s]+/).filter(Boolean)
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      const wikiImage = (kind, name) => {
+        const slug = String(name || '').replace(/^minecraft:/, '').replace(/:/g, '_').toLowerCase();
+        return 'https://minecraft.wiki/images/' + kind + '_' + encodeURIComponent(slug) + '.png';
+      };
       if (entity) {
-        const name = entity[2].replace(/_/g, ' ').replace(/\\b\\w/g, char => char.toUpperCase());
-        return { group: entity[1] === 'killed_by_entity' || entity[1] === 'entity_deaths' ? 'Deaths by Entity' : 'Kills', label: name, icon: 'https://mc-heads.net/avatar/' + encodeURIComponent(entity[2]) + '/24' };
+        const name = entity[2];
+        const group = entity[1] === 'killed_by_entity' || entity[1] === 'entity_deaths' ? 'Deaths by Entity' : 'Kills';
+        return { group, label: titleWords(name), icon: wikiImage('EntitySprite', name) };
       }
       const parts = value.split(/[.:]/).filter(Boolean);
       const type = parts.shift() || 'other';
-      const label = parts.join(' ').replace(/_/g, ' ').replace(/\\b\\w/g, char => char.toUpperCase()) || type.replace(/_/g, ' ').replace(/\\b\\w/g, char => char.toUpperCase());
+      const itemName = parts.join('_') || type;
+      const label = titleWords(itemName);
       const groups = {
         mined: 'Blocks Mined', broken: 'Blocks Broken', crafted: 'Items Crafted', used: 'Items Used',
         picked_up: 'Items Picked Up', dropped: 'Items Dropped', killed: 'Kills', killed_by: 'Deaths',
@@ -317,9 +328,9 @@ async function renderPlayerProfile(uuid) {
         swim_one_cm: 'Movement', climb_one_cm: 'Movement', crouch_one_cm: 'Movement', play_time: 'Time Played',
         total_world_time: 'Time Played', time_since_death: 'Survival', time_since_rest: 'Survival'
       };
-      const group = groups[type] || type.replace(/_/g, ' ').replace(/\\b\\w/g, char => char.toUpperCase());
-      const iconName = parts[0] || type;
-      return { group, label, icon: 'https://mc-heads.net/item/' + encodeURIComponent(iconName) + '/24' };
+      const group = groups[type] || titleWords(type);
+      const iconKind = ['mined', 'broken'].includes(type) ? 'BlockSprite' : 'ItemSprite';
+      return { group, label, icon: wikiImage(iconKind, itemName) };
     };
     const groupedStats = new Map();
     statistics.forEach(stat => {
