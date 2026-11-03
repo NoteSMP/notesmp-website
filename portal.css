@@ -401,3 +401,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .post-card-footer .post-card-location-coordinates { margin: 0; flex: 1 1 auto; min-width: 0; white-space: pre-wrap; font: inherit; line-height: inherit; }
 .post-card-footer .post-card-id { flex: 0 0 auto; }
 @media(max-width:600px) { .post-card-footer { flex-wrap: wrap; } }
+
+.footer-credit { display: inline-flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
+.footer-credit > span:first-child { color: var(--muted); font-size: 10px; }
