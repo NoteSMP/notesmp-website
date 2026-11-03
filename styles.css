@@ -176,3 +176,5 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 .player-stat-groups { min-width:0; }
 
 #hero-title[hidden],#hero-subtitle[hidden]{display:none!important}
+
+.player-stat-icon { width:24px; height:24px; object-fit:contain; image-rendering:auto; flex:0 0 24px; }
