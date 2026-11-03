@@ -214,6 +214,17 @@ async function fetchServerStatus() {
       wrapper.innerHTML = serverStatusMarkup();
       existing.replaceWith(wrapper.firstElementChild);
     }
+    const onlineSection = document.querySelector('#online-players');
+    if (onlineSection) {
+      const names = (serverData?.onlinePlayers || []).map(player => {
+        const name = typeof player === 'string' ? player : player.name || player.username;
+        const uuid = typeof player === 'object' ? player.uuid || player.id : '';
+        if (!name) return '';
+        const avatar = uuid ? 'https://crafatar.com/avatars/' + encodeURIComponent(uuid) + '?size=32&overlay' : 'https://mc-heads.net/avatar/' + encodeURIComponent(name) + '/32';
+        return '<a class="online-player" href="/players?name=' + encodeURIComponent(name) + '"><img src="' + avatar + '" alt="" loading="lazy"><span>' + safeText(name) + '</span></a>';
+      }).filter(Boolean);
+      onlineSection.innerHTML = names.length ? names.join('') : 'No players are currently reported online.';
+    }
   }
 }
 
@@ -284,7 +295,16 @@ async function renderPlayerProfile(uuid) {
     const data = await response.json();
     const player = data.player;
     if (!player) throw new Error('Player not found');
-    profile.innerHTML = `<a class="back-link" href="/players">← All players</a><div class="panel"><div class="panel-heading"><div><span class="overline">PLAYER PROFILE</span><h2 class="profile-name-with-head"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid || uuid)}/24" alt="" loading="lazy"><span>${safeText(player.username)}</span></h2></div><span class="status-meta">Updated ${safeText(formatDate(player.updated_at))}</span></div><div class="panel-body"><div class="detail-grid"><div class="detail-stat"><span>Playtime</span><strong>${safeText(formatPlaytime(player.playtime_seconds))}</strong></div><div class="detail-stat"><span>Blocks placed</span><strong>${formatNumber(player.blocks_placed)}</strong></div><div class="detail-stat"><span>Blocks broken</span><strong>${formatNumber(player.blocks_broken)}</strong></div><div class="detail-stat"><span>Kills</span><strong>${formatNumber(player.kills)}</strong></div><div class="detail-stat"><span>Deaths</span><strong>${formatNumber(player.deaths)}</strong></div><div class="detail-stat"><span>First joined</span><strong>${safeText(formatDate(player.first_join))}</strong></div><div class="detail-stat"><span>Last seen</span><strong>${safeText(formatDate(player.last_seen))}</strong></div></div></div></div>`;
+    const statsResponse = await fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/statistics`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    const statsPayload = statsResponse.ok ? await statsResponse.json() : { statistics: [] };
+    const statistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
+    const statisticMarkup = statistics.length
+      ? statistics.map(stat => {
+          const label = String(stat.stat_id || 'Statistic').replace(/^minecraft:/, '').replace(/_/g, ' ').replace(/\\b\\w/g, char => char.toUpperCase());
+          return '<div class="detail-stat"><span>' + safeText(label) + '</span><strong>' + formatNumber(stat.stat_value) + '</strong></div>';
+        }).join('')
+      : '<p class="fine-print">No detailed game statistics have been synced for this player yet.</p>';
+    profile.innerHTML = `<a class="back-link" href="/players">← All players</a><div class="panel"><div class="panel-heading"><div><span class="overline">PLAYER PROFILE</span><h2 class="profile-name-with-head"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid || uuid)}/24" alt="" loading="lazy"><span>${safeText(player.username)}</span></h2></div><span class="status-meta">Updated ${safeText(formatDate(player.updated_at))}</span></div><div class="panel-body"><div class="detail-grid"><div class="detail-stat"><span>Playtime</span><strong>${safeText(formatPlaytime(player.playtime_seconds))}</strong></div><div class="detail-stat"><span>Blocks placed</span><strong>${formatNumber(player.blocks_placed)}</strong></div><div class="detail-stat"><span>Blocks broken</span><strong>${formatNumber(player.blocks_broken)}</strong></div><div class="detail-stat"><span>Kills</span><strong>${formatNumber(player.kills)}</strong></div><div class="detail-stat"><span>Deaths</span><strong>${formatNumber(player.deaths)}</strong></div><div class="detail-stat"><span>First joined</span><strong>${safeText(formatDate(player.first_join))}</strong></div><div class="detail-stat"><span>Last seen</span><strong>${safeText(formatDate(player.last_seen))}</strong></div></div><h3 class="section-heading">All game statistics</h3><div class="detail-grid">${statisticMarkup}</div></div></div>`;
   } catch {
     profile.innerHTML = `<a class="back-link" href="/players">← All players</a>${emptyPage('Player profile unavailable', 'This player could not be found or the player API is unavailable.')}`;
   }
