@@ -346,7 +346,7 @@ async function renderPlayerProfile(uuid) {
       ? [...groupedStats.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([group, entries]) =>
           '<section class="player-stat-group"><h4>' + safeText(group) + '</h4><ul class="player-stat-list">' +
           entries.sort((a, b) => a.label.localeCompare(b.label)).map(stat =>
-            '<li><img class="player-stat-icon" src="' + stat.icon + '" alt="" loading="lazy" onerror="this.hidden=true"><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
+            '<li><img class="player-stat-icon" src="' + stat.icon + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://mcasset.cloud/26.3/assets/minecraft/textures/item/paper.png\'"><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
           ).join('') + '</ul></section>'
         ).join('')
       : '<p class="fine-print">No detailed game statistics have been synced for this player yet.</p>';
@@ -362,6 +362,9 @@ async function renderPlayerProfile(uuid) {
       items.forEach(item => { const match = !query || item.dataset.profileSearch.includes(query); item.hidden = !match; if (match) visible++; });
       const empty = panel.querySelector("[data-profile-empty]");
       if (empty) empty.hidden = visible > 0;
+      if (tab === "statistics") panel.querySelectorAll(".player-stat-group").forEach(group => {
+        group.hidden = ![...group.querySelectorAll("[data-profile-search]")].some(item => !item.hidden);
+      });
     };
     const switchProfileTab = tab => {
       profileTabs.forEach(button => { const active = button.dataset.profileTab === tab; button.classList.toggle("is-active", active); button.setAttribute("aria-selected", String(active)); });
