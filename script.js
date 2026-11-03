@@ -99,8 +99,9 @@ function linkIcon(key) {
   return '<svg ' + attrs + '>' + (paths[key] || paths.bluemap) + '</svg>';
 }
 function resourceLink(label, url, hint = 'Open') {
-  if (!url) return `<div class="resource-link is-disabled" aria-disabled="true"><span>${safeText(label)}</span><span>${safeText(hint)}</span></div>`;
-  return `<a class="resource-link" href="${safeText(url)}" target="_blank" rel="noreferrer"><span>${safeText(label)}</span><span aria-hidden="true">↗</span></a>`;
+  const key = String(label || '').toLowerCase();
+  if (!url) return `<div class="resource-link is-disabled" data-link-key="${safeText(key)}" aria-disabled="true"><span>${safeText(label)}</span><span>${safeText(hint)}</span></div>`;
+  return `<a class="resource-link" data-link-key="${safeText(key)}" href="${safeText(url)}" target="_blank" rel="noreferrer"><span>${safeText(label)}</span><span aria-hidden="true">↗</span></a>`;
 }
 
 function homePage() {
@@ -506,7 +507,31 @@ window.setInterval(fetchServerStatus, 60_000);
       console.warn("Could not load configured Discord link", error);
     }
   }
+  async function updateServerLinks() {
+    const section = document.querySelector("#section-server-links");
+    if (!section) return;
+    try {
+      const response = await fetch(API + "/content/links", {cache:"no-store"});
+      if (!response.ok) return;
+      const data = await response.json();
+      const configured = new Map((data.links || []).map(link => [String(link.link_key || "").toLowerCase(), safeUrl(link.url)]));
+      section.querySelectorAll("[data-link-key]").forEach(row => {
+        const url = configured.get(row.dataset.linkKey);
+        if (!url || row.tagName === "A") return;
+        const anchor = document.createElement("a");
+        anchor.className = "resource-link";
+        anchor.dataset.linkKey = row.dataset.linkKey;
+        anchor.href = url;
+        anchor.target = "_blank";
+        anchor.rel = "noreferrer";
+        anchor.innerHTML = row.innerHTML.replace(/<span>[^<]*<\\/span>$/, '<span aria-hidden="true">↗</span>');
+        row.replaceWith(anchor);
+      });
+    } catch (error) { console.warn("Could not load configured server links", error); }
+  }
   updateHeaderDiscordLink();
+  updateServerLinks();
+  window.addEventListener("notesmp:render", updateServerLinks);
   const app = document.querySelector("#app");
   if (!app) return;
   let lastKey = "";
