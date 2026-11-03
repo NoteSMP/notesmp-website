@@ -298,7 +298,17 @@ async function renderPlayerProfile(uuid) {
     if (!player) throw new Error('Player not found');
     const statsResponse = await fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/statistics`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
     const statsPayload = statsResponse.ok ? await statsResponse.json() : { statistics: [] };
-    const statistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
+    const rawStatistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
+    // APIs may return repeated rows for the same stat id; show one row per canonical id.
+    const uniqueStatistics = new Map();
+    rawStatistics.forEach(stat => {
+      const key = String(stat?.stat_id || '').trim().toLowerCase().replace(/^minecraft:/, '');
+      if (!key) return;
+      const value = Number(stat.stat_value) || 0;
+      const existing = uniqueStatistics.get(key);
+      if (!existing || value > (Number(existing.stat_value) || 0)) uniqueStatistics.set(key, { ...stat, stat_value: value });
+    });
+    const statistics = [...uniqueStatistics.values()];
     const wikiIconKey = (kind, id) => {
       const normalized = String(id || '').replace(/^minecraft:/i, '').toLowerCase().replace(/[.\\/-]+/g, '_');
       const specialPages = {
@@ -365,7 +375,7 @@ async function renderPlayerProfile(uuid) {
         }).map(([group, entries]) =>
           '<section class="player-stat-group"><h4>' + safeText(group) + '</h4><ul class="player-stat-list">' +
           entries.sort((a, b) => a.label.localeCompare(b.label)).map(stat =>
-            '<li><img class="player-stat-icon" data-wiki-icon="' + safeText(JSON.stringify(stat.icon || [])) + '" alt="" loading="lazy"><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
+            '<li data-stat-id="' + safeText(stat.id) + '"><img class="player-stat-icon" data-wiki-icon="' + safeText(JSON.stringify(stat.icon || [])) + '" alt="" loading="lazy"><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
           ).join('') + '</ul></section>'
         ).join('')
       : '<p class="fine-print">No detailed game statistics have been synced for this player yet.</p>';
@@ -396,7 +406,11 @@ async function renderPlayerProfile(uuid) {
       const active = profile.querySelector("[data-profile-tab].is-active")?.dataset.profileTab || "statistics";
       filterProfilePanel(active, profileSearch.value.trim().toLowerCase());
     });
-    profile.querySelectorAll(".player-stat-group li").forEach(item => { item.dataset.profileSearch = item.textContent.toLowerCase(); });
+    profile.querySelectorAll(".player-stat-group li").forEach(item => {
+      const groupName = item.closest(".player-stat-group")?.querySelector("h4")?.textContent || "";
+      const statId = item.dataset.statId || "";
+      item.dataset.profileSearch = (groupName + " " + statId + " " + item.textContent).toLowerCase();
+    });
     // Batch Wiki lookups; a zero-inclusive profile can have hundreds of statistic rows.
     const iconImages = [...profile.querySelectorAll('img.player-stat-icon[data-wiki-icon]')];
     const iconLookup = new Map();
