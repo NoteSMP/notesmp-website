@@ -299,16 +299,15 @@ async function renderPlayerProfile(uuid) {
     const statsPayload = statsResponse.ok ? await statsResponse.json() : { statistics: [] };
     const statistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
     const prettyStatName = raw => {
-      // Bukkit stat keys may contain a namespace on both the statistic and value:
-      // minecraft:mined:minecraft:stone -> mined:stone.
+      // Normalize stat identifiers before formatting labels.
       const value = String(raw || 'statistic').trim().toLowerCase().replace(/minecraft:/g, '');
-      const entity = value.match(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths)[.:]([a-z0-9_]+)$/);
       const titleWords = text => String(text || '').split(/[_\\s]+/).filter(Boolean)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
       const version = '26.3';
       const textureUrl = (kind, name) =>
         'https://mcasset.cloud/' + version + '/assets/minecraft/textures/' + kind + '/' +
         encodeURIComponent(String(name || '').toLowerCase()) + '.png';
+      const entity = value.match(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths)[.:]([a-z0-9_]+)$/);
       if (entity) {
         const name = entity[2];
         const group = entity[1] === 'killed_by_entity' || entity[1] === 'entity_deaths' ? 'Deaths by Entity' : 'Kills';
@@ -318,6 +317,12 @@ async function renderPlayerProfile(uuid) {
       const type = parts.shift() || 'other';
       const itemName = parts.join('_') || type;
       const label = titleWords(itemName);
+      const specialLabels = {
+        time_since_death: 'Time Since Death', time_since_rest: 'Time Since Rest',
+        fly_one_cm: 'Distance Flown', walk_one_cm: 'Distance Walked', sprint_one_cm: 'Distance Sprinted',
+        swim_one_cm: 'Distance Swum', climb_one_cm: 'Distance Climbed', crouch_one_cm: 'Distance Crouched',
+        play_time: 'Play Time', total_world_time: 'Total World Time'
+      };
       const groups = {
         mined: 'Blocks Mined', broken: 'Blocks Broken', crafted: 'Items Crafted', used: 'Items Used',
         picked_up: 'Items Picked Up', dropped: 'Items Dropped', killed: 'Kills', killed_by: 'Deaths',
@@ -328,7 +333,7 @@ async function renderPlayerProfile(uuid) {
       };
       const group = groups[type] || titleWords(type);
       const kind = ['mined', 'broken'].includes(type) ? 'block' : 'item';
-      return { group, label, icon: textureUrl(kind, itemName) };
+      return { group, label: specialLabels[itemName] || label, icon: textureUrl(kind, itemName) };
     };
     const groupedStats = new Map();
     statistics.forEach(stat => {
