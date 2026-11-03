@@ -335,7 +335,7 @@ async function renderPlayerProfile(uuid) {
         mined: 'Blocks Mined', mine_block: 'Blocks Mined', broken: 'Blocks Broken', break_block: 'Blocks Broken',
         crafted: 'Items Crafted', craft_item: 'Items Crafted', used: 'Items Used', use_item: 'Items Used',
         picked_up: 'Items Picked Up', pickup: 'Items Picked Up', dropped: 'Items Dropped', drop: 'Items Dropped',
-        killed: 'Kills', killed_by: 'Deaths', custom: 'General', interact_with_furnace: 'General', open_furnace: 'General',
+        killed: 'Kills', killed_by: 'Deaths', custom: 'General',
         damage_dealt: 'Combat', damage_taken: 'Combat',
         deaths: 'Survival', jump: 'Movement', walk_one_cm: 'Movement', sprint_one_cm: 'Movement',
         fly_one_cm: 'Movement', swim_one_cm: 'Movement', climb_one_cm: 'Movement', crouch_one_cm: 'Movement',
@@ -344,7 +344,8 @@ async function renderPlayerProfile(uuid) {
       const blockTypes = ['mined', 'mine_block', 'broken', 'break_block', 'place_block'];
       const iconType = blockTypes.includes(type) ? 'block' : 'item';
       const iconItem = type === 'interact_with_furnace' || type === 'open_furnace' ? 'furnace' : itemName;
-      return { group: groups[type] || 'General', label: specialLabels[itemName] || label, icon: wikiIconUrl(iconType, iconItem) };
+      const group = itemName.startsWith('interact_with_') ? 'Interactions' : (groups[type] || 'General');
+      return { group, label: specialLabels[itemName] || label, icon: wikiIconUrl(iconType, iconItem) };
     };
     const groupedStats = new Map();
     statistics.forEach(stat => {
