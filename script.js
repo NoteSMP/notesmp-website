@@ -299,6 +299,10 @@ async function renderPlayerProfile(uuid) {
     const statsResponse = await fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/statistics`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
     const statsPayload = statsResponse.ok ? await statsResponse.json() : { statistics: [] };
     const statistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
+    const wikiIconUrl = (kind, id) => {
+      const pageTitle = String(id || '').replace(/^minecraft:/i, '').split(/[_.\\/-]+/).filter(Boolean).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+      return 'https://minecraft.wiki/api.php?action=query&format=json&prop=pageimages&piprop=thumbnail&pithumbsize=64&origin=*&titles=' + encodeURIComponent(pageTitle);
+    };
     const prettyStatName = raw => {
       const value = String(raw || 'statistic').trim().toLowerCase().replace(/minecraft:/g, '');
       const titleWords = text => String(text || '').split(/[_\s]+/).filter(Boolean)
