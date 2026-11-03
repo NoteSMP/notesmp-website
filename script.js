@@ -300,7 +300,7 @@ async function renderPlayerProfile(uuid) {
     const statistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
     const prettyStatName = raw => {
       const value = String(raw || 'statistic').trim().toLowerCase().replace(/minecraft:/g, '');
-      const titleWords = text => String(text || '').split(/[_\\s]+/).filter(Boolean)
+      const titleWords = text => String(text || '').split(/[_\s]+/).filter(Boolean)
         .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
       const version = '26.3';
       const textureUrl = (kind, name) =>
