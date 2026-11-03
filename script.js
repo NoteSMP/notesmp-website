@@ -300,8 +300,16 @@ async function renderPlayerProfile(uuid) {
     const statsPayload = statsResponse.ok ? await statsResponse.json() : { statistics: [] };
     const statistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
     const wikiIconUrl = (kind, id) => {
-      const pageTitle = String(id || '').replace(/^minecraft:/i, '').split(/[_.\\/-]+/).filter(Boolean).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
-      return 'https://minecraft.wiki/api.php?action=query&format=json&prop=pageimages&piprop=thumbnail&pithumbsize=64&origin=*&titles=' + encodeURIComponent(pageTitle);
+      const normalized = String(id || '').replace(/^minecraft:/i, '').toLowerCase().replace(/[.\\/-]+/g, '_');
+      const specialPages = {
+        white_wool: 'Wool', red_wool: 'Wool', red_bed: 'Bed',
+        birch_planks: 'Planks', mutton: 'Mutton', furnace: 'Furnace'
+      };
+      const pageTitle = specialPages[normalized] || normalized.split(/[_]+/).filter(Boolean)
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+      const fileTitle = normalized.split('_').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+      const titles = ['File:' + fileTitle + '.png', 'File:' + fileTitle.replace(/ /g, '_') + '.png', pageTitle].join('|');
+      return 'https://minecraft.wiki/api.php?action=query&format=json&prop=imageinfo|pageimages&iiprop=url&piprop=thumbnail&pithumbsize=64&origin=*&titles=' + encodeURIComponent(titles);
     };
     const prettyStatName = raw => {
       const value = String(raw || 'statistic').trim().toLowerCase().replace(/minecraft:/g, '');
@@ -327,14 +335,15 @@ async function renderPlayerProfile(uuid) {
         mined: 'Blocks Mined', mine_block: 'Blocks Mined', broken: 'Blocks Broken', break_block: 'Blocks Broken',
         crafted: 'Items Crafted', craft_item: 'Items Crafted', used: 'Items Used', use_item: 'Items Used',
         picked_up: 'Items Picked Up', pickup: 'Items Picked Up', dropped: 'Items Dropped', drop: 'Items Dropped',
-        killed: 'Kills', killed_by: 'Deaths', custom: 'General', damage_dealt: 'Combat', damage_taken: 'Combat',
+        killed: 'Kills', killed_by: 'Deaths', custom: 'General', interact_with_furnace: 'General', open_furnace: 'General',
+        damage_dealt: 'Combat', damage_taken: 'Combat',
         deaths: 'Survival', jump: 'Movement', walk_one_cm: 'Movement', sprint_one_cm: 'Movement',
         fly_one_cm: 'Movement', swim_one_cm: 'Movement', climb_one_cm: 'Movement', crouch_one_cm: 'Movement',
         play_time: 'Time Played', total_world_time: 'Time Played', time_since_death: 'Survival', time_since_rest: 'Survival'
       };
       const blockTypes = ['mined', 'mine_block', 'broken', 'break_block', 'place_block'];
       const iconType = blockTypes.includes(type) ? 'block' : 'item';
-      return { group: groups[type] || titleWords(type), label: specialLabels[itemName] || label, icon: wikiIconUrl(iconType, itemName) };
+      return { group: groups[type] || 'General', label: specialLabels[itemName] || label, icon: wikiIconUrl(iconType, itemName) };
     };
     const groupedStats = new Map();
     statistics.forEach(stat => {
@@ -387,9 +396,12 @@ async function renderPlayerProfile(uuid) {
         const response = await fetch(image.dataset.wikiIcon);
         if (!response.ok) throw new Error('Wiki query failed');
         const payload = await response.json();
-        const page = Object.values(payload?.query?.pages || {})[0];
-        if (!page?.thumbnail?.source) throw new Error('Wiki page image missing');
-        image.src = page.thumbnail.source;
+        const pages = Object.values(payload?.query?.pages || {});
+        const filePage = pages.find(page => page?.imageinfo?.[0]?.url);
+        const articlePage = pages.find(page => page?.thumbnail?.source);
+        const iconUrl = filePage?.imageinfo?.[0]?.url || articlePage?.thumbnail?.source;
+        if (!iconUrl) throw new Error('Wiki image missing');
+        image.src = iconUrl;
       } catch { image.remove(); }
     });
     try {
