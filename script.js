@@ -321,64 +321,86 @@ async function renderPlayerProfile(uuid) {
       const fileTitle = normalized === 'mutton' ? 'Raw Mutton' : normalized.split('_').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
       return ['File:' + fileTitle + '.png', 'File:' + fileTitle.replace(/ /g, '_') + '.png', pageTitle];
     };
-    const prettyStatName = raw => {
-      const value = String(raw || 'statistic').trim().toLowerCase().replace(/minecraft:/g, '');
-      const titleWords = text => String(text || '').split(/[_\s]+/).filter(Boolean)
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-      const entity = value.match(/^(kill_entity|killed_by_entity|entity_kills|entity_deaths|killed|killed_by)[.:]([a-z0-9_]+)$/);
-      if (entity) {
-        const name = entity[2];
-        const group = entity[1] === 'killed_by_entity' || entity[1] === 'entity_deaths' || entity[1] === 'killed_by'
-          ? 'Deaths by Entity' : 'Kills by Entity';
-        return { group, label: titleWords(name), icon: wikiIconKey('mob', name) };
-      }
-      const parts = value.split(/[.:]/).filter(Boolean);
-      const type = parts.shift() || 'other';
-      const itemName = parts.join('_') || type;
-      const label = titleWords(itemName);
-      const specialLabels = {
-        time_since_death: 'Time Since Death', time_since_rest: 'Time Since Rest',
-        fly_one_cm: 'Distance Flown', walk_one_cm: 'Distance Walked', sprint_one_cm: 'Distance Sprinted',
-        swim_one_cm: 'Distance Swum', climb_one_cm: 'Distance Climbed', crouch_one_cm: 'Distance Crouched',
-        play_time: 'Play Time', total_world_time: 'Total World Time'
-      };
-      const groups = {
-        mined: 'Blocks Mined', mine_block: 'Blocks Mined', broken: 'Blocks Broken', break_block: 'Blocks Broken',
-        crafted: 'Items Crafted', craft_item: 'Items Crafted', used: 'Items Used', use_item: 'Items Used',
-        picked_up: 'Items Picked Up', pickup: 'Items Picked Up', dropped: 'Items Dropped', drop: 'Items Dropped',
-        killed: 'Kills by Entity', killed_by: 'Deaths by Entity', custom: 'General',
-        mob_kills: 'Kills', player_kills: 'Kills', damage_dealt: 'Combat', damage_taken: 'Combat',
-        deaths: 'Survival', jump: 'Movement', walk_one_cm: 'Movement', sprint_one_cm: 'Movement',
-        fly_one_cm: 'Movement', swim_one_cm: 'Movement', climb_one_cm: 'Movement', crouch_one_cm: 'Movement',
-        play_time: 'Time Played', total_world_time: 'Time Played', time_since_death: 'Survival', time_since_rest: 'Survival'
-      };
-      const blockTypes = ['mined', 'mine_block', 'broken', 'break_block', 'place_block'];
-      const iconType = blockTypes.includes(type) ? 'block' : 'item';
-      const iconItem = type === 'interact_with_furnace' || type === 'open_furnace' ? 'furnace' : itemName;
-      const group = itemName.startsWith('interact_with_') ? 'Interactions'
-        : (type === 'custom' && itemName === 'mob_kills' ? 'Kills'
-          : type === 'custom' && itemName === 'player_kills' ? 'Kills'
-            : groups[type] || 'General');
-      return { group, label: specialLabels[itemName] || label, icon: wikiIconKey(iconType, iconItem) };
+    const titleWords = raw => String(raw || '').split(/[_\\s]+/).filter(Boolean)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    const statKey = raw => String(raw || '').trim().toLowerCase().replace(/^minecraft:/, '');
+    const statValue = stat => Number(stat.stat_value) || 0;
+    const statMap = new Map(statistics.map(stat => [statKey(stat.stat_id), statValue(stat)]));
+    const readStat = (...keys) => {
+      for (const key of keys) if (statMap.has(key)) return statMap.get(key);
+      return 0;
     };
-    const groupedStats = new Map();
+    const entityRows = new Map();
+    const itemRows = new Map();
+    const generalRows = [];
+    const damageRows = [];
+    const distanceRows = [];
+    const interactionRows = [];
+    const generalStatNames = {
+      'custom:mob_kills': 'Mob Kills', 'custom:player_kills': 'Player Kills',
+      'custom:deaths': 'Deaths', 'custom:jump': 'Jumps',
+      'custom:damage_dealt': 'Damage Dealt', 'custom:damage_dealt_absorbed': 'Damage Dealt (Absorbed)',
+      'custom:damage_dealt_resisted': 'Damage Dealt (Resisted)', 'custom:damage_taken': 'Damage Taken',
+      'custom:damage_blocked_by_shield': 'Damage Blocked by Shield',
+      'custom:damage_absorbed': 'Damage Absorbed', 'custom:damage_resisted': 'Damage Resisted',
+      'custom:damage’_dealt': 'Damage Dealt'
+    };
+    const entityPattern = /^(?:killed|killed_by|kill_entity|killed_by_entity|entity_kills|entity_deaths)[.:]([a-z0-9_]+)$/;
+    const itemPattern = /^(mined|broken|crafted|used|picked_up|dropped|mine_block|break_block|craft_item|use_item|pickup|drop)[.:]([a-z0-9_]+)$/;
+    const entityTypes = new Set(['killed','kill_entity','entity_kills','killed_by','killed_by_entity','entity_deaths']);
+    const itemTypes = new Set(['mined','mine_block','broken','break_block','crafted','craft_item','used','use_item','picked_up','pickup','dropped','drop']);
+    const itemMetric = { mined: 'mined', mine_block: 'mined', broken: 'broken', break_block: 'broken', crafted: 'crafted', craft_item: 'crafted', used: 'used', use_item: 'used', picked_up: 'pickedUp', pickup: 'pickedUp', dropped: 'dropped', drop: 'dropped' };
+    const makeEntity = name => {
+      if (!entityRows.has(name)) entityRows.set(name, { name, icon: wikiIconKey('mob', name), killed: 0, killedBy: 0 });
+      return entityRows.get(name);
+    };
+    const makeItem = name => {
+      if (!itemRows.has(name)) itemRows.set(name, { name, icon: wikiIconKey('item', name), mined: 0, broken: 0, crafted: 0, used: 0, pickedUp: 0, dropped: 0 });
+      return itemRows.get(name);
+    };
     statistics.forEach(stat => {
-      const parsed = prettyStatName(stat.stat_id);
-      if (!groupedStats.has(parsed.group)) groupedStats.set(parsed.group, []);
-      groupedStats.get(parsed.group).push({ ...parsed, value: stat.stat_value, id: stat.stat_id });
+      const key = statKey(stat.stat_id);
+      const value = statValue(stat);
+      const entityMatch = key.match(entityPattern);
+      if (entityMatch) {
+        const [, name] = entityMatch;
+        const type = key.split(/[.:]/)[0];
+        const row = makeEntity(name);
+        if (['killed_by','killed_by_entity','entity_deaths'].includes(type)) row.killedBy = value;
+        else row.killed = value;
+        return;
+      }
+      const itemMatch = key.match(itemPattern);
+      if (itemMatch) {
+        const [, type, name] = itemMatch;
+        makeItem(name)[itemMetric[type]] = value;
+        return;
+      }
+      const parts = key.split(/[.:]/);
+      const metric = parts.slice(1).join('_') || parts[0];
+      const label = generalStatNames[key] || titleWords(metric);
+      const entry = { label, value, id: stat.stat_id };
+      if (/^custom:(damage_|damage)/.test(key)) damageRows.push(entry);
+      else if (/^custom:(walk|sprint|swim|fly|climb|crouch|aviate|boat|horse|minecart|pig|strider)_one_cm$/.test(key) || /^custom:(walk|sprint|swim|fly|climb|crouch|aviate|boat|horse|minecart|pig|strider)/.test(key)) distanceRows.push(entry);
+      else if (/^custom:interact_with_/.test(key)) interactionRows.push({ ...entry, label: titleWords(metric.replace(/^interact_with_/, '')) });
+      else generalRows.push(entry);
     });
-    const groupOrder = ['General', 'Blocks Mined', 'Blocks Broken', 'Items Crafted', 'Items Used', 'Items Picked Up', 'Items Dropped', 'Kills', 'Kills by Entity', 'Deaths', 'Deaths by Entity', 'Combat', 'Movement', 'Survival', 'Time Played'];
-    const statisticMarkup = groupedStats.size
-      ? [...groupedStats.entries()].sort(([a], [b]) => {
-          const ai = groupOrder.indexOf(a), bi = groupOrder.indexOf(b);
-          return (ai < 0 ? groupOrder.length : ai) - (bi < 0 ? groupOrder.length : bi) || a.localeCompare(b);
-        }).map(([group, entries]) =>
-          '<section class="player-stat-group"><h4>' + safeText(group) + '</h4><ul class="player-stat-list">' +
-          entries.sort((a, b) => a.label.localeCompare(b.label)).map(stat =>
-            '<li data-stat-id="' + safeText(stat.id) + '"><img class="player-stat-icon" data-wiki-icon="' + safeText(JSON.stringify(stat.icon || [])) + '" alt="" loading="lazy"><span class="player-stat-label">' + safeText(stat.label) + '</span><strong>' + formatNumber(stat.value) + '</strong></li>'
-          ).join('') + '</ul></section>'
-        ).join('')
-      : '<p class="fine-print">No detailed game statistics have been synced for this player yet.</p>';
+    const tableHead = columns => '<div class="table-wrap player-stat-table-wrap"><table class="player-stat-table"><thead><tr>' + columns.map(column => '<th>' + safeText(column) + '</th>').join('') + '</tr></thead><tbody>';
+    const tableEnd = '</tbody></table></div>';
+    const iconCell = icon => '<td class="player-stat-item-cell"><img class="player-stat-icon" data-wiki-icon="' + safeText(JSON.stringify(icon || [])) + '" alt="" loading="lazy"></td>';
+    const numberCell = value => '<td class="numeric">' + formatNumber(value) + '</td>';
+    const generalTable = (rows, columns = ['Statistic', 'Value']) => rows.length ? tableHead(columns) + rows.sort((a,b) => a.label.localeCompare(b.label)).map(row => '<tr data-stat-id="' + safeText(row.id) + '"><td>' + safeText(row.label) + '</td>' + numberCell(row.value) + '</tr>').join('') + tableEnd : '';
+    const itemTable = [...itemRows.values()].length ? tableHead(['Icon', 'Item', 'Mined', 'Broken', 'Crafted', 'Used', 'Picked up', 'Dropped']) + [...itemRows.values()].sort((a,b) => a.name.localeCompare(b.name)).map(row => '<tr data-stat-id="' + safeText(row.name) + '">' + iconCell(row.icon) + '<td>' + safeText(titleWords(row.name)) + '</td>' + numberCell(row.mined) + numberCell(row.broken) + numberCell(row.crafted) + numberCell(row.used) + numberCell(row.pickedUp) + numberCell(row.dropped) + '</tr>').join('') + tableEnd : '';
+    const entityTable = entityRows.size ? tableHead(['Icon', 'Entity', 'Killed', 'Killed by']) + [...entityRows.values()].sort((a,b) => a.name.localeCompare(b.name)).map(row => '<tr data-stat-id="' + safeText(row.name) + '">' + iconCell(row.icon) + '<td>' + safeText(titleWords(row.name)) + '</td>' + numberCell(row.killed) + numberCell(row.killedBy) + '</tr>').join('') + tableEnd : '';
+    const groupMarkup = (name, body) => body ? '<section class="player-stat-group"><h4>' + safeText(name) + '</h4>' + body + '</section>' : '';
+    const statisticMarkup = [
+      groupMarkup('General', generalTable(generalRows)),
+      groupMarkup('Damage', generalTable(damageRows)),
+      groupMarkup('Distance', generalTable(distanceRows)),
+      groupMarkup('Interactions', generalTable(interactionRows)),
+      groupMarkup('Entities', entityTable),
+      groupMarkup('Items', itemTable)
+    ].join('') || '<p class="fine-print">No detailed game statistics have been synced for this player yet.</p>';
     profile.innerHTML = `<a class="back-link" href="/players">← All players</a><div class="panel"><div class="panel-heading"><div><span class="overline">PLAYER PROFILE</span><h2 class="profile-name-with-head"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid || uuid)}/24" alt="" loading="lazy"><span>${safeText(player.username)}</span></h2></div><span class="status-meta">Updated ${safeText(formatDate(player.updated_at))}</span></div><div class="panel-body"><div class="detail-grid"><div class="detail-stat"><span>Playtime</span><strong>${safeText(formatPlaytime(player.playtime_seconds))}</strong></div><div class="detail-stat"><span>Blocks placed</span><strong>${formatNumber(player.blocks_placed)}</strong></div><div class="detail-stat"><span>Blocks broken</span><strong>${formatNumber(player.blocks_broken)}</strong></div><div class="detail-stat"><span>Kills</span><strong>${formatNumber(player.kills)}</strong></div><div class="detail-stat"><span>Deaths</span><strong>${formatNumber(player.deaths)}</strong></div><div class="detail-stat"><span>First joined</span><strong>${safeText(formatDate(player.first_join))}</strong></div><div class="detail-stat"><span>Last seen</span><strong>${safeText(formatDate(player.last_seen))}</strong></div></div><div class="player-profile-tabs" role="tablist" aria-label="Player profile sections"><button type="button" class="profile-tab is-active" role="tab" aria-selected="true" data-profile-tab="statistics">Statistics</button><button type="button" class="profile-tab" role="tab" aria-selected="false" data-profile-tab="advancements">Advancements</button><button type="button" class="profile-tab" role="tab" aria-selected="false" data-profile-tab="posts">Posts</button></div><input class="search-input profile-search" id="profile-search" type="search" placeholder="Search statistics…" aria-label="Search player profile data"><div class="player-profile-panel" data-profile-panel="statistics"><div class="player-stat-groups">${statisticMarkup}</div></div><div class="player-profile-panel" data-profile-panel="advancements" hidden><p class="fine-print">Loading earned advancements…</p></div><div class="player-profile-panel" data-profile-panel="posts" hidden><p class="fine-print">Loading posts mentioning this player as a builder…</p></div></div></div>`;
     const profileTabs = [...profile.querySelectorAll("[data-profile-tab]")];
     const profilePanels = [...profile.querySelectorAll("[data-profile-panel]")];
