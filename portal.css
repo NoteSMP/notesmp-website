@@ -414,3 +414,17 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .online-player { display:flex; align-items:center; gap:12px; min-height:48px; padding:7px 0; color:var(--text); }
 .online-player img { width:36px; height:36px; flex:0 0 36px; border-radius:4px; object-fit:cover; }
 .online-player span { align-self:center; font-weight:800; }
+
+
+/* Keep warning banners aligned consistently with info banners */
+.home-news-feed .notice-bar.news-warning,
+.home-news-feed .notice-bar.news-warning-red,
+.home-news-feed .notice-bar.news-warning-orange {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+.home-news-feed .notice-bar.news-warning .news-copy,
+.home-news-feed .notice-bar.news-warning-red .news-copy,
+.home-news-feed .notice-bar.news-warning-orange .news-copy { flex: 1 1 auto; min-width: 0; text-align: left; }
