@@ -212,3 +212,70 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 /* Ensure mob kills spans the full profile grid width, independently of overview columns. */
 .player-stat-groups>.mob-kills-group{grid-column:1/-1!important;width:100%;min-width:0}
 .player-stat-groups>.mob-kills-group .mob-kill-grid{width:100%;}
+
+
+/* Polished, consistent General / Travel / Other overview cards. */
+.player-stat-groups>.player-stat-group:nth-child(-n+3){
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--panel);
+  box-shadow:0 4px 14px rgba(0,0,0,.06);
+}
+.player-stat-groups>.player-stat-group:nth-child(-n+3)>h4{
+  display:flex;
+  align-items:center;
+  min-height:44px;
+  margin:0;
+  padding:0 14px;
+  border:0;
+  border-bottom:1px solid var(--line);
+  background:rgba(127,127,127,.09);
+  font-size:14px;
+  letter-spacing:.025em;
+}
+.player-stat-groups>.player-stat-group:nth-child(-n+3)>.player-stat-table-wrap{
+  width:100%;
+  max-width:none;
+  margin:0;
+  border:0;
+  border-radius:0;
+}
+.player-stat-groups>.player-stat-group:nth-child(-n+3) .player-stat-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+}
+.player-stat-groups>.player-stat-group:nth-child(-n+3) .player-stat-table th{
+  padding:9px 12px;
+  background:rgba(127,127,127,.045);
+  color:var(--muted);
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.player-stat-groups>.player-stat-group:nth-child(-n+3) .player-stat-table td{
+  padding:8px 12px;
+  border-bottom:1px solid rgba(127,127,127,.12);
+  font-size:12px;
+  line-height:1.35;
+}
+.player-stat-groups>.player-stat-group:nth-child(-n+3) .player-stat-table tbody tr:last-child td{border-bottom:0}
+.player-stat-groups>.player-stat-group:nth-child(-n+3) .player-stat-table tbody td:first-child{
+  color:var(--muted);
+  overflow-wrap:anywhere;
+}
+.player-stat-groups>.player-stat-group:nth-child(-n+3) .player-stat-table tbody td.numeric{
+  white-space:nowrap;
+  font-weight:600;
+}
+@media(max-width:900px){
+  .player-stat-groups{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+  .player-stat-groups{grid-template-columns:1fr}
+}
