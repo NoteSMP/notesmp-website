@@ -199,3 +199,12 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 .mob-kill-card span{flex:1;min-width:0}
 .mob-kill-card strong{margin-left:auto}
 @media(max-width:760px){.player-stat-groups{grid-template-columns:1fr}}
+
+/* Player-stat readability and six-column mob kill layout. */
+.player-stat-table th.numeric{text-align:center}
+.player-stat-table tbody td.numeric{text-align:right}
+.player-stat-table tbody tr:nth-child(even) td{background:rgba(0,0,0,.055)}
+.mob-kill-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media(max-width:1100px){.mob-kill-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:760px){.mob-kill-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:440px){.mob-kill-grid{grid-template-columns:1fr}}
