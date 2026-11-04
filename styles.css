@@ -187,3 +187,5 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 .mob-kill-card{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:rgba(127,127,127,.045)}
 .mob-kill-card span{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
 .mob-kill-card strong{font-size:13px;color:var(--text);font-variant-numeric:tabular-nums}
+
+.player-stat-groups > .player-stat-group:nth-child(1),.player-stat-groups > .player-stat-group:nth-child(2){grid-column:1/-1}
