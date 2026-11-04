@@ -444,6 +444,34 @@ async function renderPlayerProfile(uuid) {
       if (iconUrl) image.src = iconUrl;
       else image.remove();
     });
+    // Each profile table can be sorted independently by clicking any column heading.
+    profile.querySelectorAll('.player-stat-table').forEach(table => {
+      table.querySelectorAll('.stat-sort-button').forEach(button => {
+        button.addEventListener('click', () => {
+          const column = Number(button.dataset.sortColumn);
+          const body = table.tBodies[0];
+          if (!body) return;
+          const ascending = button.dataset.sortDirection !== 'asc';
+          table.querySelectorAll('.stat-sort-button').forEach(other => {
+            if (other !== button) delete other.dataset.sortDirection;
+            const arrow = other.querySelector('span');
+            if (arrow && other !== button) arrow.textContent = '↕';
+          });
+          button.dataset.sortDirection = ascending ? 'asc' : 'desc';
+          const arrow = button.querySelector('span');
+          if (arrow) arrow.textContent = ascending ? '↑' : '↓';
+          [...body.rows].sort((left,right) => {
+            const a = left.cells[column]?.textContent.trim() || '';
+            const b = right.cells[column]?.textContent.trim() || '';
+            const numericA = Number(a.replace(/[,\s]/g,''));
+            const numericB = Number(b.replace(/[,\s]/g,''));
+            const result = a !== '' && b !== '' && Number.isFinite(numericA) && Number.isFinite(numericB)
+              ? numericA - numericB : a.localeCompare(b, undefined, {numeric:true,sensitivity:'base'});
+            return (ascending ? result : -result);
+          }).forEach(row => body.append(row));
+        });
+      });
+    });
     try {
       const [advResponse, postResponse] = await Promise.all([
         fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/advancements`, {cache:"no-store"}),
