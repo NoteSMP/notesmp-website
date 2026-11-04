@@ -39,12 +39,14 @@ function getDiscordEventState(event = {}) {
 function formatDate(value) {
   if (!value) return 'Not recorded';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? 'Not recorded' : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  return Number.isNaN(date.getTime()) ? 'Not recorded' : date.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function formatPlaytime(seconds) {
-  const hours = Math.floor(Math.max(0, Number(seconds) || 0) / 3600);
-  return `${formatNumber(hours)} hr`;
+  let total = Math.floor(Math.max(0, Number(seconds) || 0) / 60);
+  const days = Math.floor(total / 1440); total %= 1440;
+  const hours = Math.floor(total / 60); const minutes = total % 60;
+  return [days ? `${days}d` : '', hours ? `${hours}h` : '', `${minutes}m`].filter(Boolean).join(' ');
 }
 
 function getMotd(value) {
@@ -311,8 +313,10 @@ async function renderPlayerProfile(uuid) {
     ];
     const statTable = rows => '<div class="table-wrap player-stat-table-wrap"><table class="player-stat-table"><thead><tr><th>Statistic</th><th class="numeric">Value</th></tr></thead><tbody>' + rows.map(([label,value]) => '<tr><td>' + safeText(label) + '</td><td class="numeric">' + safeText(String(value ?? 0)) + '</td></tr>').join("") + '</tbody></table></div>';
     const sectionMarkup = sections.map(([name,rows]) => '<section class="player-stat-group"><h4>' + safeText(name) + '</h4>' + statTable(rows) + '</section>').join("");
-    const mobRows = rawStatistics.filter(stat => String(stat.stat_id || "").startsWith("mob_kill:")).map(stat => ({id:String(stat.stat_id).slice(9),count:Number(stat.stat_value)||0})).sort((a,b)=>a.id.localeCompare(b.id));
-    const mobMarkup = '<section class="player-stat-group"><h4>Mob Kills</h4><div class="table-wrap player-stat-table-wrap"><table class="player-stat-table"><thead><tr><th>Icon</th><th>Mob</th><th class="numeric">Mob Kills</th></tr></thead><tbody>' + mobRows.map(row => '<tr><td><img class="player-stat-icon" src="https://minecraft.wiki/images/' + encodeURIComponent(titleWords(row.id).replace(/ /g,"_")) + '.png" alt="" loading="lazy" ></td><td>' + safeText(titleWords(row.id)) + '</td><td class="numeric">' + formatNumber(row.count) + '</td></tr>').join("") + '</tbody></table></div></section>';
+    const mobMap = new Map(rawStatistics.filter(stat => String(stat.stat_id || "").toLowerCase().startsWith("mob_kill:")).map(stat => [String(stat.stat_id).slice(9).toLowerCase().replace(/^minecraft:/, ""), Number(stat.stat_value)||0]));
+    const knownEntities = "allay,armadillo,armor_stand,axolotl,bat,bee,blaze,bogged,breeze,camel,cat,cave_spider,chicken,cod,cow,creeper,dolphin,donkey,drowned,elder_guardian,ender_dragon,enderman,endermite,evoker,fox,frog,ghast,glow_squid,goat,guardian,hoglin,horse,husk,iron_golem,llama,magma_cube,mooshroom,mule,ocelot,panda,parrot,phantom,pig,piglin,piglin_brute,pillager,polar_bear,pufferfish,rabbit,ravager,salmon,sheep,shulker,silverfish,skeleton,skeleton_horse,slime,sniffer,snow_golem,spider,squid,stray,strider,tadpole,trader_llama,tropical_fish,turtle,vex,villager,vindicator,wandering_trader,warden,witch,wither,wither_skeleton,wolf,zoglin,zombie,zombie_horse,zombie_villager,zombified_piglin".split(",");
+    const mobRows = [...new Set(knownEntities.concat([...mobMap.keys()]))].map(id => ({id,count:mobMap.get(id)||0})).sort((a,b)=>a.id.localeCompare(b.id));
+    const mobMarkup = '<section class="player-stat-group mob-kills-group"><h4>Mob Kills</h4><div class="mob-kill-grid">' + mobRows.map(row => '<div class="mob-kill-card" data-profile-search="mob kills ' + safeText(row.id) + '"><span>' + safeText(titleWords(row.id)) + '</span><strong>' + formatNumber(row.count) + '</strong></div>').join("") + '</div></section>';
     const statisticMarkup = sectionMarkup + mobMarkup;
     profile.innerHTML = `<a class="back-link" href="/players">← All players</a><div class="panel"><div class="panel-heading"><div><span class="overline">PLAYER PROFILE</span><h2 class="profile-name-with-head"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid || uuid)}/24" alt="" loading="lazy"><span>${safeText(player.username)}</span></h2></div><span class="status-meta">Updated ${safeText(formatDate(player.updated_at))}</span></div><div class="panel-body"><div class="player-profile-tabs" role="tablist" aria-label="Player profile sections"><button type="button" class="profile-tab is-active" role="tab" aria-selected="true" data-profile-tab="statistics">Statistics</button><button type="button" class="profile-tab" role="tab" aria-selected="false" data-profile-tab="advancements">Advancements</button><button type="button" class="profile-tab" role="tab" aria-selected="false" data-profile-tab="posts">Posts</button></div><input class="search-input profile-search" id="profile-search" type="search" placeholder="Search statistics…" aria-label="Search player profile data"><div class="player-profile-panel" data-profile-panel="statistics"><div class="player-stat-groups">${statisticMarkup}</div></div><div class="player-profile-panel" data-profile-panel="advancements" hidden><p class="fine-print">Loading earned advancements…</p></div><div class="player-profile-panel" data-profile-panel="posts" hidden><p class="fine-print">Loading posts mentioning this player as a builder…</p></div></div></div>`;
     const profileTabs = [...profile.querySelectorAll("[data-profile-tab]")];
