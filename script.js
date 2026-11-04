@@ -321,7 +321,7 @@ async function renderPlayerProfile(uuid) {
       const fileTitle = normalized === 'mutton' ? 'Raw Mutton' : normalized.split('_').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
       return ['File:' + fileTitle + '.png', 'File:' + fileTitle.replace(/ /g, '_') + '.png', pageTitle];
     };
-    const titleWords = raw => String(raw || '').split(/[_\\s]+/).filter(Boolean)
+    const titleWords = raw => String(raw || '').split(/[_\s]+/).filter(Boolean)
       .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     // Normalize statistic IDs with nested Minecraft namespaces.
     const statKey = raw => String(raw || '').trim().toLowerCase().replace(/minecraft:/g, '');
