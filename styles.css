@@ -178,3 +178,12 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 #hero-title[hidden],#hero-subtitle[hidden]{display:none!important}
 
 .player-stat-icon { width:24px; height:24px; object-fit:contain; image-rendering:auto; flex:0 0 24px; }
+
+/* Player profile statistics: keep the overview groups stacked and mob kills dense. */
+.player-stat-group-general,.player-stat-group-fight{grid-column:1/-1}
+.player-stat-group-general .player-stat-table-wrap,.player-stat-group-fight .player-stat-table-wrap{max-width:100%}
+.mob-kills-group{grid-column:1/-1}
+.mob-kill-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}
+.mob-kill-card{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:rgba(127,127,127,.045)}
+.mob-kill-card span{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.mob-kill-card strong{font-size:13px;color:var(--text);font-variant-numeric:tabular-nums}
