@@ -377,7 +377,45 @@ async function renderPlayerProfile(uuid) {
       if (iconUrl) image.src = iconUrl;
       else image.remove();
     });
-    // Fetch mob thumbnails from Minecraft Wiki pageimages; resolve by the canonical entity page title.\n    const mobCards = [...profile.querySelectorAll("[data-mob-wiki]")];\n    for (let offset = 0; offset < mobCards.length; offset += 35) {\n      const batch = mobCards.slice(offset, offset + 35);\n      const pageTitles = batch.map(card => titleWords(card.dataset.mobWiki).replace(/\\s+/g, "_"));\n      try {\n        const url = "https://minecraft.wiki/api.php?action=query&format=json&prop=pageimages&piprop=thumbnail&pithumbsize=64&origin=*&titles=" + encodeURIComponent(pageTitles.join("|"));\n        const response = await fetch(url);\n        if (!response.ok) continue;\n        const payload = await response.json();\n        const thumbnails = new Map(Object.values(payload?.query?.pages || {}).map(page => [String(page.title || "").replace(/\\s+/g, "_").toLowerCase(), page.thumbnail?.source]).filter(([,src]) => Boolean(src)));\n        batch.forEach(card => {\n          const image = card.querySelector(".mob-kill-icon");\n          const title = titleWords(card.dataset.mobWiki).replace(/\\s+/g, "_").toLowerCase();\n          const src = thumbnails.get(title);\n          if (src && image) image.src = src;\n          else image?.remove();\n        });\n      } catch { batch.forEach(card => card.querySelector(".mob-kill-icon")?.remove()); }\n    }\n    // Each profile table can be sorted independently by clicking any column heading.
+    // Resolve mob thumbnails from Minecraft Wiki's pageimages API, including redirected/canonical page titles.
+    const mobCards = [...profile.querySelectorAll("[data-mob-wiki]")];
+    for (let offset = 0; offset < mobCards.length; offset += 35) {
+      const batch = mobCards.slice(offset, offset + 35);
+      const requestedTitles = batch.map(card => titleWords(card.dataset.mobWiki).replace(/\\s+/g, "_"));
+      try {
+        const url = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=64&origin=*&titles=" + encodeURIComponent(requestedTitles.join("|"));
+        const response = await fetch(url, { headers: { Accept: "application/json" } });
+        if (!response.ok) throw new Error("Minecraft Wiki returned " + response.status);
+        const payload = await response.json();
+        const thumbnails = new Map();
+        Object.values(payload?.query?.pages || {}).forEach(page => {
+          const src = page?.thumbnail?.source;
+          if (!src || !page?.title) return;
+          const canonical = String(page.title).replace(/\\s+/g, "_").toLowerCase();
+          thumbnails.set(canonical, src);
+        });
+        (payload?.query?.normalized || []).forEach(entry => {
+          const from = String(entry.from || "").replace(/\\s+/g, "_").toLowerCase();
+          const to = String(entry.to || "").replace(/\\s+/g, "_").toLowerCase();
+          if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
+        });
+        (payload?.query?.redirects || []).forEach(entry => {
+          const from = String(entry.from || "").replace(/\\s+/g, "_").toLowerCase();
+          const to = String(entry.to || "").replace(/\\s+/g, "_").toLowerCase();
+          if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
+        });
+        batch.forEach((card, index) => {
+          const image = card.querySelector(".mob-kill-icon");
+          const title = requestedTitles[index].toLowerCase();
+          const src = thumbnails.get(title);
+          if (src && image) image.src = src;
+          else if (image) image.remove();
+        });
+      } catch {
+        batch.forEach(card => card.querySelector(".mob-kill-icon")?.remove());
+      }
+    }
+    // Each profile table can be sorted independently by clicking any column heading.
     profile.querySelectorAll('.player-stat-table').forEach(table => {
       table.querySelectorAll('.stat-sort-button').forEach(button => {
         button.addEventListener('click', () => {
