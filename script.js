@@ -296,7 +296,7 @@ async function renderPlayerProfile(uuid) {
     const data = await response.json();
     const player = data.player;
     if (!player) throw new Error('Player not found');
-    const statsResponse = await fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/statistics`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    const statsResponse = await fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/statistics?refresh=1`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
     const statsPayload = statsResponse.ok ? await statsResponse.json() : { statistics: [] };
     const rawStatistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
     // APIs may return repeated rows for the same stat id; show one row per canonical id.
