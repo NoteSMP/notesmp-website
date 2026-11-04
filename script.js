@@ -303,7 +303,7 @@ async function renderPlayerProfile(uuid) {
     const rawStatistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
     const statMap = new Map(rawStatistics.map(stat => [String(stat.stat_id || "").toLowerCase(), Number(stat.stat_value) || 0]));
     const read = key => statMap.get(key) || 0;
-    const titleWords = raw => String(raw || "").split(/[_\\s]+/).filter(Boolean).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+    const titleWords = raw => String(raw || "").split(/[_\s]+/).filter(Boolean).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
     const fmtDistance = value => (Number(value || 0) / 100).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " m";
     const sections = [
       ["General", [["Time Played", formatPlaytime(player.playtime_seconds)], ["Joined", formatDate(player.first_join)], ["Last Seen", formatDate(player.last_seen)], ["Mob Kills", read("mob_kills")], ["Player Kills", read("player_kills")], ["Number of Deaths", read("deaths")], ["Time Since Last Death", read("time_since_last_death")], ["Damage Absorbed", read("damage_absorbed")], ["Damage Dealt", read("damage_dealt")], ["Damage Resisted", read("damage_resisted")], ["Damage Taken", read("damage_taken")], ["Jumps", read("jumps")], ["Sneak Time", read("sneak_time")]]],
@@ -381,7 +381,7 @@ async function renderPlayerProfile(uuid) {
     const mobCards = [...profile.querySelectorAll("[data-mob-wiki]")];
     for (let offset = 0; offset < mobCards.length; offset += 35) {
       const batch = mobCards.slice(offset, offset + 35);
-      const requestedTitles = batch.map(card => titleWords(card.dataset.mobWiki).replace(/\\s+/g, "_"));
+      const requestedTitles = batch.map(card => titleWords(card.dataset.mobWiki).replace(/\s+/g, "_"));
       try {
         const url = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=64&origin=*&titles=" + encodeURIComponent(requestedTitles.join("|"));
         const response = await fetch(url, { headers: { Accept: "application/json" } });
@@ -391,17 +391,17 @@ async function renderPlayerProfile(uuid) {
         Object.values(payload?.query?.pages || {}).forEach(page => {
           const src = page?.thumbnail?.source;
           if (!src || !page?.title) return;
-          const canonical = String(page.title).replace(/\\s+/g, "_").toLowerCase();
+          const canonical = String(page.title).replace(/\s+/g, "_").toLowerCase();
           thumbnails.set(canonical, src);
         });
         (payload?.query?.normalized || []).forEach(entry => {
-          const from = String(entry.from || "").replace(/\\s+/g, "_").toLowerCase();
-          const to = String(entry.to || "").replace(/\\s+/g, "_").toLowerCase();
+          const from = String(entry.from || "").replace(/\s+/g, "_").toLowerCase();
+          const to = String(entry.to || "").replace(/\s+/g, "_").toLowerCase();
           if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
         });
         (payload?.query?.redirects || []).forEach(entry => {
-          const from = String(entry.from || "").replace(/\\s+/g, "_").toLowerCase();
-          const to = String(entry.to || "").replace(/\\s+/g, "_").toLowerCase();
+          const from = String(entry.from || "").replace(/\s+/g, "_").toLowerCase();
+          const to = String(entry.to || "").replace(/\s+/g, "_").toLowerCase();
           if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
         });
         batch.forEach((card, index) => {
