@@ -323,69 +323,52 @@ async function renderPlayerProfile(uuid) {
     };
     const titleWords = raw => String(raw || '').split(/[_\\s]+/).filter(Boolean)
       .map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    const statKey = raw => String(raw || '').trim().toLowerCase().replace(/^minecraft:/, '');
+    // Normalize statistic IDs with nested Minecraft namespaces.
+    const statKey = raw => String(raw || '').trim().toLowerCase().replace(/minecraft:/g, '');
     const statValue = stat => Number(stat.stat_value) || 0;
     const statMap = new Map(statistics.map(stat => [statKey(stat.stat_id), statValue(stat)]));
-    const readStat = (...keys) => {
-      for (const key of keys) if (statMap.has(key)) return statMap.get(key);
-      return 0;
-    };
-    const entityRows = new Map();
-    const itemRows = new Map();
-    const generalRows = [];
-    const damageRows = [];
-    const distanceRows = [];
-    const interactionRows = [];
+    const readStat = (...keys) => { for (const key of keys) if (statMap.has(key)) return statMap.get(key); return 0; };
+    const entityRows = new Map(), itemRows = new Map();
+    const generalRows = [], damageRows = [], distanceRows = [], interactionRows = [];
     const generalStatNames = {
-      'custom:mob_kills': 'Mob Kills', 'custom:player_kills': 'Player Kills',
-      'custom:deaths': 'Deaths', 'custom:jump': 'Jumps',
-      'custom:damage_dealt': 'Damage Dealt', 'custom:damage_dealt_absorbed': 'Damage Dealt (Absorbed)',
-      'custom:damage_dealt_resisted': 'Damage Dealt (Resisted)', 'custom:damage_taken': 'Damage Taken',
-      'custom:damage_blocked_by_shield': 'Damage Blocked by Shield',
-      'custom:damage_absorbed': 'Damage Absorbed', 'custom:damage_resisted': 'Damage Resisted',
-      'custom:damage’_dealt': 'Damage Dealt'
+      'custom:mob_kills':'Mob Kills','custom:player_kills':'Player Kills','custom:deaths':'Deaths','custom:jump':'Jumps',
+      'custom:damage_dealt':'Damage Dealt','custom:damage_dealt_absorbed':'Damage Dealt (Absorbed)',
+      'custom:damage_dealt_resisted':'Damage Dealt (Resisted)','custom:damage_taken':'Damage Taken',
+      'custom:damage_blocked_by_shield':'Damage Blocked by Shield','custom:damage_absorbed':'Damage Absorbed',
+      'custom:damage_resisted':'Damage Resisted'
     };
-    const entityPattern = /^(?:killed|killed_by|kill_entity|killed_by_entity|entity_kills|entity_deaths)[.:]([a-z0-9_]+)$/;
-    const itemPattern = /^(mined|broken|crafted|used|picked_up|dropped|mine_block|break_block|craft_item|use_item|pickup|drop)[.:]([a-z0-9_]+)$/;
-    const entityTypes = new Set(['killed','kill_entity','entity_kills','killed_by','killed_by_entity','entity_deaths']);
-    const itemTypes = new Set(['mined','mine_block','broken','break_block','crafted','craft_item','used','use_item','picked_up','pickup','dropped','drop']);
-    const itemMetric = { mined: 'mined', mine_block: 'mined', broken: 'broken', break_block: 'broken', crafted: 'crafted', craft_item: 'crafted', used: 'used', use_item: 'used', picked_up: 'pickedUp', pickup: 'pickedUp', dropped: 'dropped', drop: 'dropped' };
+    const entityTypes = new Set(['killed','killed_by','kill_entity','killed_by_entity','entity_kills','entity_deaths']);
+    const itemMetric = {mined:'mined',mine_block:'mined',broken:'broken',break_block:'broken',crafted:'crafted',craft_item:'crafted',used:'used',use_item:'used',picked_up:'pickedUp',pickup:'pickedUp',dropped:'dropped',drop:'dropped'};
     const makeEntity = name => {
-      if (!entityRows.has(name)) entityRows.set(name, { name, icon: wikiIconKey('mob', name), killed: 0, killedBy: 0 });
+      if (!entityRows.has(name)) entityRows.set(name,{name,icon:wikiIconKey('mob',name),killed:0,killedBy:0});
       return entityRows.get(name);
     };
     const makeItem = name => {
-      if (!itemRows.has(name)) itemRows.set(name, { name, icon: wikiIconKey('item', name), mined: 0, broken: 0, crafted: 0, used: 0, pickedUp: 0, dropped: 0 });
+      if (!itemRows.has(name)) itemRows.set(name,{name,icon:wikiIconKey('item',name),mined:0,broken:0,crafted:0,used:0,pickedUp:0,dropped:0});
       return itemRows.get(name);
     };
     statistics.forEach(stat => {
-      const key = statKey(stat.stat_id);
-      const value = statValue(stat);
-      const entityMatch = key.match(entityPattern);
-      if (entityMatch) {
-        const [, name] = entityMatch;
-        const type = key.split(/[.:]/)[0];
-        const row = makeEntity(name);
-        if (['killed_by','killed_by_entity','entity_deaths'].includes(type)) row.killedBy = value;
-        else row.killed = value;
-        return;
+      const key = statKey(stat.stat_id), value = statValue(stat);
+      const split = key.match(/^([a-z_]+)[.:](.+)$/);
+      if (split) {
+        const type = split[1], name = split[2].replace(/^minecraft:/,'').replace(/[.:]/g,'_');
+        if (itemMetric[type] && /^[a-z0-9_]+$/.test(name)) { makeItem(name)[itemMetric[type]] += value; return; }
+        if (entityTypes.has(type) && /^[a-z0-9_]+$/.test(name)) {
+          const row = makeEntity(name);
+          if (['killed_by','killed_by_entity','entity_deaths'].includes(type)) row.killedBy += value;
+          else row.killed += value;
+          return;
+        }
       }
-      const itemMatch = key.match(itemPattern);
-      if (itemMatch) {
-        const [, type, name] = itemMatch;
-        makeItem(name)[itemMetric[type]] = value;
-        return;
-      }
-      const parts = key.split(/[.:]/);
-      const metric = parts.slice(1).join('_') || parts[0];
-      const label = generalStatNames[key] || titleWords(metric);
-      const entry = { label, value, id: stat.stat_id };
-      if (/^custom:(damage_|damage)/.test(key)) damageRows.push(entry);
-      else if (/^custom:(walk|sprint|swim|fly|climb|crouch|aviate|boat|horse|minecart|pig|strider)_one_cm$/.test(key) || /^custom:(walk|sprint|swim|fly|climb|crouch|aviate|boat|horse|minecart|pig|strider)/.test(key)) distanceRows.push(entry);
-      else if (/^custom:interact_with_/.test(key)) interactionRows.push({ ...entry, label: titleWords(metric.replace(/^interact_with_/, '')) });
+      const parts = key.split(/[.:]/), metric = parts.slice(1).join('_') || parts[0];
+      const label = generalStatNames[key] || titleWords(metric.replace(/^custom:/,''));
+      const entry = {label,value,id:stat.stat_id};
+      if (/^custom:damage/.test(key)) damageRows.push(entry);
+      else if (/^custom:(walk|sprint|swim|fly|climb|crouch|aviate|boat|horse|minecart|pig|strider)/.test(key)) distanceRows.push(entry);
+      else if (/^custom:interact_with_/.test(key)) interactionRows.push({...entry,label:titleWords(metric.replace(/^interact_with_/,''))});
       else generalRows.push(entry);
     });
-    const tableHead = columns => '<div class="table-wrap player-stat-table-wrap"><table class="player-stat-table"><thead><tr>' + columns.map(column => '<th>' + safeText(column) + '</th>').join('') + '</tr></thead><tbody>';
+    const tableHead = columns => '<div class="table-wrap player-stat-table-wrap"><table class="player-stat-table"><thead><tr>' + columns.map((column,index) => '<th><button type="button" class="stat-sort-button" data-sort-column="' + index + '">' + safeText(column) + ' <span aria-hidden="true">↕</span></button></th>').join('') + '</tr></thead><tbody>';
     const tableEnd = '</tbody></table></div>';
     const iconCell = icon => '<td class="player-stat-item-cell"><img class="player-stat-icon" data-wiki-icon="' + safeText(JSON.stringify(icon || [])) + '" alt="" loading="lazy"></td>';
     const numberCell = value => '<td class="numeric">' + formatNumber(value) + '</td>';
