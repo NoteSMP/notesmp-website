@@ -238,7 +238,12 @@ async function pollPluginRefreshSignal() {
     const response = await fetch(`${API_BASE}/server/plugin-state`, { cache: 'no-store' });
     if (!response.ok) throw new Error('Plugin state unavailable');
     const state = await response.json();
+    const wasAvailable = pluginAvailable;
     pluginAvailable = Boolean(state.pluginAvailable);
+    if (!wasAvailable && pluginAvailable) {
+      const profileMatch = location.pathname.match(/^\\/players\\/([0-9a-fA-F-]{36})\\/?$/);
+      if (profileMatch) renderPlayerProfile(profileMatch[1]);
+    }
     const signal = Number(state.refreshAt || 0);
     if (signal > lastPluginRefreshSignal) {
       lastPluginRefreshSignal = signal;
@@ -497,7 +502,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
     } catch (error) { console.warn("Player profile supplemental data could not be loaded", error); }
 
     // D1 is rendered first; the plugin response replaces it without persisting live data.
-    if (!liveProfile) {
+    if (!liveProfile && pluginAvailable) {
       fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/live`, { cache: "no-store" })
         .then(response => response.ok ? response.json() : null)
         .then(payload => {
