@@ -53,8 +53,8 @@ function formatPlaytime(seconds) {
 
 function getMotd(value) {
   if (typeof value === 'string') return value.trim();
-  if (Array.isArray(value?.raw)) return value.raw.join('\\n').trim();
-  if (Array.isArray(value?.clean)) return value.clean.join('\\n').trim();
+  if (Array.isArray(value?.raw)) return value.raw.join('\n').trim();
+  if (Array.isArray(value?.clean)) return value.clean.join('\n').trim();
   if (typeof value?.raw === 'string') return value.raw.trim();
   if (typeof value?.clean === 'string') return value.clean.trim();
   return '';
