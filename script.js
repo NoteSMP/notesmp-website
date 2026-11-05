@@ -102,15 +102,15 @@ function linkIcon(key) {
   };
   return '<svg ' + attrs + '>' + (paths[key] || paths.bluemap) + '</svg>';
 }
-function resourceLink(label, url, hint = 'Open') {
-  const key = String(label || '').toLowerCase();
+function resourceLink(label, url, hint = 'Open', linkKey = String(label || '').toLowerCase()) {
+  const key = String(linkKey || '').toLowerCase();
   if (!url) return `<div class="resource-link is-disabled" data-link-key="${safeText(key)}" aria-disabled="true"><span>${safeText(label)}</span><span>${safeText(hint)}</span></div>`;
   return `<a class="resource-link" data-link-key="${safeText(key)}" href="${safeText(url)}" target="_blank" rel="noreferrer"><span>${safeText(label)}</span><span aria-hidden="true">↗</span></a>`;
 }
 
 function homePage() {
   const onlineNames = (serverData?.onlinePlayers || []).map(player => { const name = typeof player === 'string' ? player : player.name || player.username; const uuid = typeof player === 'object' ? player.uuid || player.id : ''; if (!name) return ''; const avatar = uuid ? 'https://crafatar.com/avatars/' + encodeURIComponent(uuid) + '?size=32&overlay' : 'https://mc-heads.net/avatar/' + encodeURIComponent(name) + '/32'; return '<a class="online-player" href="/players?name=' + encodeURIComponent(name) + '"><img src="' + avatar + '" alt="" loading="lazy"><span>' + safeText(name) + '</span></a>'; }).filter(Boolean);
-  return `<div class="page-shell"><section class="home-hero" aria-labelledby="home-title"><div class="home-hero-content"><span class="eyebrow">NOTE SMP · JAVA EDITION 26.3</span><h1 id="hero-title" hidden>Your world. Your people.</h1><p id="hero-subtitle" hidden>Everything happening on NoteSMP, in one place. Check the server, find your next event, and see what the community is building.</p><div class="hero-buttons"><a class="button-primary" href="/players">Explore players <span aria-hidden="true">→</span></a><a class="button-secondary" href="/events">See events <span aria-hidden="true">↗</span></a></div></div><div class="hero-event-slot" id="hero-event" hidden></div></section><section class="home-news-section panel" id="home-news" aria-label="News" hidden><div id="home-news-feed" class="home-news-feed"></div></section><div class="home-layout"><div class="main-column">${serverStatusMarkup()}<section class="panel" id="section-server-updates"><div class="panel-heading"><div><span class="overline">Server Updates</span><h2>Latest Update</h2></div><a class="text-link" href="/devlog">All updates ↗</a></div><div class="empty-state"><strong>Announcement feed not connected yet</strong>Critical maintenance alerts and server news will appear here once connected.</div></section><section id="section-events"><div class="home-section-heading"><div><span class="overline">Events</span><h2>Upcoming Events</h2></div><a class="text-link" href="/events">View all ↗</a></div><div class="panel"><div class="empty-state"><strong>Events are on the way</strong>Upcoming and past events will appear here when the Discord event feed is connected.</div></div></section></div><aside class="side-column"><section class="panel" id="section-server-links"><div class="panel-heading"><div><span class="overline">Server Links</span><h2>Find your way in</h2></div></div><div class="link-list">${resourceLink('Discord', null, 'Invite not set')}${resourceLink('YouTube', null, 'Link not set')}${resourceLink('Modpack', null, 'Link not set')}${resourceLink('BlueMap', null, 'Link not set')}${resourceLink('Donate', null, 'Donation link not set')}</div></section><section class="panel" id="section-online-now"><div class="panel-heading"><div><span class="overline">Online Now</span><h2>Players in the world</h2></div><a class="text-link" href="/players">Players ↗</a></div><div class="empty-state" id="online-players">${onlineNames.length ? onlineNames.join('') : 'Live player names will show here when the server reports them.'}</div></section><section class="panel" id="section-creators"><div class="panel-heading"><div><span class="overline">Creators</span><h2>See who is live</h2></div></div><div class="link-list"><div class="resource-link is-disabled" aria-disabled="true"><span>Creator roster</span><span>Coming soon</span></div><div class="resource-link is-disabled" aria-disabled="true"><span>Live streams</span><span>Coming soon</span></div></div></aside></div></div>`;
+  return `<div class="page-shell"><section class="home-hero" aria-labelledby="home-title"><div class="home-hero-content"><span class="eyebrow">NOTE SMP · JAVA EDITION 26.3</span><h1 id="hero-title" hidden>Your world. Your people.</h1><p id="hero-subtitle" hidden>Everything happening on NoteSMP, in one place. Check the server, find your next event, and see what the community is building.</p><div class="hero-buttons"><a class="button-primary" href="/players">Explore players <span aria-hidden="true">→</span></a><a class="button-secondary" href="/events">See events <span aria-hidden="true">↗</span></a></div></div><div class="hero-event-slot" id="hero-event" hidden></div></section><section class="home-news-section panel" id="home-news" aria-label="News" hidden><div id="home-news-feed" class="home-news-feed"></div></section><div class="home-layout"><div class="main-column">${serverStatusMarkup()}<section class="panel" id="section-server-updates"><div class="panel-heading"><div><span class="overline">Server Updates</span><h2>Latest Update</h2></div><a class="text-link" href="/devlog">All updates ↗</a></div><div class="empty-state"><strong>Announcement feed not connected yet</strong>Critical maintenance alerts and server news will appear here once connected.</div></section><section id="section-events"><div class="home-section-heading"><div><span class="overline">Events</span><h2>Upcoming Events</h2></div><a class="text-link" href="/events">View all ↗</a></div><div class="panel"><div class="empty-state"><strong>Events are on the way</strong>Upcoming and past events will appear here when the Discord event feed is connected.</div></div></section></div><aside class="side-column"><section class="panel" id="section-server-links"><div class="panel-heading"><div><span class="overline">Server Links</span><h2>Find your way in</h2></div></div><div class="link-list">${resourceLink('Discord', null, 'Invite not set')}${resourceLink('YouTube', null, 'Link not set')}${resourceLink('Modpack', null, 'Link not set')}${resourceLink('BlueMap', null, 'Link not set')}${resourceLink('Donations', null, 'Link not set', 'donations')}</div></section><section class="panel" id="section-online-now"><div class="panel-heading"><div><span class="overline">Online Now</span><h2>Players in the world</h2></div><a class="text-link" href="/players">Players ↗</a></div><div class="empty-state" id="online-players">${onlineNames.length ? onlineNames.join('') : 'Live player names will show here when the server reports them.'}</div></section><section class="panel" id="section-creators"><div class="panel-heading"><div><span class="overline">Creators</span><h2>See who is live</h2></div></div><div class="link-list"><div class="resource-link is-disabled" aria-disabled="true"><span>Creator roster</span><span>Coming soon</span></div><div class="resource-link is-disabled" aria-disabled="true"><span>Live streams</span><span>Coming soon</span></div></div></aside></div></div>`;
 }
 
 function pageHeading(title, description, eyebrow) {
@@ -469,17 +469,24 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
     });
     try {
       const [advResponse, postResponse] = await Promise.all([
-        liveProfile ? Promise.resolve(null) : fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/advancements`, {cache:"no-store"}),
+        fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/advancements`, {cache:"no-store"}),
         fetch(`${API_BASE}/content/posts?category=gallery&builder=${encodeURIComponent(player.username)}&limit=1000`, {cache:"no-store"})
       ]);
-      const advPayload = liveProfile || (advResponse?.ok ? await advResponse.json() : {advancements:[]});
+      const savedAdvPayload = advResponse?.ok ? await advResponse.json() : {advancements:[]};
+      const liveAdvancements = Array.isArray(liveProfile?.advancements) ? liveProfile.advancements : [];
+      const advPayload = liveAdvancements.length ? liveProfile : savedAdvPayload;
       const earned = (Array.isArray(advPayload.advancements) ? advPayload.advancements : [])
-        .map(item => ({
-          id: item.advancement_id || item.advancementId || "",
-          title: item.advancement_title || item.title || item.advancement_id || item.advancementId || "",
-          earnedAt: item.earned_at || item.earnedAt || null,
-          icon: item.icon_name || item.icon || item.iconName || ""
-        }))
+        .map(item => {
+          const id = item.advancement_id || item.advancementId || "";
+          const rawTitle = item.advancement_title || item.title || id;
+          const title = rawTitle.includes("/") ? titleWords(rawTitle.split("/").pop()) : rawTitle;
+          return {
+            id,
+            title,
+            earnedAt: item.earned_at || item.earnedAt || null,
+            icon: item.icon_name || item.icon || item.iconName || ""
+          };
+        })
         .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/"))
         .sort((a, b) => Date.parse(b.earnedAt || 0) - Date.parse(a.earnedAt || 0));
       const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
@@ -659,7 +666,7 @@ window.setInterval(() => { if (!pluginAvailable) fetchServerStatus(); }, 5 * 60_
       const data = await response.json();
       const configured = new Map((data.links || []).map(link => [String(link.link_key || "").toLowerCase(), safeUrl(link.url)]));
       section.querySelectorAll("[data-link-key]").forEach(row => {
-        const url = configured.get(row.dataset.linkKey);
+        const url = configured.get(row.dataset.linkKey) || (row.dataset.linkKey === "donations" ? configured.get("donate") : configured.get("donations"));
         if (!url || row.tagName === "A") return;
         const anchor = document.createElement("a");
         anchor.className = "resource-link";
