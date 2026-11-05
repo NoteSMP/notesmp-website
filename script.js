@@ -289,7 +289,7 @@ function renderPlayers() {
   results.innerHTML = `<div class="table-wrap"><table class="player-table"><thead><tr><th>Player</th><th class="numeric">Playtime</th><th class="numeric">Placed</th><th class="numeric">Broken</th><th class="numeric">Kills</th><th class="numeric">Deaths</th></tr></thead><tbody>${filtered.map(player => `<tr><td><a class="player-name player-name-with-head" href="/players/${encodeURIComponent(player.uuid)}"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid)}/20" alt="" loading="lazy"><span>${safeText(player.username)}</span></a></td><td class="numeric">${formatPlaytime(player.playtime_seconds)}</td><td class="numeric">${formatNumber(player.blocks_placed)}</td><td class="numeric">${formatNumber(player.blocks_broken)}</td><td class="numeric">${formatNumber(player.kills)}</td><td class="numeric">${formatNumber(player.deaths)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
-async function renderPlayerProfile(uuid) {
+async function renderPlayerProfile(uuid, liveProfile = null) {
   const profile = document.querySelector('#player-profile');
   if (!profile) return;
   try {
@@ -298,8 +298,8 @@ async function renderPlayerProfile(uuid) {
     const data = await response.json();
     const player = data.player;
     if (!player) throw new Error('Player not found');
-    const statsResponse = await fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/statistics?refresh=1`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
-    const statsPayload = statsResponse.ok ? await statsResponse.json() : { statistics: [] };
+    const statsResponse = liveProfile ? null : await fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/statistics`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    const statsPayload = liveProfile || (statsResponse?.ok ? await statsResponse.json() : { statistics: [] });
     const rawStatistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
     const statMap = new Map(rawStatistics.map(stat => [String(stat.stat_id || "").toLowerCase(), Number(stat.stat_value) || 0]));
     const read = key => statMap.get(key) || 0;
@@ -445,10 +445,10 @@ async function renderPlayerProfile(uuid) {
     });
     try {
       const [advResponse, postResponse] = await Promise.all([
-        fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/advancements`, {cache:"no-store"}),
+        liveProfile ? Promise.resolve(null) : fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/advancements`, {cache:"no-store"}),
         fetch(`${API_BASE}/content/posts?category=gallery&builder=${encodeURIComponent(player.username)}&limit=1000`, {cache:"no-store"})
       ]);
-      const advPayload = advResponse.ok ? await advResponse.json() : {advancements:[]};
+      const advPayload = liveProfile || (advResponse?.ok ? await advResponse.json() : {advancements:[]});
       const earned = Array.isArray(advPayload.advancements) ? advPayload.advancements : [];
       const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
       advPanel.innerHTML = earned.length ? earned.map(item => {
@@ -469,6 +469,17 @@ async function renderPlayerProfile(uuid) {
         return '<article class="profile-search-row" data-profile-search="' + safeText(searchText) + '"><strong>' + safeText(post.title || "Untitled post") + '</strong><span>Builders: ' + safeText(builderText) + '</span><small>' + safeText(formatDate(post.publishedAt)) + '</small></article>';
       }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching posts.</p>' : '<p class="fine-print">No published builder posts found for this player.</p>';
     } catch (error) { console.warn("Player profile supplemental data could not be loaded", error); }
+
+    // D1 is rendered first; the plugin response replaces it without persisting live data.
+    if (!liveProfile) {
+      fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/live`, { cache: "no-store" })
+        .then(response => response.ok ? response.json() : null)
+        .then(payload => {
+          const currentPath = location.pathname.replace(/\\/$/, "");
+          if (payload?.ok && currentPath === "/players/" + uuid) renderPlayerProfile(uuid, payload);
+        })
+        .catch(error => console.warn("Live player profile unavailable; keeping saved snapshot", error));
+    }
 
   } catch {
     profile.innerHTML = `<a class="back-link" href="/players">← All players</a>${emptyPage('Player profile unavailable', 'This player could not be found or the player API is unavailable.')}`;
