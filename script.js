@@ -241,7 +241,7 @@ async function pollPluginRefreshSignal() {
     const wasAvailable = pluginAvailable;
     pluginAvailable = Boolean(state.pluginAvailable);
     if (!wasAvailable && pluginAvailable) {
-      const profileMatch = location.pathname.match(/^\\/players\\/([0-9a-fA-F-]{36})\\/?$/);
+      const profileMatch = location.pathname.match(/^\/players\/([0-9a-fA-F-]{36})\/?$/);
       if (profileMatch) renderPlayerProfile(profileMatch[1]);
     }
     const signal = Number(state.refreshAt || 0);
