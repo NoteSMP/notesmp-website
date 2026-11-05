@@ -298,6 +298,9 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
     const data = await response.json();
     const player = data.player;
     if (!player) throw new Error('Player not found');
+    if (liveProfile?.baseStats) Object.assign(player, liveProfile.baseStats);
+    if (liveProfile?.firstJoin) player.first_join = liveProfile.firstJoin;
+    if (liveProfile?.lastSeen) player.last_seen = liveProfile.lastSeen;
     const statsResponse = liveProfile ? null : await fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/statistics`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
     const statsPayload = liveProfile || (statsResponse?.ok ? await statsResponse.json() : { statistics: [] });
     const rawStatistics = Array.isArray(statsPayload.statistics) ? statsPayload.statistics : [];
