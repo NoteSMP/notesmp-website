@@ -490,7 +490,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       const advancementIcons = [...advPanel.querySelectorAll("[data-advancement-icon]")].filter(image => image.dataset.advancementIcon);
       for (let offset = 0; offset < advancementIcons.length; offset += 35) {
         const batch = advancementIcons.slice(offset, offset + 35);
-        const requestedTitles = batch.map(image => titleWords(String(image.dataset.advancementIcon).split(":").pop()).replace(/\\s+/g, "_"));
+        const requestedTitles = batch.map(image => titleWords(String(image.dataset.advancementIcon).split(":").pop()).replace(/\s+/g, "_"));
         try {
           const wikiUrl = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=64&origin=*&titles=" + encodeURIComponent(requestedTitles.join("|"));
           const wikiResponse = await fetch(wikiUrl, { headers: { Accept: "application/json" } });
@@ -498,16 +498,16 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
           const wikiData = await wikiResponse.json();
           const thumbnails = new Map();
           Object.values(wikiData?.query?.pages || {}).forEach(page => {
-            if (page?.title && page?.thumbnail?.source) thumbnails.set(String(page.title).replace(/\\s+/g, "_").toLowerCase(), page.thumbnail.source);
+            if (page?.title && page?.thumbnail?.source) thumbnails.set(String(page.title).replace(/\s+/g, "_").toLowerCase(), page.thumbnail.source);
           });
           (wikiData?.query?.normalized || []).forEach(item => {
-            const from = String(item.from || "").replace(/\\s+/g, "_").toLowerCase();
-            const to = String(item.to || "").replace(/\\s+/g, "_").toLowerCase();
+            const from = String(item.from || "").replace(/\s+/g, "_").toLowerCase();
+            const to = String(item.to || "").replace(/\s+/g, "_").toLowerCase();
             if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
           });
           (wikiData?.query?.redirects || []).forEach(item => {
-            const from = String(item.from || "").replace(/\\s+/g, "_").toLowerCase();
-            const to = String(item.to || "").replace(/\\s+/g, "_").toLowerCase();
+            const from = String(item.from || "").replace(/\s+/g, "_").toLowerCase();
+            const to = String(item.to || "").replace(/\s+/g, "_").toLowerCase();
             if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
           });
           batch.forEach((image, index) => {
@@ -880,7 +880,7 @@ window.setInterval(() => { if (!pluginAvailable) fetchServerStatus(); }, 5 * 60_
   }
   async function getPosts(category, group = "") {
     const params = new URLSearchParams({ category, limit: "100" });
-    if (group) params.set("group", group.trim().toLowerCase().replace(/\\s+/g, "-"));
+    if (group) params.set("group", group.trim().toLowerCase().replace(/\s+/g, "-"));
     const response = await fetch(API + "/content/posts?" + params.toString(), { cache: "no-store" });
     if (!response.ok) throw new Error("Feed request failed");
     const data = await response.json();
@@ -991,7 +991,7 @@ async function loadPage() {
           const startTime = rawStart ? Date.parse(rawStart) : NaN;
           if (!Number.isFinite(startTime)) continue;
           const eventId = String(post.event?.id || post.event?.eventId || post.discordEventId || "");
-          const normalizedTitle = String(post.title || "").trim().toLowerCase().replace(/\\s+/g, " ");
+          const normalizedTitle = String(post.title || "").trim().toLowerCase().replace(/\s+/g, " ");
           const identity = eventId || normalizedTitle + ":" + startTime;
           if (!uniqueEvents.has(identity)) uniqueEvents.set(identity, { post, startTime });
         }
