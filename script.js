@@ -544,7 +544,8 @@ menuButton?.addEventListener('click', () => {
 document.querySelector('#year').textContent = new Date().getFullYear();
 render();
 fetchServerStatus();
-window.setInterval(fetchServerStatus, 60_000);
+// Refresh live status every five minutes; the first check still runs immediately on page load.
+window.setInterval(fetchServerStatus, 5 * 60_000);
 
 
 (() => {
