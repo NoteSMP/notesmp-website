@@ -6,6 +6,8 @@ const menuButton = document.querySelector('.nav-toggle');
 const toast = document.querySelector('.toast');
 const routeTitles = { '/': 'Info', '/events': 'Events', '/gallery': 'Gallery', '/players': 'Players', '/commands': 'Commands', '/rules': 'Rules', '/devlog': 'Updates' };
 let serverData = null;
+let pluginAvailable = false;
+let lastPluginRefreshSignal = 0;
 let playerData = [];
 let playerLoadFailed = false;
 let selectedGalleryGroup = 'Events';
@@ -229,6 +231,20 @@ async function fetchServerStatus() {
       onlineSection.innerHTML = names.length ? names.join('') : 'No players are currently reported online.';
     }
   }
+}
+
+async function pollPluginRefreshSignal() {
+  try {
+    const response = await fetch(`${API_BASE}/server/plugin-state`, { cache: 'no-store' });
+    if (!response.ok) throw new Error('Plugin state unavailable');
+    const state = await response.json();
+    pluginAvailable = Boolean(state.pluginAvailable);
+    const signal = Number(state.refreshAt || 0);
+    if (signal > lastPluginRefreshSignal) {
+      lastPluginRefreshSignal = signal;
+      await fetchServerStatus();
+    }
+  } catch { pluginAvailable = false; }
 }
 
 async function loadPlayers() {
@@ -558,8 +574,10 @@ menuButton?.addEventListener('click', () => {
 document.querySelector('#year').textContent = new Date().getFullYear();
 render();
 fetchServerStatus();
-// Refresh live status every five minutes; the first check still runs immediately on page load.
-window.setInterval(fetchServerStatus, 5 * 60_000);
+pollPluginRefreshSignal();
+// Plugin signals refresh status on start/join/leave; otherwise the website falls back to five-minute checks.
+window.setInterval(pollPluginRefreshSignal, 10_000);
+window.setInterval(() => { if (!pluginAvailable) fetchServerStatus(); }, 5 * 60_000);
 
 
 (() => {
