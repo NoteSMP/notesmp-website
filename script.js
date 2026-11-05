@@ -131,7 +131,7 @@ function galleryPage() {
 }
 
 function playerListPage() {
-  return `<div class="page-shell">${pageHeading('Players', 'Search the player directory and compare the stats recorded by the server.', 'PLAYER DIRECTORY')}<div class="page-content"><div class="toolbar"><input class="search-input" id="player-search" type="search" aria-label="Search players" placeholder="Search by player name"><select class="sort-select" id="player-sort" aria-label="Sort players"><option value="playtime_seconds">Playtime</option><option value="blocks_placed">Blocks placed</option><option value="blocks_broken">Blocks broken</option><option value="kills">Kills</option><option value="deaths">Deaths</option></select><span class="player-count" id="player-count" aria-live="polite"></span></div><div id="player-results"></div></div></div>`;
+  return `<div class="page-shell">${pageHeading('Players', 'Browse the players who have joined NoteSMP.', 'PLAYER DIRECTORY')}<div class="page-content"><div class="toolbar"><input class="search-input" id="player-search" type="search" aria-label="Search players" placeholder="Search by player name"><span class="player-count" id="player-count" aria-live="polite"></span></div><div id="player-results"></div></div></div>`;
 }
 
 function playerProfilePage(uuid) {
@@ -479,7 +479,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
       advPanel.innerHTML = earned.length ? earned.map(item => {
         const title = item.title || item.id;
-        return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + item.id).toLowerCase()) + '"><div><strong>' + safeText(title) + '</strong><span>' + safeText(item.id) + '</span></div><small>' + safeText(formatDate(item.earnedAt)) + '</small></article>';
+        return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + item.id).toLowerCase()) + '"><img class="advancement-icon" src="https://minecraft.wiki/images/' + encodeURIComponent(title.replace(/\\s+/g, "_")) + '.png" alt="" loading="lazy" onerror="this.hidden=true"><div><strong>' + safeText(title) + '</strong><span>' + safeText(item.id) + '</span></div><small>' + safeText(formatDate(item.earnedAt)) + '</small></article>';
       }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
       const postPayload = postResponse.ok ? await postResponse.json() : {posts:[]};
       const playerName = String(player.username || "").toLowerCase();
@@ -570,7 +570,6 @@ document.addEventListener('input', event => {
   if (event.target.matches('#command-search')) filterCommands();
 });
 document.addEventListener('change', event => {
-  if (event.target.matches('#player-sort')) renderPlayers();
 });
 window.addEventListener('popstate', render);
 menuButton?.addEventListener('click', () => {
