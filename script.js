@@ -281,8 +281,7 @@ async function loadPlayers() {
 
 function getSortedPlayers() {
   const search = document.querySelector('#player-search')?.value.trim().toLowerCase() || '';
-  const sortBy = document.querySelector('#player-sort')?.value || 'playtime_seconds';
-  return playerData.filter(player => String(player.username || '').toLowerCase().includes(search)).sort((left, right) => Number(right[sortBy] || 0) - Number(left[sortBy] || 0));
+  return playerData.filter(player => String(player.username || '').toLowerCase().includes(search)).sort((left, right) => String(left.username || '').localeCompare(String(right.username || ''), undefined, { sensitivity: 'base' }));
 }
 
 function renderPlayers() {
@@ -302,7 +301,7 @@ function renderPlayers() {
     results.innerHTML = emptyPage('No players match', 'Try another player name.');
     return;
   }
-  results.innerHTML = `<div class="table-wrap"><table class="player-table"><thead><tr><th>Player</th><th class="numeric">Playtime</th><th class="numeric">Placed</th><th class="numeric">Broken</th><th class="numeric">Kills</th><th class="numeric">Deaths</th></tr></thead><tbody>${filtered.map(player => `<tr><td><a class="player-name player-name-with-head" href="/players/${encodeURIComponent(player.uuid)}"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid)}/20" alt="" loading="lazy"><span>${safeText(player.username)}</span></a></td><td class="numeric">${formatPlaytime(player.playtime_seconds)}</td><td class="numeric">${formatNumber(player.blocks_placed)}</td><td class="numeric">${formatNumber(player.blocks_broken)}</td><td class="numeric">${formatNumber(player.kills)}</td><td class="numeric">${formatNumber(player.deaths)}</td></tr>`).join('')}</tbody></table></div>`;
+  results.innerHTML = `<div class="player-directory">${filtered.map(player => `<a class="player-directory-card" href="/players/${encodeURIComponent(player.uuid)}"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid)}/48" alt="" loading="lazy"><span>${safeText(player.username)}</span></a>`).join("")}</div>`;
 }
 
 async function renderPlayerProfile(uuid, liveProfile = null) {
@@ -324,10 +323,11 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
     const read = key => statMap.get(key) || 0;
     const titleWords = raw => String(raw || "").split(/[_\s]+/).filter(Boolean).map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
     const fmtDistance = value => (Number(value || 0) / 100).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " m";
+    const formatTicksDuration = ticks => { const totalSeconds = Math.floor(Math.max(0, Number(ticks) || 0) / 20); const days = Math.floor(totalSeconds / 86400); const hours = Math.floor((totalSeconds % 86400) / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); return [days ? days + "d" : "", hours ? hours + "h" : "", minutes ? minutes + "m" : ""].filter(Boolean).join(" ") || "0m"; };
     const sections = [
-      ["General", [["Time Played", formatPlaytime(player.playtime_seconds)], ["Joined", formatDate(player.first_join)], ["Last Seen", formatDate(player.last_seen)], ["Mob Kills", read("mob_kills")], ["Player Kills", read("player_kills")], ["Number of Deaths", read("deaths")], ["Time Since Last Death", read("time_since_last_death")], ["Damage Absorbed", read("damage_absorbed")], ["Damage Dealt", read("damage_dealt")], ["Damage Resisted", read("damage_resisted")], ["Damage Taken", read("damage_taken")], ["Jumps", read("jumps")], ["Sneak Time", read("sneak_time")]]],
+      ["General", [["Time Played", formatPlaytime(player.playtime_seconds)], ["Joined", formatDate(player.first_join)], ["Last Seen", formatDate(player.last_seen)], ["Mob Kills", read("mob_kills")], ["Player Kills", read("player_kills")], ["Number of Deaths", read("deaths")], ["Time Since Last Death", formatTicksDuration(read("time_since_last_death"))], ["Damage Absorbed", read("damage_absorbed")], ["Damage Dealt", read("damage_dealt")], ["Damage Resisted", read("damage_resisted")], ["Damage Taken", read("damage_taken")], ["Jumps", read("jumps")], ["Sneak Time", read("sneak_time")]]],
       ["Travel", [["Distance Climbed", fmtDistance(read("distance_climbed"))], ["Distance Crouched", fmtDistance(read("distance_crouched"))], ["Distance Fallen", fmtDistance(read("distance_fallen"))], ["Distance Flown", fmtDistance(read("distance_flown"))], ["Distance Sprinted", fmtDistance(read("distance_sprinted"))], ["Distance Swum", fmtDistance(read("distance_swum"))], ["Distance Walked", fmtDistance(read("distance_walked"))], ["Distance Walked under Water", fmtDistance(read("distance_walked_under_water"))], ["Distance by Boat", fmtDistance(read("distance_by_boat"))], ["Distance by Elytra", fmtDistance(read("distance_by_elytra"))], ["Distance by Happy Ghast", fmtDistance(read("distance_by_happy_ghast"))], ["Distance by Horse", fmtDistance(read("distance_by_horse"))], ["Distance by Minecart", fmtDistance(read("distance_by_minecart"))]]],
-      ["Other", [["Blocks Placed", read("blocks_placed")], ["Blocks Broken", read("blocks_broken")], ["Fish Caught", read("fish_caught")], ["Animals Bred", read("animals_bred")], ["Chests Opened", read("chests_opened")], ["Barrels Opened", read("barrels_opened")], ["Shulker Boxes Opened", read("shulker_boxes_opened")], ["Items Dropped", read("items_dropped")], ["Items Enchanted", read("items_enchanted")], ["Talked to Villagers", read("talked_to_villagers")], ["Traded with Villagers", read("traded_with_villagers")], ["Time Since Last Rest", read("time_since_last_rest")], ["Times Slept in a Bed", read("times_slept_in_a_bed")]]]
+      ["Other", [["Blocks Placed", read("blocks_placed")], ["Blocks Broken", read("blocks_broken")], ["Fish Caught", read("fish_caught")], ["Animals Bred", read("animals_bred")], ["Chests Opened", read("chests_opened")], ["Barrels Opened", read("barrels_opened")], ["Shulker Boxes Opened", read("shulker_boxes_opened")], ["Items Dropped", read("items_dropped")], ["Items Enchanted", read("items_enchanted")], ["Talked to Villagers", read("talked_to_villagers")], ["Traded with Villagers", read("traded_with_villagers")], ["Time Since Last Rest", formatTicksDuration(read("time_since_last_rest"))], ["Times Slept in a Bed", read("times_slept_in_a_bed")]]]
     ];
     const statTable = rows => '<div class="table-wrap player-stat-table-wrap"><table class="player-stat-table"><tbody>' + rows.map(([label,value]) => '<tr><td>' + safeText(label) + '</td><td class="numeric">' + safeText(String(value ?? 0)) + '</td></tr>').join("") + '</tbody></table></div>';
     const sectionMarkup = sections.map(([name,rows]) => '<section class="player-stat-group"><h4>' + safeText(name) + '</h4>' + statTable(rows) + '</section>').join("");
@@ -468,11 +468,18 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
         fetch(`${API_BASE}/content/posts?category=gallery&builder=${encodeURIComponent(player.username)}&limit=1000`, {cache:"no-store"})
       ]);
       const advPayload = liveProfile || (advResponse?.ok ? await advResponse.json() : {advancements:[]});
-      const earned = Array.isArray(advPayload.advancements) ? advPayload.advancements : [];
+      const earned = (Array.isArray(advPayload.advancements) ? advPayload.advancements : [])
+        .map(item => ({
+          id: item.advancement_id || item.advancementId || "",
+          title: item.advancement_title || item.title || item.advancement_id || item.advancementId || "",
+          earnedAt: item.earned_at || item.earnedAt || null
+        }))
+        .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/"))
+        .sort((a, b) => Date.parse(b.earnedAt || 0) - Date.parse(a.earnedAt || 0));
       const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
       advPanel.innerHTML = earned.length ? earned.map(item => {
-        const title = item.advancement_title || item.advancement_id;
-        return '<article class="profile-search-row" data-profile-search="' + safeText((title + " " + item.advancement_id).toLowerCase()) + '"><strong>' + safeText(title) + '</strong><span>' + safeText(item.advancement_id) + '</span><small>' + safeText(formatDate(item.earned_at)) + '</small></article>';
+        const title = item.title || item.id;
+        return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + item.id).toLowerCase()) + '"><div><strong>' + safeText(title) + '</strong><span>' + safeText(item.id) + '</span></div><small>' + safeText(formatDate(item.earnedAt)) + '</small></article>';
       }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
       const postPayload = postResponse.ok ? await postResponse.json() : {posts:[]};
       const playerName = String(player.username || "").toLowerCase();
