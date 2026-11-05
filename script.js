@@ -477,15 +477,46 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
         .map(item => ({
           id: item.advancement_id || item.advancementId || "",
           title: item.advancement_title || item.title || item.advancement_id || item.advancementId || "",
-          earnedAt: item.earned_at || item.earnedAt || null
+          earnedAt: item.earned_at || item.earnedAt || null,
+          icon: item.icon_name || item.icon || item.iconName || ""
         }))
         .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/"))
         .sort((a, b) => Date.parse(b.earnedAt || 0) - Date.parse(a.earnedAt || 0));
       const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
       advPanel.innerHTML = earned.length ? earned.map(item => {
         const title = item.title || item.id;
-        return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + item.id).toLowerCase()) + '"><img class="advancement-icon" src="https://minecraft.wiki/images/' + encodeURIComponent(title.replace(/\\s+/g, "_")) + '.png" alt="" loading="lazy" onerror="this.hidden=true"><div><strong>' + safeText(title) + '</strong><span>' + safeText(item.id) + '</span></div><small>' + safeText(formatDate(item.earnedAt)) + '</small></article>';
+        return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + item.id).toLowerCase()) + '"><img class="advancement-icon" data-advancement-icon="' + safeText(item.icon) + '" alt="" loading="lazy"><div><strong>' + safeText(title) + '</strong><span>' + safeText(item.id) + '</span></div><small>' + safeText(formatDate(item.earnedAt)) + '</small></article>';
       }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
+      const advancementIcons = [...advPanel.querySelectorAll("[data-advancement-icon]")].filter(image => image.dataset.advancementIcon);
+      for (let offset = 0; offset < advancementIcons.length; offset += 35) {
+        const batch = advancementIcons.slice(offset, offset + 35);
+        const requestedTitles = batch.map(image => titleWords(String(image.dataset.advancementIcon).split(":").pop()).replace(/\\s+/g, "_"));
+        try {
+          const wikiUrl = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=64&origin=*&titles=" + encodeURIComponent(requestedTitles.join("|"));
+          const wikiResponse = await fetch(wikiUrl, { headers: { Accept: "application/json" } });
+          if (!wikiResponse.ok) throw new Error("Minecraft Wiki returned " + wikiResponse.status);
+          const wikiData = await wikiResponse.json();
+          const thumbnails = new Map();
+          Object.values(wikiData?.query?.pages || {}).forEach(page => {
+            if (page?.title && page?.thumbnail?.source) thumbnails.set(String(page.title).replace(/\\s+/g, "_").toLowerCase(), page.thumbnail.source);
+          });
+          (wikiData?.query?.normalized || []).forEach(item => {
+            const from = String(item.from || "").replace(/\\s+/g, "_").toLowerCase();
+            const to = String(item.to || "").replace(/\\s+/g, "_").toLowerCase();
+            if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
+          });
+          (wikiData?.query?.redirects || []).forEach(item => {
+            const from = String(item.from || "").replace(/\\s+/g, "_").toLowerCase();
+            const to = String(item.to || "").replace(/\\s+/g, "_").toLowerCase();
+            if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
+          });
+          batch.forEach((image, index) => {
+            const src = thumbnails.get(requestedTitles[index].toLowerCase());
+            if (src) image.src = src;
+            else image.hidden = true;
+          });
+        } catch { batch.forEach(image => image.hidden = true); }
+      }
       const postPayload = postResponse.ok ? await postResponse.json() : {posts:[]};
       const playerName = String(player.username || "").toLowerCase();
       const matchingPosts = (postPayload.posts || []).filter(post => {
