@@ -494,7 +494,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/live`, { cache: "no-store" })
         .then(response => response.ok ? response.json() : null)
         .then(payload => {
-          const currentPath = location.pathname.replace(/\\/$/, "");
+          const currentPath = location.pathname.replace(/\/$/, "");
           if (payload?.ok && currentPath === "/players/" + uuid) renderPlayerProfile(uuid, payload);
         })
         .catch(error => console.warn("Live player profile unavailable; keeping saved snapshot", error));
