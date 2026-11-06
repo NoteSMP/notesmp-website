@@ -11,6 +11,7 @@ let lastPluginRefreshSignal = 0;
 let playerData = [];
 let playerLoadFailed = false;
 let selectedGalleryGroup = 'Events';
+let selectedProfileTab = 'statistics';
 let toastTimer;
 
 function safeText(value) {
@@ -343,7 +344,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
     const mobRows = [...new Set(knownEntities.concat([...mobMap.keys()]))].map(id => ({id,count:mobMap.get(id)||0})).sort((a,b)=>a.id.localeCompare(b.id));
     const mobMarkup = '<section class="player-stat-group mob-kills-group"><h4>Mob Kills</h4><div class="mob-kill-grid">' + mobRows.map(row => '<div class="mob-kill-card" data-mob-wiki="' + safeText(row.id) + '" data-profile-search="mob kills ' + safeText(row.id) + '"><img class="mob-kill-icon" alt="" loading="lazy"><span>' + safeText(titleWords(row.id)) + '</span><strong>' + formatNumber(row.count) + '</strong></div>').join("") + '</div></section>';
     const statisticMarkup = sectionMarkup + mobMarkup;
-    profile.innerHTML = `<a class="back-link" href="/players">← All players</a><div class="panel"><div class="panel-heading"><div><span class="overline">PLAYER PROFILE</span><h2 class="profile-name-with-head"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid || uuid)}/24" alt="" loading="lazy"><span>${safeText(player.username)}</span></h2></div><span class="status-meta">Updated ${safeText(formatDate(player.updated_at))}</span></div><div class="panel-body"><div class="player-profile-tabs" role="tablist" aria-label="Player profile sections"><button type="button" class="profile-tab is-active" role="tab" aria-selected="true" data-profile-tab="statistics">Statistics</button><button type="button" class="profile-tab" role="tab" aria-selected="false" data-profile-tab="advancements">Advancements</button><button type="button" class="profile-tab" role="tab" aria-selected="false" data-profile-tab="posts">Posts</button></div><input class="search-input profile-search" id="profile-search" type="search" placeholder="Search statistics…" aria-label="Search player profile data"><div class="player-profile-panel" data-profile-panel="statistics"><div class="player-stat-groups">${statisticMarkup}</div></div><div class="player-profile-panel" data-profile-panel="advancements" hidden><p class="fine-print">Loading earned advancements…</p></div><div class="player-profile-panel" data-profile-panel="posts" hidden><p class="fine-print">Loading posts mentioning this player as a builder…</p></div></div></div>`;
+    profile.innerHTML = `<a class="back-link" href="/players">← All players</a><div class="panel"><div class="panel-heading"><div><span class="overline">PLAYER PROFILE</span><h2 class="profile-name-with-head"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid || uuid)}/24" alt="" loading="lazy"><span>${safeText(player.username)}</span></h2></div><span class="status-meta">Updated ${safeText(formatDate(player.updated_at))}</span></div><div class="panel-body"><div class="player-profile-tabs" role="tablist" aria-label="Player profile sections">${["statistics","advancements","posts"].map(tab => '<button type="button" class="profile-tab ' + (selectedProfileTab === tab ? "is-active" : "") + '" role="tab" aria-selected="' + String(selectedProfileTab === tab) + '" data-profile-tab="' + tab + '">' + (tab === "statistics" ? "Statistics" : tab === "advancements" ? "Advancements" : "Posts") + '</button>').join("")}</div><input class="search-input profile-search" id="profile-search" type="search" placeholder="${selectedProfileTab === "statistics" ? "Search statistics…" : selectedProfileTab === "advancements" ? "Search advancements…" : "Search posts…"}" aria-label="Search player profile data"><div class="player-profile-panel" data-profile-panel="statistics" ${selectedProfileTab !== "statistics" ? "hidden" : ""}><div class="player-stat-groups">${statisticMarkup}</div></div><div class="player-profile-panel" data-profile-panel="advancements" ${selectedProfileTab !== "advancements" ? "hidden" : ""}><p class="fine-print">Loading earned advancements…</p></div><div class="player-profile-panel" data-profile-panel="posts" ${selectedProfileTab !== "posts" ? "hidden" : ""}><p class="fine-print">Loading posts mentioning this player as a builder…</p></div></div></div>`;
     const profileTabs = [...profile.querySelectorAll("[data-profile-tab]")];
     const profilePanels = [...profile.querySelectorAll("[data-profile-panel]")];
     const profileSearch = profile.querySelector("#profile-search");
@@ -360,12 +361,14 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       });
     };
     const switchProfileTab = tab => {
+      selectedProfileTab = ["statistics", "advancements", "posts"].includes(tab) ? tab : "statistics";
       profileTabs.forEach(button => { const active = button.dataset.profileTab === tab; button.classList.toggle("is-active", active); button.setAttribute("aria-selected", String(active)); });
       profilePanels.forEach(panel => { panel.hidden = panel.dataset.profilePanel !== tab; });
       if (profileSearch) { profileSearch.placeholder = tab === "statistics" ? "Search statistics…" : tab === "advancements" ? "Search advancements…" : "Search posts…"; profileSearch.value = ""; }
       filterProfilePanel(tab, "");
     };
     profileTabs.forEach(button => button.addEventListener("click", () => switchProfileTab(button.dataset.profileTab)));
+    switchProfileTab(selectedProfileTab);
     profileSearch?.addEventListener("input", () => {
       const active = profile.querySelector("[data-profile-tab].is-active")?.dataset.profileTab || "statistics";
       filterProfilePanel(active, profileSearch.value.trim().toLowerCase());
@@ -523,26 +526,24 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       const advancementIcons = [...advPanel.querySelectorAll("[data-advancement-icon]")].filter(image => image.dataset.advancementIcon);
       for (let offset = 0; offset < advancementIcons.length; offset += 35) {
         const batch = advancementIcons.slice(offset, offset + 35);
-        const requestedTitles = batch.map(image => titleWords(String(image.dataset.advancementIcon).split(":").pop()).replace(/\s+/g, "_"));
+        const requestedTitles = batch.map(image => "File:" + titleWords(String(image.dataset.advancementIcon).split(":").pop()) + ".png");
         try {
-          const wikiUrl = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=64&origin=*&titles=" + encodeURIComponent(requestedTitles.join("|"));
+          const wikiUrl = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=imageinfo|pageimages&iiprop=url&piprop=thumbnail&pithumbsize=64&origin=*&titles=" + encodeURIComponent(requestedTitles.join("|"));
           const wikiResponse = await fetch(wikiUrl, { headers: { Accept: "application/json" } });
           if (!wikiResponse.ok) throw new Error("Minecraft Wiki returned " + wikiResponse.status);
           const wikiData = await wikiResponse.json();
           const thumbnails = new Map();
           Object.values(wikiData?.query?.pages || {}).forEach(page => {
-            if (page?.title && page?.thumbnail?.source) thumbnails.set(String(page.title).replace(/\s+/g, "_").toLowerCase(), page.thumbnail.source);
+            const src = page?.imageinfo?.[0]?.url || page?.thumbnail?.source;
+            if (page?.title && src) thumbnails.set(String(page.title).replace(/\\s+/g, "_").toLowerCase(), src);
           });
-          (wikiData?.query?.normalized || []).forEach(item => {
-            const from = String(item.from || "").replace(/\s+/g, "_").toLowerCase();
-            const to = String(item.to || "").replace(/\s+/g, "_").toLowerCase();
+          const resolveAlias = (from, to) => {
+            from = String(from || "").replace(/\\s+/g, "_").toLowerCase();
+            to = String(to || "").replace(/\\s+/g, "_").toLowerCase();
             if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
-          });
-          (wikiData?.query?.redirects || []).forEach(item => {
-            const from = String(item.from || "").replace(/\s+/g, "_").toLowerCase();
-            const to = String(item.to || "").replace(/\s+/g, "_").toLowerCase();
-            if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
-          });
+          };
+          (wikiData?.query?.normalized || []).forEach(item => resolveAlias(item.from, item.to));
+          (wikiData?.query?.redirects || []).forEach(item => resolveAlias(item.from, item.to));
           batch.forEach((image, index) => {
             const src = thumbnails.get(requestedTitles[index].toLowerCase());
             if (src) image.src = src;
