@@ -754,6 +754,10 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
             image.onerror = () => { image.onerror = null; image.hidden = true; };
             matched++;
           });
+          // Wiki lookups can replace fallback titles after the initial render.
+          // Re-apply the active filter so rows that no longer match are hidden
+          // and newly matching Wiki titles become visible immediately.
+          filterProfilePanel("advancements", profileSearch?.value.trim().toLowerCase() || "");
           if (!wikiIndex.size || !matched) throw new Error("No advancement icons matched. Wiki entries: " + wikiIndex.size + "; profile rows: " + rows.length);
           console.info("NoteSMP: loaded " + matched + " advancement icons from minecraft.wiki");
         } catch (error) {
