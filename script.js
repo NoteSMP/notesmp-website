@@ -525,8 +525,8 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       track.append(fill);
       progress.append(progressMeta, track);
       advPanel.prepend(progress);
-      // Resolve advancement item artwork from the icon column on the Minecraft Wiki page.
-      // Use the linked File page and its imageinfo URL, never the decorative frame.
+      // Resolve advancement icons from the actual item artwork linked in the Wiki's icon column.
+      // Wiki File pages use /w/File: URLs; the frame overlay is explicitly excluded.
       if (earned.length) {
         try {
           const wikiResponse = await fetch("https://minecraft.wiki/api.php?action=parse&page=Advancement&prop=text&format=json&origin=*", { headers: { Accept: "application/json" }, cache: "force-cache" });
@@ -534,32 +534,44 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
           const wikiPayload = await wikiResponse.json();
           const wikiDocument = new DOMParser().parseFromString(wikiPayload?.parse?.text?.["*"] || "", "text/html");
           const wikiIndex = new Map();
-          const advancementIdPattern = new RegExp("^(?:[a-z0-9_.-]+:)?((?:[a-z0-9_.-]+/)+[a-z0-9_.-]+)$", "i");
+          const advancementIdPattern = /^(?:[a-z0-9_.-]+:)?((?:[a-z0-9_.-]+\/)+[a-z0-9_.-]+)$/i;
           for (const row of wikiDocument.querySelectorAll("tr")) {
             const cells = [...row.querySelectorAll("th,td")];
             if (cells.length < 2) continue;
             const codeValues = [...row.querySelectorAll("code")].map(node => node.textContent.trim());
-            const match = codeValues.map(value => value.match(advancementIdPattern)).filter(Boolean).pop();
+            const candidates = codeValues.concat(row.textContent.match(/(?:minecraft:)?[a-z0-9_.-]+\/[a-z0-9_./-]+/gi) || []);
+            const match = candidates.map(value => value.match(advancementIdPattern)).filter(Boolean).pop();
             if (!match) continue;
             const id = "minecraft:" + match[1].toLowerCase();
-            const title = cells[1]?.textContent?.replace(/\\s+/g, " ").trim();
-            const fileLink = cells[0]?.querySelector('a[href*="/wiki/File:"],a[href^="./File:"]');
+            const title = cells[1]?.textContent?.replace(/\s+/g, " ").trim();
+            const itemImage = [...(cells[0]?.querySelectorAll("img") || [])].find(candidate => {
+              const source = [candidate.getAttribute("src"), candidate.getAttribute("data-src"), candidate.getAttribute("data-original"), candidate.getAttribute("data-lazy-src"), candidate.getAttribute("srcset")].filter(Boolean).join(" ");
+              const alt = candidate.getAttribute("alt") || "";
+              return source && !/advancement-(?:plain|oval|fancy)-(?:raw|worn)/i.test(source + " " + alt)
+                && !/advancement[-_ ]frame/i.test(source + " " + alt);
+            });
+            const rawSource = itemImage?.getAttribute("data-src") || itemImage?.getAttribute("data-original") || itemImage?.getAttribute("data-lazy-src") || itemImage?.getAttribute("src") || itemImage?.getAttribute("srcset")?.split(/\s+/)[0] || "";
+            let iconUrl = "";
+            if (rawSource) {
+              try { iconUrl = new URL(rawSource.split(" ")[0], "https://minecraft.wiki").href; } catch {}
+            }
+            const fileLink = cells[0]?.querySelector('a[href*="/w/File:"],a[href*="/wiki/File:"],a[href^="./File:"]');
             let fileTitle = "";
             if (fileLink) {
               try {
                 const fileUrl = new URL(fileLink.getAttribute("href"), "https://minecraft.wiki");
                 const filePath = decodeURIComponent(fileUrl.pathname);
-                const marker = filePath.indexOf("/wiki/File:");
-                if (marker >= 0) fileTitle = filePath.slice(marker + 6).replace(/_/g, " ");
+                const marker = Math.max(filePath.indexOf("/w/File:"), filePath.indexOf("/wiki/File:"));
+                if (marker >= 0) fileTitle = filePath.slice(marker + (filePath.startsWith("/wiki/", marker) ? 6 : 3)).replace(/_/g, " ");
                 else if (filePath.startsWith("/File:")) fileTitle = filePath.slice(1).replace(/_/g, " ");
               } catch {}
             }
-            if (title) wikiIndex.set(id, { title, fileTitle });
+            if (title) wikiIndex.set(id, { title, iconUrl, fileTitle });
           }
-          const fileTitles = [...new Set([...wikiIndex.values()].map(item => item.fileTitle).filter(Boolean))];
+          const unresolvedFiles = [...new Set([...wikiIndex.values()].filter(item => !item.iconUrl && item.fileTitle).map(item => item.fileTitle))];
           const imageUrls = new Map();
-          for (let offset = 0; offset < fileTitles.length; offset += 40) {
-            const batch = fileTitles.slice(offset, offset + 40);
+          for (let offset = 0; offset < unresolvedFiles.length; offset += 40) {
+            const batch = unresolvedFiles.slice(offset, offset + 40);
             const imageResponse = await fetch("https://minecraft.wiki/api.php?action=query&format=json&prop=imageinfo&iiprop=url&titles=" + encodeURIComponent(batch.join("|")) + "&origin=*", { headers: { Accept: "application/json" } });
             if (!imageResponse.ok) continue;
             const imagePayload = await imageResponse.json();
@@ -573,9 +585,9 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
             if (!data) return;
             const heading = image.closest(".advancement-row")?.querySelector("strong");
             if (heading && data.title) heading.textContent = data.title;
-            const imageUrl = data.fileTitle ? imageUrls.get(data.fileTitle.replace(/^File:/i, "").toLowerCase()) : "";
-            if (imageUrl) {
-              image.src = imageUrl;
+            const iconUrl = data.iconUrl || (data.fileTitle ? imageUrls.get(data.fileTitle.replace(/^File:/i, "").toLowerCase()) : "");
+            if (iconUrl) {
+              image.src = iconUrl;
               image.hidden = false;
               image.onerror = () => { image.hidden = true; };
             } else image.hidden = true;
