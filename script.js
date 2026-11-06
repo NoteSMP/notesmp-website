@@ -489,13 +489,35 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
             icon: item.icon_name || item.icon || item.iconName || ""
           };
         })
-        .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/"))
+        .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/") && !/(^|\\/)root$/i.test(item.id))
         .sort((a, b) => Date.parse(b.earnedAt || 0) - Date.parse(a.earnedAt || 0));
       const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
       advPanel.innerHTML = earned.length ? earned.map(item => {
         const title = item.title || item.id;
         return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + item.id).toLowerCase()) + '"><img class="advancement-icon" data-advancement-icon="' + safeText(item.icon) + '" alt="" loading="lazy"><div><strong>' + safeText(title) + '</strong><span>' + safeText(item.id) + '</span></div><small>' + safeText(formatDate(item.earnedAt)) + '</small></article>';
       }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
+      const totalAdvancements = Number(liveProfile?.totalAdvancements) || 0;
+      if (totalAdvancements > 0) {
+        const completed = Math.min(earned.length, totalAdvancements);
+        const percent = Math.min(100, completed / totalAdvancements * 100);
+        const progress = element("div", "advancement-progress");
+        progress.style.cssText = "margin:0 0 18px;padding:14px 16px;border:1px solid var(--border-color,rgba(255,255,255,.12));border-radius:12px;background:var(--surface-soft,rgba(255,255,255,.035))";
+        const progressMeta = element("div", "advancement-progress-meta");
+        progressMeta.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:9px;font-size:.9rem";
+        progressMeta.append(element("strong", "", "Advancement progress"), element("span", "fine-print", completed + " / " + totalAdvancements));
+        const track = element("div", "advancement-progress-track");
+        track.setAttribute("role", "progressbar");
+        track.setAttribute("aria-label", "Advancement progress");
+        track.setAttribute("aria-valuemin", "0");
+        track.setAttribute("aria-valuemax", String(totalAdvancements));
+        track.setAttribute("aria-valuenow", String(completed));
+        track.style.cssText = "height:9px;overflow:hidden;border-radius:999px;background:rgba(128,128,128,.22)";
+        const fill = element("div", "advancement-progress-fill");
+        fill.style.cssText = "height:100%;width:" + percent + "%;border-radius:inherit;background:var(--accent,#b5e853);transition:width .35s ease";
+        track.append(fill);
+        progress.append(progressMeta, track);
+        advPanel.prepend(progress);
+      }
       const advancementIcons = [...advPanel.querySelectorAll("[data-advancement-icon]")].filter(image => image.dataset.advancementIcon);
       for (let offset = 0; offset < advancementIcons.length; offset += 35) {
         const batch = advancementIcons.slice(offset, offset + 35);
