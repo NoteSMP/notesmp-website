@@ -489,7 +489,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
             icon: item.icon_name || item.icon || item.iconName || ""
           };
         })
-        .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/") && !/(^|\\/)root$/i.test(item.id))
+        .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/") && !/(^|\/)root$/i.test(item.id))
         .sort((a, b) => Date.parse(b.earnedAt || 0) - Date.parse(a.earnedAt || 0));
       const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
       advPanel.innerHTML = earned.length ? earned.map(item => {
