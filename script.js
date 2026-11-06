@@ -450,7 +450,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       ["Travel", [["Distance Climbed", fmtDistance(read("distance_climbed"))], ["Distance Crouched", fmtDistance(read("distance_crouched"))], ["Distance Fallen", fmtDistance(read("distance_fallen"))], ["Distance Flown", fmtDistance(read("distance_flown"))], ["Distance Sprinted", fmtDistance(read("distance_sprinted"))], ["Distance Swum", fmtDistance(read("distance_swum"))], ["Distance Walked", fmtDistance(read("distance_walked"))], ["Distance Walked under Water", fmtDistance(read("distance_walked_under_water"))], ["Distance by Boat", fmtDistance(read("distance_by_boat"))], ["Distance by Elytra", fmtDistance(read("distance_by_elytra"))], ["Distance by Happy Ghast", fmtDistance(read("distance_by_happy_ghast"))], ["Distance by Horse", fmtDistance(read("distance_by_horse"))], ["Distance by Minecart", fmtDistance(read("distance_by_minecart"))]]],
       ["Other", [["Blocks Placed", read("blocks_placed")], ["Blocks Broken", read("blocks_broken")], ["Fish Caught", read("fish_caught")], ["Animals Bred", read("animals_bred")], ["Chests Opened", read("chests_opened")], ["Barrels Opened", read("barrels_opened")], ["Shulker Boxes Opened", read("shulker_boxes_opened")], ["Items Dropped", read("items_dropped")], ["Items Enchanted", read("items_enchanted")], ["Talked to Villagers", read("talked_to_villagers")], ["Traded with Villagers", read("traded_with_villagers")], ["Time Since Last Rest", formatTicksDuration(read("time_since_last_rest"))], ["Times Slept in a Bed", read("times_slept_in_a_bed")]]]
     ];
-    const statTable = rows => '<div class="table-wrap player-stat-table-wrap"><table class="player-stat-table"><tbody>' + rows.map(([label,value]) => '<tr><td>' + safeText(label) + '</td><td class="numeric">' + safeText(String(value ?? 0)) + '</td></tr>').join("") + '</tbody></table></div>';
+    const statTable = rows => '<div class="table-wrap player-stat-table-wrap"><table class="player-stat-table"><tbody>' + rows.map(([label,value]) => '<tr data-profile-search="' + safeText((String(label) + " " + String(value ?? 0)).toLowerCase()) + '"><td>' + safeText(label) + '</td><td class="numeric">' + safeText(String(value ?? 0)) + '</td></tr>').join("") + '</tbody></table></div>';
     const sectionMarkup = sections.map(([name,rows]) => '<section class="player-stat-group"><h4>' + safeText(name) + '</h4>' + statTable(rows) + '</section>').join("");
     const mobMap = new Map(rawStatistics.filter(stat => String(stat.stat_id || "").toLowerCase().startsWith("minecraft:kill_entity:")).map(stat => [String(stat.stat_id).slice("minecraft:kill_entity:".length).toLowerCase().replace(/^minecraft:/, ""), Number(stat.stat_value)||0]));
     const knownEntities = "allay,armadillo,armor_stand,axolotl,bat,bee,blaze,bogged,breeze,camel,cat,cave_spider,chicken,cod,cow,creeper,dolphin,donkey,drowned,elder_guardian,ender_dragon,enderman,endermite,evoker,fox,frog,ghast,glow_squid,goat,guardian,hoglin,horse,husk,iron_golem,llama,magma_cube,mooshroom,mule,ocelot,panda,parrot,phantom,pig,piglin,piglin_brute,pillager,polar_bear,pufferfish,rabbit,ravager,salmon,sheep,shulker,silverfish,skeleton,skeleton_horse,slime,sniffer,snow_golem,spider,squid,stray,strider,tadpole,trader_llama,tropical_fish,turtle,vex,villager,vindicator,wandering_trader,warden,witch,wither,wither_skeleton,wolf,zoglin,zombie,zombie_horse,zombie_villager,zombified_piglin".split(",");
@@ -466,12 +466,20 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       if (!panel) return;
       const items = [...panel.querySelectorAll("[data-profile-search]")];
       let visible = 0;
+      if (tab === "statistics") {
+        // Keep every statistic visible; search highlights matching rows/cards instead of filtering them out.
+        items.forEach(item => {
+          item.hidden = false;
+          const match = Boolean(query) && item.dataset.profileSearch.includes(query);
+          item.classList.toggle("is-search-match", match);
+          if (match) visible++;
+        });
+        panel.querySelectorAll(".player-stat-group").forEach(group => { group.hidden = false; });
+        return;
+      }
       items.forEach(item => { const match = !query || item.dataset.profileSearch.includes(query); item.hidden = !match; if (match) visible++; });
       const empty = panel.querySelector("[data-profile-empty]");
       if (empty) empty.hidden = visible > 0;
-      if (tab === "statistics") panel.querySelectorAll(".player-stat-group").forEach(group => {
-        group.hidden = ![...group.querySelectorAll("[data-profile-search]")].some(item => !item.hidden);
-      });
     };
     const switchProfileTab = tab => {
       selectedProfileTab = ["statistics", "advancements", "posts"].includes(tab) ? tab : "statistics";
@@ -613,6 +621,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
         const resourceLocation = item.id.includes(":") ? item.id.slice(item.id.indexOf(":") + 1) : item.id;
         return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + resourceLocation).toLowerCase()) + '"><img class="advancement-icon" data-advancement-id="' + safeText(item.id) + '" alt="" loading="lazy"><strong class="advancement-name">' + safeText(title) + '</strong><span class="advancement-path">' + safeText(resourceLocation) + '</span><time class="advancement-date" datetime="' + safeText(item.earnedAt || "") + '">' + safeText(formatDate(item.earnedAt)) + '</time></article>';
       }).join("") + '</div><p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
+      filterProfilePanel("advancements", profileSearch?.value.trim().toLowerCase() || "");
       const totalAdvancements = Number(liveProfile?.totalAdvancements ?? countPayload?.totalAdvancements) || 0;
       const completed = totalAdvancements > 0 ? Math.min(earned.length, totalAdvancements) : earned.length;
       const percent = totalAdvancements > 0 ? Math.min(100, completed / totalAdvancements * 100) : 0;
