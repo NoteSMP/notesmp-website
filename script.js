@@ -12,6 +12,7 @@ let playerData = [];
 let playerLoadFailed = false;
 let selectedGalleryGroup = 'Events';
 let selectedProfileTab = 'statistics';
+let liveProfileRequests = new Map();
 let toastTimer;
 
 function safeText(value) {
@@ -483,33 +484,25 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       const liveAdvancements = Array.isArray(liveProfile?.advancements) ? liveProfile.advancements : [];
       const advPayload = liveAdvancements.length ? liveProfile : savedAdvPayload;
       const earned = (Array.isArray(advPayload.advancements) ? advPayload.advancements : [])
-        .map(item => {
-          const id = item.advancement_id || item.advancementId || "";
-          const rawTitle = item.advancement_title || item.title || id;
-          const title = rawTitle.includes("/") ? titleWords(rawTitle.split("/").pop()) : rawTitle;
-          return {
-            id,
-            title,
-            earnedAt: item.earned_at || item.earnedAt || null,
-            icon: item.icon_name || item.icon || item.iconName || ""
-          };
-        })
+        .map(item => ({ id: item.advancement_id || item.advancementId || "", earnedAt: item.earned_at || item.earnedAt || null }))
         .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/") && !/(^|\/)root$/i.test(item.id))
         .sort((a, b) => Date.parse(b.earnedAt || 0) - Date.parse(a.earnedAt || 0));
       const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
       advPanel.innerHTML = earned.length ? earned.map(item => {
-        const title = item.title || item.id;
-        return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + item.id).toLowerCase()) + '"><img class="advancement-icon" data-advancement-icon="' + safeText(item.icon) + '" alt="" loading="lazy"><div><strong>' + safeText(title) + '</strong><span>' + safeText(item.id) + '</span></div><small>' + safeText(formatDate(item.earnedAt)) + '</small></article>';
+        const title = titleWords(item.id.split(":").pop().split("/").pop());
+        return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + item.id).toLowerCase()) + '"><img class="advancement-icon" data-advancement-id="' + safeText(item.id) + '" alt="" loading="lazy"><div><strong>' + safeText(title) + '</strong><span>' + safeText(item.id) + '</span></div><small>' + safeText(formatDate(item.earnedAt)) + '</small></article>';
       }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
       const totalAdvancements = Number(liveProfile?.totalAdvancements ?? countPayload?.totalAdvancements) || 0;
       const completed = totalAdvancements > 0 ? Math.min(earned.length, totalAdvancements) : earned.length;
       const percent = totalAdvancements > 0 ? Math.min(100, completed / totalAdvancements * 100) : 0;
-      const progress = element("div", "advancement-progress");
+      const progress = document.createElement("div"); progress.className = "advancement-progress";
       progress.style.cssText = "margin:0 0 18px;padding:14px 16px;border:1px solid var(--border-color,rgba(255,255,255,.12));border-radius:12px;background:var(--surface-soft,rgba(255,255,255,.035))";
-      const progressMeta = element("div", "advancement-progress-meta");
+      const progressMeta = document.createElement("div"); progressMeta.className = "advancement-progress-meta";
       progressMeta.style.cssText = "display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:9px;font-size:.9rem";
-      progressMeta.append(element("strong", "", "Advancement progress"), element("span", "fine-print", totalAdvancements > 0 ? completed + " / " + totalAdvancements : completed + " earned · total syncing"));
-      const track = element("div", "advancement-progress-track");
+      const progressTitle = document.createElement("strong"); progressTitle.textContent = "Advancement progress";
+      const progressCount = document.createElement("span"); progressCount.className = "fine-print"; progressCount.textContent = totalAdvancements > 0 ? completed + " / " + totalAdvancements : completed + " earned · total syncing";
+      progressMeta.append(progressTitle, progressCount);
+      const track = document.createElement("div"); track.className = "advancement-progress-track";
       track.setAttribute("role", "progressbar");
       track.setAttribute("aria-label", "Advancement progress");
       track.setAttribute("aria-valuemin", "0");
@@ -520,52 +513,45 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
         track.setAttribute("aria-valuetext", "Total advancement count is syncing");
       }
       track.style.cssText = "height:9px;overflow:hidden;border-radius:999px;background:rgba(128,128,128,.22)";
-      const fill = element("div", "advancement-progress-fill");
+      const fill = document.createElement("div"); fill.className = "advancement-progress-fill";
       fill.style.cssText = "height:100%;width:" + (totalAdvancements > 0 ? percent : 28) + "%;border-radius:inherit;background:var(--accent,#b5e853);transition:width .35s ease;opacity:" + (totalAdvancements > 0 ? "1" : ".55");
       track.append(fill);
       progress.append(progressMeta, track);
       advPanel.prepend(progress);
-      const advancementIcons = [...advPanel.querySelectorAll("[data-advancement-icon]")].filter(image => image.dataset.advancementIcon);
-      for (let offset = 0; offset < advancementIcons.length; offset += 25) {
-        const batch = advancementIcons.slice(offset, offset + 25);
-        const titlePairs = batch.map(image => {
-          const title = titleWords(String(image.dataset.advancementIcon).split(":").pop());
-          return [title, "File:" + title + ".png"];
-        });
-        const requestedTitles = titlePairs.flat();
+      // Resolve canonical advancement titles and icons from the Minecraft Wiki table by ID.
+      if (earned.length) {
         try {
-          const wikiUrl = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=pageimages|imageinfo&iiprop=url&piprop=thumbnail&pithumbsize=96&origin=*&titles=" + encodeURIComponent(requestedTitles.join("|"));
-          const wikiResponse = await fetch(wikiUrl, { headers: { Accept: "application/json" } });
+          const wikiResponse = await fetch("https://minecraft.wiki/api.php?action=parse&page=Advancement&prop=text&format=json&origin=*", { headers: { Accept: "application/json" }, cache: "force-cache" });
           if (!wikiResponse.ok) throw new Error("Minecraft Wiki returned " + wikiResponse.status);
-          const wikiData = await wikiResponse.json();
-          const thumbnails = new Map();
-          Object.values(wikiData?.query?.pages || {}).forEach(page => {
-            const src = page?.thumbnail?.source || page?.imageinfo?.[0]?.url;
-            if (page?.title && src) thumbnails.set(String(page.title).replace(/\\s+/g, "_").toLowerCase(), src);
-          });
-          const resolveAlias = (from, to) => {
-            from = String(from || "").replace(/\\s+/g, "_").toLowerCase();
-            to = String(to || "").replace(/\\s+/g, "_").toLowerCase();
-            if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
-          };
-          (wikiData?.query?.normalized || []).forEach(item => resolveAlias(item.from, item.to));
-          (wikiData?.query?.redirects || []).forEach(item => resolveAlias(item.from, item.to));
-          batch.forEach((image, index) => {
-            const candidates = titlePairs[index].map(title => title.replace(/\\s+/g, "_").toLowerCase());
-            const src = candidates.map(title => thumbnails.get(title)).find(Boolean);
-            if (src) {
-              image.src = src;
+          const wikiPayload = await wikiResponse.json();
+          const wikiDocument = new DOMParser().parseFromString(wikiPayload?.parse?.text?.["*"] || "", "text/html");
+          const wikiIndex = new Map();
+          for (const row of wikiDocument.querySelectorAll("tr")) {
+            const cells = [...row.querySelectorAll("th,td")];
+            if (cells.length < 2) continue;
+            const codeText = [...row.querySelectorAll("code")].map(node => node.textContent.trim()).join(" ");
+            const match = codeText.match(/(?:[a-z0-9_.-]+:)?((?:[a-z0-9_.-]+\/)+[a-z0-9_.-]+)/i);
+            if (!match) continue;
+            const id = "minecraft:" + match[1].toLowerCase();
+            const title = cells[1]?.textContent?.replace(/\s+/g, " ").trim();
+            const icon = cells[0]?.querySelector("img");
+            const source = icon?.getAttribute("src") || icon?.getAttribute("data-src") || icon?.getAttribute("data-original");
+            const iconUrl = source ? new URL(source, "https://minecraft.wiki").href : "";
+            if (title) wikiIndex.set(id, { title, iconUrl });
+          }
+          advPanel.querySelectorAll("[data-advancement-id]").forEach(image => {
+            const data = wikiIndex.get(image.dataset.advancementId);
+            if (!data) return;
+            const article = image.closest(".advancement-row");
+            const heading = article?.querySelector("strong");
+            if (heading && data.title) heading.textContent = data.title;
+            if (data.iconUrl) {
+              image.src = data.iconUrl;
               image.hidden = false;
-              image.onerror = () => {
-                image.onerror = null;
-                image.hidden = true;
-              };
+              image.onerror = () => { image.hidden = true; };
             } else image.hidden = true;
           });
-        } catch (error) {
-          console.warn("Minecraft Wiki advancement icon lookup failed", error);
-          batch.forEach(image => { image.hidden = true; });
-        }
+        } catch (error) { console.warn("Minecraft Wiki advancement lookup failed", error); }
       }
       const postPayload = postResponse.ok ? await postResponse.json() : {posts:[]};
       const playerName = String(player.username || "").toLowerCase();
@@ -583,14 +569,17 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
     } catch (error) { console.warn("Player profile supplemental data could not be loaded", error); }
 
     // D1 is rendered first; the plugin response replaces it without persisting live data.
-    if (!liveProfile && pluginAvailable) {
-      fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/live`, { cache: "no-store" })
+    if (!liveProfile && pluginAvailable && !liveProfileRequests.has(uuid)) {
+      const request = fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/live`, { cache: "no-store" })
         .then(response => response.ok ? response.json() : null)
         .then(payload => {
           const currentPath = location.pathname.replace(/\/$/, "");
           if (payload?.ok && currentPath === "/players/" + uuid) renderPlayerProfile(uuid, payload);
+          return payload;
         })
-        .catch(error => console.warn("Live player profile unavailable; keeping saved snapshot", error));
+        .catch(error => { console.warn("Live player profile unavailable; keeping saved snapshot", error); return null; })
+        .finally(() => { if (liveProfileRequests.get(uuid) === request) liveProfileRequests.delete(uuid); });
+      liveProfileRequests.set(uuid, request);
     }
 
   } catch {
