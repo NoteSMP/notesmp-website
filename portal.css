@@ -508,6 +508,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 html, body { cursor: var(--cursor-note); }
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+textarea, [contenteditable="true"] { cursor: text; caret-color: var(--lime); }
 a[href], button:not(:disabled), [role="button"]:not([aria-disabled="true"]),
 summary, label[for], input[type="checkbox"]:not(:disabled),
 input[type="radio"]:not(:disabled), select:not(:disabled) {
@@ -519,7 +521,6 @@ button:disabled, [role="button"][aria-disabled="true"],
 [data-disabled="true"] {
   cursor: var(--cursor-barrier) !important;
 }
-input, textarea, [contenteditable="true"] { cursor: text; caret-color: var(--lime); }
 ::selection {
   color: #111713;
   background: #D3EF75;
