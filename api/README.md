@@ -1,30 +1,12 @@
-# NoteSMP API
+# NoteSMP API location
 
-This is a separate Cloudflare Worker API. It does not replace the existing website Worker.
+The API is maintained in its own repository: [NoteSMP/notesmp-api](https://github.com/NoteSMP/notesmp-api).
 
-## Planned deployment
+Production Worker:
+`https://notesmp-api.notesmp-de.workers.dev`
 
-- Worker name: `notesmp-api`
-- Database: Cloudflare D1 named `notesmp-data`
-- D1 binding: `DB`
-- Public API hostname: `api.notesmp.de` (connect only after deployment)
-- Website origin: `https://www.notesmp.de`
+This folder is not a separate or planned API deployment. Do not create a second Worker or database from this note. Make API source, schema and migration changes in the dedicated `notesmp-api` repository.
 
-## Endpoints
+The website frontend in this repository calls the API's public `/v1` endpoints. Protected Minecraft/plugin endpoints require the server-side `MINECRAFT_API_KEY` and must never be called from browser code.
 
-- `GET /v1/health` — checks API and D1 connectivity.
-- `GET /v1/server` — latest server heartbeat.
-- `GET /v1/players` — public player leaderboard (up to 100).
-- `GET /v1/players/:uuid` — public player profile.
-- `POST /v1/minecraft/heartbeat` — protected Minecraft server heartbeat.
-- `POST /v1/minecraft/offline` — protected server shutdown notification.
-
-## Secrets
-
-Set `MINECRAFT_API_KEY` as a Worker secret. Never put it in the website, GitHub, or a public config file. The Paper plugin will use it in an Authorization Bearer header.
-
-## Database
-
-Create the D1 database, then run `api/schema.sql` against the remote database. The Worker must have a D1 binding named `DB`.
-
-Do not deploy until a real database ID has been added to the Wrangler configuration. Never commit API keys or other secrets.
+See the API repository README for the current endpoint reference, D1 schema/migrations, bindings, secrets and deployment instructions.
