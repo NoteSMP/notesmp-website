@@ -1,44 +1,60 @@
 # NoteSMP Website
 
-Public website for the NoteSMP Minecraft Java server: **https://notesmp.de** and **https://www.notesmp.de**.
+Public website for the NoteSMP Minecraft Java server: [notesmp.de](https://notesmp.de).
 
-## Features
+## What the site provides
 
-- Server status and join address.
-- Public content/news and events.
-- Gallery sections and published community posts.
-- Creator/stream listings.
-- Public player profiles and statistics pages.
-- Discord links and site navigation.
+- Server information, connection address, live server status and online-player list.
+- Public events, announcements, gallery posts and website links.
+- Creator and Twitch live information.
+- Player directory and public player profiles, including statistics and advancement history.
+- Responsive navigation and pages for Info, Events, Gallery, Players, Commands, Rules and Updates.
 
-## Hosting and deployment
+## Architecture
 
-The site is static content deployed as a Cloudflare Worker with Workers Static Assets. The configuration is in `wrangler.jsonc`; the asset directory is the repository root.
+This repository contains the static frontend. It is deployed as the `notesmp-website` Cloudflare Worker using Workers Static Assets.
 
-Cloudflare Git integration can deploy changes pushed to the connected branch. To deploy manually:
+The frontend reads dynamic information from the separate [NoteSMP API repository](https://github.com/NoteSMP/notesmp-api), deployed at:
 
-```bash
-npm install --save-dev wrangler
-npx wrangler login
-npx wrangler dev
-npx wrangler deploy
-```
+`https://notesmp-api.notesmp-de.workers.dev/v1`
 
-## API integration
+The Paper plugin signals the API when player/server information changes. The API performs the public Minecraft server-status check; the website does not need a continuously running game-server process.
 
-The frontend calls the NoteSMP API for dynamic data. Configure the API base URL in the site's frontend configuration where applicable. Do not put the Minecraft API secret or bot token in frontend code; browser-visible data must be public.
+Player directory records are stored in D1. A player is registered when they join. Player profiles can request fresh statistics and advancements from the online plugin; scheduled snapshots are stored separately in D1.
 
 ## Main files
 
-| File | Role |
+| File | Purpose |
 |---|---|
-| `index.html` | Website entry page and markup. |
-| `script.js` | Frontend behavior and API-driven content. |
-| `styles.css` | Main site styling. |
-| `portal.css` | Portal/page styling. |
-| `api/` | Site API-related assets or handlers. |
-| `wrangler.jsonc` | Cloudflare Worker/static assets deployment settings. |
+| `index.html` | Frontend entry point and page shell. |
+| `script.js` | Routing, rendering, API requests and interactive behavior. |
+| `styles.css`, `portal.css` | Global and portal/page styling. |
+| `wrangler.jsonc` | Cloudflare Worker and static-asset configuration. |
+| `api/README.md` | Pointer to the separately maintained API project. |
 
-## Development
+## Local development
 
-Edit the static assets, preview locally with Wrangler, and check both desktop and mobile layouts before deploying. Keep secrets out of this repository.
+Requirements: Node.js and npm.
+
+```bash
+npm install
+npx wrangler dev
+```
+
+Preview the static site locally, test the main routes and player profiles, and check both desktop and mobile layouts.
+
+## Deploy
+
+The production Worker is named `notesmp-website`. Deploy from this repository with:
+
+```bash
+npx wrangler deploy
+```
+
+If using Cloudflare Workers Builds, verify the configured repository and production branch before relying on an automatic deployment.
+
+## Security and contributions
+
+- Never put `MINECRAFT_API_KEY`, Discord bot tokens, or other secrets in frontend code.
+- Treat all API responses and user-provided content as untrusted; escape text before inserting it into HTML.
+- Keep public pages usable when optional API integrations are temporarily unavailable.
