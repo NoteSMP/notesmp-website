@@ -263,6 +263,12 @@ function render() {
   if (playerDirectoryRefreshTimer) { clearInterval(playerDirectoryRefreshTimer); playerDirectoryRefreshTimer = null; }
   const profileMatch = path.match(/^\/players\/([0-9a-fA-F-]{36})$/);
   const profileUuid = profileMatch?.[1] || '';
+  // Preserve the selected profile tab across a refresh while staying on a profile,
+  // but reset it when navigating back to the player directory (or another route).
+  if (activeLiveProfileUuid && !profileMatch) {
+    selectedProfileTab = "statistics";
+    try { sessionStorage.setItem("notesmp-profile-tab", "statistics"); } catch {}
+  }
   if (profileUuid !== activeLiveProfileUuid) {
     liveProfileRequests.clear();
     activeLiveProfileUuid = profileUuid;
@@ -477,7 +483,18 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
         panel.querySelectorAll(".player-stat-group").forEach(group => { group.hidden = false; });
         return;
       }
-      items.forEach(item => { const match = !query || item.dataset.profileSearch.includes(query); item.hidden = !match; if (match) visible++; });
+      items.forEach(item => {
+        const match = !query || item.dataset.profileSearch.includes(query);
+        item.hidden = !match;
+        if (tab === "advancements") {
+          // Advancement rows use display:grid!important for their layout, which can
+          // override the browser's default [hidden] display rule. Force the filter
+          // state explicitly so non-matching rows are never rendered.
+          if (match) item.style.removeProperty("display");
+          else item.style.setProperty("display", "none", "important");
+        }
+        if (match) visible++;
+      });
       const empty = panel.querySelector("[data-profile-empty]");
       if (empty) empty.hidden = visible > 0;
     };
