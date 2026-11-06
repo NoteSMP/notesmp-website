@@ -547,14 +547,14 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
 
           const wikiDocument = new DOMParser().parseFromString(html, "text/html");
           const wikiIndex = new Map();
-          const normalize = value => String(value || "").replace(/\\s+/g, " ").trim().toLowerCase();
+          const normalize = value => String(value || "").replace(/\s+/g, " ").trim().toLowerCase();
           const normalizeId = value => {
-            const match = String(value || "").match(/(?:minecraft:)?((?:story|nether|end|adventure|husbandry)\\/[a-z0-9_./-]+)/i);
+            const match = String(value || "").match(/(?:minecraft:)?((?:story|nether|end|adventure|husbandry)\/[a-z0-9_./-]+)/i);
             return match ? "minecraft:" + match[1].toLowerCase() : "";
           };
           const imageUrlFrom = value => {
             if (!value || /^(?:data:|blob:)/i.test(value)) return "";
-            try { return new URL(value.trim().split(/\\s+/)[0], "https://minecraft.wiki/").href; } catch { return ""; }
+            try { return new URL(value.trim().split(/\s+/)[0], "https://minecraft.wiki/").href; } catch { return ""; }
           };
 
           for (const table of wikiDocument.querySelectorAll("table")) {
@@ -581,7 +581,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
               const id = normalizeId(resourceCell.textContent);
               if (!id) continue;
 
-              const title = cells[titleColumn].textContent.replace(/\\s+/g, " ").trim();
+              const title = cells[titleColumn].textContent.replace(/\s+/g, " ").trim();
               const iconCell = cells[iconColumn];
               const candidates = [];
               for (const image of iconCell.querySelectorAll("img")) {
@@ -591,7 +591,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
                   image.getAttribute("data-original"),
                   image.getAttribute("data-lazy-src"),
                   image.getAttribute("src"),
-                  ...(image.getAttribute("srcset") || "").split(",").map(part => part.trim().split(/\\s+/)[0])
+                  ...(image.getAttribute("srcset") || "").split(",").map(part => part.trim().split(/\s+/)[0])
                 ];
                 for (const source of sources) {
                   const url = imageUrlFrom(source);
@@ -600,12 +600,12 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
               }
               for (const anchor of iconCell.querySelectorAll("a[href]")) {
                 const href = anchor.getAttribute("href") || "";
-                if (/\\.(?:png|webp|gif|jpe?g)(?:[?#]|$)/i.test(href) && !/advancement-(?:plain|oval|fancy)-(?:raw|worn)/i.test(href)) {
+                if (/\.(?:png|webp|gif|jpe?g)(?:[?#]|$)/i.test(href) && !/advancement-(?:plain|oval|fancy)-(?:raw|worn)/i.test(href)) {
                   const url = imageUrlFrom(href);
                   if (url) candidates.push(url);
                 }
               }
-              const iconUrl = candidates.find(url => /\\/(?:images|thumb)\\//i.test(url)) || candidates[0] || "";
+              const iconUrl = candidates.find(url => /\/(?:images|thumb)\//i.test(url)) || candidates[0] || "";
               if (title || iconUrl) wikiIndex.set(id, { title, iconUrl });
             }
           }
