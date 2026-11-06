@@ -59,7 +59,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .is-online .status-dot { background: #b7e96b; box-shadow: 0 0 12px #b7e96b70; }
 .is-offline .status-dot { background: var(--red); }
 .status-meta { color: var(--muted); font-family: var(--mono); font-size: 10px; text-align: right; }
-.address-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 0 12px; margin-top: 14px; border-top: 1px solid var(--line); }
+.address-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 0 12px; margin-top: 0; border-top: 0; }
 .server-ip { font-family: var(--mono); font-size: 19px; font-weight: 500; }
 .copy-button { min-height: 34px; padding: 0 11px; border: 1px solid var(--line); color: var(--lime); background: transparent; cursor: pointer; font-size: 10px; font-weight: 800; }
 .copy-button:hover { border-color: var(--lime); }
