@@ -279,3 +279,12 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
 @media(max-width:600px){
   .player-stat-groups{grid-template-columns:1fr}
 }
+
+/* Advancement rows use four fixed, horizontal columns; override generic profile row layout. */
+.player-profile-panel[data-profile-panel="advancements"] .advancement-list{display:grid;gap:8px;overflow-x:auto;max-width:100%}
+.player-profile-panel[data-profile-panel="advancements"] .profile-search-row.advancement-row{display:grid!important;grid-template-columns:40px minmax(150px,1fr) minmax(170px,1.1fr) minmax(175px,auto);align-items:center;column-gap:14px;row-gap:0;min-width:680px;padding:12px 14px}
+.player-profile-panel[data-profile-panel="advancements"] .advancement-row .advancement-icon{display:block;width:36px;height:36px;min-width:36px;object-fit:contain;image-rendering:pixelated}
+.player-profile-panel[data-profile-panel="advancements"] .advancement-row .advancement-name{min-width:0;overflow-wrap:anywhere}
+.player-profile-panel[data-profile-panel="advancements"] .advancement-row .advancement-path{min-width:0;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.player-profile-panel[data-profile-panel="advancements"] .advancement-row .advancement-date{white-space:nowrap;text-align:right;color:var(--muted);font-size:12px}
+@media(max-width:560px){.player-profile-panel[data-profile-panel="advancements"] .profile-search-row.advancement-row{grid-template-columns:34px minmax(130px,1fr) minmax(150px,1fr) minmax(160px,auto);column-gap:10px;min-width:620px}.player-profile-panel[data-profile-panel="advancements"] .advancement-row .advancement-icon{width:30px;height:30px;min-width:30px}}
