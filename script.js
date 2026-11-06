@@ -64,13 +64,23 @@ function formatPlaytime(seconds) {
 }
 
 function getMotd(value) {
+  const componentText = component => {
+    if (component == null) return '';
+    if (typeof component === 'string' || typeof component === 'number') return String(component);
+    if (Array.isArray(component)) return component.map(componentText).join('');
+    if (typeof component !== 'object') return '';
+    const own = typeof component.text === 'string' ? component.text : '';
+    const children = Array.isArray(component.extra) ? component.extra.map(componentText).join('') : '';
+    const args = Array.isArray(component.with) ? component.with.map(componentText).join('') : '';
+    return own + args + children;
+  };
   if (typeof value === 'string') return value.trim();
-  if (Array.isArray(value)) return value.join('\n').trim();
-  if (Array.isArray(value?.raw)) return value.raw.join('\n').trim();
-  if (Array.isArray(value?.clean)) return value.clean.join('\n').trim();
+  if (Array.isArray(value)) return value.map(componentText).join('\n').trim();
   if (typeof value?.raw === 'string') return value.raw.trim();
+  if (Array.isArray(value?.raw)) return value.raw.map(componentText).join('\n').trim();
   if (typeof value?.clean === 'string') return value.clean.trim();
-  return '';
+  if (Array.isArray(value?.clean)) return value.clean.map(componentText).join('\n').trim();
+  return componentText(value).trim();
 }
 
 function motdHtml(value) {
