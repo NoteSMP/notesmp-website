@@ -99,7 +99,8 @@ function linkIcon(key) {
     discord: '<path fill="currentColor" d="M19.7 5.2a18 18 0 0 0-4.4-1.4l-.6 1.2a16 16 0 0 0-5.4 0l-.6-1.2a18 18 0 0 0-4.4 1.4C1.5 9.3.8 13.3 1.2 17.2a18 18 0 0 0 5.4 2.7l1.2-1.9-1.9-.9.5-.4a13 13 0 0 0 11.2 0l.5.4-1.9.9 1.2 1.9a18 18 0 0 0 5.4-2.7c.5-4.5-.8-8.4-3.1-12ZM8.7 14.8c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/>',
     youtube: '<path fill="currentColor" d="M23 7.1a3 3 0 0 0-2.1-2.1C19 4.5 12 4.5 12 4.5s-7 0-8.9.5A3 3 0 0 0 1 7.1 31 31 0 0 0 .5 12s0 3.4.5 4.9a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1c.5-1.5.5-4.9.5-4.9s0-3.4-.5-4.9ZM9.7 15.5v-7l6 3.5-6 3.5Z"/>',
     modpack: '<path fill="currentColor" d="M12 2 2.5 7v10L12 22l9.5-5V7L12 2Zm0 2.5 6.8 3.6-6.8 3.5L5.2 8.1 12 4.5Zm-7 5.3 6 3.1v6.1l-6-3.2V9.8Zm8 9.2v-6.1l6-3.1v6l-6 3.2Z"/>',
-    bluemap: '<path fill="currentColor" d="M3 3h18v18H3V3Zm3 3v12h12V6H6Zm2 2h8v2H8V8Zm0 4h8v2H8v-2Z"/>'
+    bluemap: '<path fill="currentColor" d="M3 3h18v18H3V3Zm3 3v12h12V6H6Zm2 2h8v2H8V8Zm0 4h8v2H8v-2Z"/>',
+    donate: '<path fill="currentColor" d="M12 21s-8-4.7-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 6.3-8 11-8 11Z"/>'
   };
   return '<svg ' + attrs + '>' + (paths[key] || paths.bluemap) + '</svg>';
 }
