@@ -492,7 +492,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       const advPayload = liveAdvancements.length ? liveProfile : savedAdvPayload;
       const earned = (Array.isArray(advPayload.advancements) ? advPayload.advancements : [])
         .map(item => ({ id: item.advancement_id || item.advancementId || "", earnedAt: item.earned_at || item.earnedAt || null }))
-        .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/") && !/(^|\/)root$/i.test(item.id))
+        .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/"))
         .sort((a, b) => Date.parse(b.earnedAt || 0) - Date.parse(a.earnedAt || 0));
       const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
       advPanel.innerHTML = earned.length ? '<div class="advancement-list">' + earned.map(item => {
@@ -526,70 +526,73 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       track.append(fill);
       progress.append(progressMeta, track);
       advPanel.prepend(progress);
-      // Resolve advancement icons from the actual item artwork linked in the Wiki's icon column.
-      // Wiki File pages use /w/File: URLs; the frame overlay is explicitly excluded.
+      // Read the Wiki's Icon, Advancement, and Resource location columns directly.
+      // formatversion=2 returns parse.text as a string; older API output may wrap it in "*".
       if (earned.length) {
         try {
-          const wikiResponse = await fetch("https://minecraft.wiki/api.php?action=parse&page=Advancement&prop=text&format=json&origin=*", { headers: { Accept: "application/json" }, cache: "force-cache" });
+          const wikiResponse = await fetch("https://minecraft.wiki/api.php?action=parse&page=Advancement&prop=text&format=json&formatversion=2&origin=*", {
+            headers: { Accept: "application/json" }, cache: "force-cache"
+          });
           if (!wikiResponse.ok) throw new Error("Minecraft Wiki returned " + wikiResponse.status);
           const wikiPayload = await wikiResponse.json();
-          const wikiDocument = new DOMParser().parseFromString(wikiPayload?.parse?.text?.["*"] || "", "text/html");
+          const parsedText = wikiPayload?.parse?.text;
+          const html = typeof parsedText === "string" ? parsedText : (parsedText?.["*"] || "");
+          if (!html) throw new Error("Minecraft Wiki returned no parsed table HTML");
+          const wikiDocument = new DOMParser().parseFromString(html, "text/html");
           const wikiIndex = new Map();
-          const advancementIdPattern = /^(?:[a-z0-9_.-]+:)?((?:[a-z0-9_.-]+\/)+[a-z0-9_.-]+)$/i;
-          for (const row of wikiDocument.querySelectorAll("tr")) {
-            const cells = [...row.querySelectorAll("th,td")];
-            if (cells.length < 2) continue;
-            const codeValues = [...row.querySelectorAll("code")].map(node => node.textContent.trim());
-            const candidates = codeValues.concat(row.textContent.match(/(?:minecraft:)?[a-z0-9_.-]+\/[a-z0-9_./-]+/gi) || []);
-            const match = candidates.map(value => value.match(advancementIdPattern)).filter(Boolean).pop();
-            if (!match) continue;
-            const id = "minecraft:" + match[1].toLowerCase();
-            const title = cells[1]?.textContent?.replace(/\s+/g, " ").trim();
-            const itemImage = [...(cells[0]?.querySelectorAll("img") || [])].find(candidate => {
-              const candidates = [candidate.getAttribute("data-src"), candidate.getAttribute("data-original"), candidate.getAttribute("data-lazy-src"), candidate.getAttribute("srcset")?.split(/\\s+/)[0], candidate.getAttribute("src")].filter(Boolean);
-              const usableSource = candidates.find(source => !/^data:/i.test(source) && !/transparent|placeholder|spacer/i.test(source));
-              const alt = candidate.getAttribute("alt") || "";
-              return usableSource && !/advancement-(?:plain|oval|fancy)-(?:raw|worn)/i.test(usableSource + " " + alt)
-                && !/advancement[-_ ]frame/i.test(usableSource + " " + alt);
-            });
-            const rawSource = [itemImage?.getAttribute("data-src"), itemImage?.getAttribute("data-original"), itemImage?.getAttribute("data-lazy-src"), itemImage?.getAttribute("srcset")?.split(/\\s+/)[0], itemImage?.getAttribute("src")].find(source => source && !/^data:/i.test(source) && !/transparent|placeholder|spacer/i.test(source)) || "";
-            let iconUrl = "";
-            if (rawSource) {
-              try { iconUrl = new URL(rawSource.split(" ")[0], "https://minecraft.wiki").href; } catch {}
+          const normalizeResource = value => String(value || "").trim().replace(/^minecraft:/i, "").replace(/^\/+|\/+$/g, "").toLowerCase();
+          const readImageSource = image => [
+            image.getAttribute("data-src"),
+            image.getAttribute("data-original"),
+            image.getAttribute("data-lazy-src"),
+            image.getAttribute("srcset")?.split(/\s+/)[0],
+            image.getAttribute("src")
+          ].filter(Boolean).find(source => !/^data:/i.test(source) && !/transparent|placeholder|spacer/i.test(source)) || "";
+          for (const table of wikiDocument.querySelectorAll("table")) {
+            const headerRow = table.querySelector("tr");
+            const headerCells = headerRow ? [...headerRow.querySelectorAll(":scope > th, :scope > td")] : [];
+            const headers = headerCells.map(cell => cell.textContent.replace(/\s+/g, " ").trim().toLowerCase());
+            const iconColumn = headers.findIndex(value => value === "icon");
+            const advancementColumn = headers.findIndex(value => value === "advancement");
+            const resourceColumn = headers.findIndex(value => value.includes("resource location"));
+            if (iconColumn < 0 || advancementColumn < 0 || resourceColumn < 0) continue;
+            for (const row of table.querySelectorAll("tr")) {
+              const cells = [...row.querySelectorAll(":scope > th, :scope > td")];
+              if (cells.length <= Math.max(iconColumn, advancementColumn, resourceColumn)) continue;
+              const resourceCell = cells[resourceColumn];
+              const resourceText = [...resourceCell.querySelectorAll("code")].map(node => node.textContent.trim()).find(Boolean) || resourceCell.textContent.trim();
+              const resource = normalizeResource(resourceText);
+              if (!resource || !resource.includes("/")) continue;
+              const id = "minecraft:" + resource;
+              const title = cells[advancementColumn].textContent.replace(/\s+/g, " ").trim();
+              const iconCell = cells[iconColumn];
+              const images = [...iconCell.querySelectorAll("img")];
+              // The icon cell's first image is the frame; use the following item artwork.
+              const itemImage = images.find((image, index) => index > 0 && readImageSource(image)
+                && !/advancement-(?:plain|oval|fancy)-(?:raw|worn)|advancement[-_ ]frame/i.test(readImageSource(image) + " " + (image.getAttribute("alt") || "")));
+              let iconUrl = "";
+              const imageSource = itemImage ? readImageSource(itemImage) : "";
+              if (imageSource) {
+                try { iconUrl = new URL(imageSource.split(/\s+/)[0], "https://minecraft.wiki").href; } catch {}
+              }
+              // If the image URL is only on its link, use that direct Invicon image URL.
+              if (!iconUrl) {
+                const imageLink = [...iconCell.querySelectorAll("a[href]")].map(anchor => anchor.getAttribute("href") || "")
+                  .find(href => /\/images\/Invicon_[^?#]+\.(?:png|webp|gif)/i.test(href));
+                if (imageLink) {
+                  try { iconUrl = new URL(imageLink, "https://minecraft.wiki").href; } catch {}
+                }
+              }
+              if (title) wikiIndex.set(id, { title, iconUrl });
             }
-            const fileLink = cells[0]?.querySelector('a[href*="/w/File:"],a[href*="/wiki/File:"],a[href^="./File:"]');
-            let fileTitle = "";
-            if (fileLink) {
-              try {
-                const fileUrl = new URL(fileLink.getAttribute("href"), "https://minecraft.wiki");
-                const filePath = decodeURIComponent(fileUrl.pathname);
-                const marker = Math.max(filePath.indexOf("/w/File:"), filePath.indexOf("/wiki/File:"));
-                if (marker >= 0) fileTitle = filePath.slice(marker + (filePath.startsWith("/wiki/", marker) ? 6 : 3)).replace(/_/g, " ");
-                else if (filePath.startsWith("/File:")) fileTitle = filePath.slice(1).replace(/_/g, " ");
-              } catch {}
-            }
-            if (title) wikiIndex.set(id, { title, iconUrl, fileTitle });
-          }
-          const unresolvedFiles = [...new Set([...wikiIndex.values()].filter(item => !item.iconUrl && item.fileTitle).map(item => item.fileTitle))];
-          const imageUrls = new Map();
-          for (let offset = 0; offset < unresolvedFiles.length; offset += 40) {
-            const batch = unresolvedFiles.slice(offset, offset + 40);
-            const imageResponse = await fetch("https://minecraft.wiki/api.php?action=query&format=json&prop=imageinfo&iiprop=url&titles=" + encodeURIComponent(batch.join("|")) + "&origin=*", { headers: { Accept: "application/json" } });
-            if (!imageResponse.ok) continue;
-            const imagePayload = await imageResponse.json();
-            Object.values(imagePayload?.query?.pages || {}).forEach(page => {
-              const imageUrl = page?.imageinfo?.[0]?.url;
-              if (page?.title && imageUrl) imageUrls.set(page.title.replace(/^File:/i, "").replace(/_/g, " ").toLowerCase(), imageUrl);
-            });
           }
           advPanel.querySelectorAll("[data-advancement-id]").forEach(image => {
             const data = wikiIndex.get(image.dataset.advancementId);
-            if (!data) return;
-            const heading = image.closest(".advancement-row")?.querySelector("strong");
+            if (!data) { image.hidden = true; return; }
+            const heading = image.closest(".advancement-row")?.querySelector(".advancement-name");
             if (heading && data.title) heading.textContent = data.title;
-            const iconUrl = data.iconUrl || (data.fileTitle ? imageUrls.get(data.fileTitle.replace(/^File:/i, "").toLowerCase()) : "");
-            if (iconUrl) {
-              image.src = iconUrl;
+            if (data.iconUrl) {
+              image.src = data.iconUrl;
               image.hidden = false;
               image.onerror = () => { image.hidden = true; };
             } else image.hidden = true;
