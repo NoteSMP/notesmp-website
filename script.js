@@ -225,12 +225,22 @@ function closeMenu() {
 
 async function fetchServerStatus() {
   try {
-    const response = await fetch(`${API_BASE}/server`, { headers: { Accept: 'application/json' } });
+    // Always bypass browser/CDN caches so a page reload reflects the current server state.
+    const response = await fetch(`${API_BASE}/server?refresh=${Date.now()}`, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(15000)
+    });
     if (!response.ok) throw new Error('Status unavailable');
-    serverData = await response.json();
-  } catch {
+    const payload = await response.json();
+    if (typeof payload.online !== 'boolean') throw new Error('Invalid server status response');
+    serverData = payload;
+  } catch (error) {
+    console.warn('Live Minecraft server status could not be refreshed:', error);
     serverData = { unavailable: true };
   }
+
+  // The status request runs on every route; update the visible live widgets whenever present.
   if (currentPath() === '/') {
     const existing = document.querySelector('#status-heading')?.closest('.panel');
     if (existing) {
@@ -240,13 +250,12 @@ async function fetchServerStatus() {
     }
     const onlineSection = document.querySelector('#online-players');
     if (onlineSection) {
-      const names = (serverData?.onlinePlayers || []).map(player => {
+      const names = (serverData?.online && Array.isArray(serverData.onlinePlayers) ? serverData.onlinePlayers : []).map(player => {
         const name = typeof player === 'string' ? player : player.name || player.username;
-        const uuid = typeof player === 'object' ? player.uuid || player.id : '';
         if (!name) return '';
         return '<a class="online-player" href="/players?name=' + encodeURIComponent(name) + '">' + playerHeadImage(name, 32, 'online-player-head') + '<span>' + safeText(name) + '</span></a>';
       }).filter(Boolean);
-      onlineSection.innerHTML = names.length ? names.join('') : 'No players are currently reported online.';
+      onlineSection.innerHTML = names.length ? names.join('') : (serverData?.unavailable ? 'Live player list is temporarily unavailable.' : 'No players are currently online.');
     }
   }
 }
