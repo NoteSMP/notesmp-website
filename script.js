@@ -340,15 +340,15 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
     const fmtDistance = value => (Number(value || 0) / 100).toLocaleString(undefined, { maximumFractionDigits: 2 }) + " m";
     const formatTicksDuration = ticks => { const totalSeconds = Math.floor(Math.max(0, Number(ticks) || 0) / 20); const days = Math.floor(totalSeconds / 86400); const hours = Math.floor((totalSeconds % 86400) / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); return [days ? days + "d" : "", hours ? hours + "h" : "", minutes ? minutes + "m" : ""].filter(Boolean).join(" ") || "0m"; };
     const sections = [
-      ["General", [["Time Played", formatPlaytime(player.playtime_seconds)], ["Joined", formatDate(player.first_join)], ["Last Seen", formatDate(player.last_seen)], ["Mob Kills", read("mob_kills")], ["Player Kills", read("player_kills")], ["Number of Deaths", read("deaths")], ["Time Since Last Death", formatTicksDuration(read("time_since_last_death"))], ["Damage Absorbed", read("damage_absorbed")], ["Damage Dealt", read("damage_dealt")], ["Damage Resisted", read("damage_resisted")], ["Damage Taken", read("damage_taken")], ["Jumps", read("jumps")], ["Sneak Time", read("sneak_time")]]],
+      ["General", [["Time Played", formatPlaytime(player.playtime_seconds)], ["Joined", formatDate(player.first_join)], ["Last Seen", formatDate(player.last_seen)], ["Mob Kills", read("mob_kills")], ["Player Kills", read("player_kills")], ["Number of Deaths", read("deaths")], ["Time Since Last Death", formatTicksDuration(read("time_since_last_death"))], ["Damage Absorbed", read("damage_absorbed")], ["Damage Dealt", read("damage_dealt")], ["Damage Resisted", read("damage_resisted")], ["Damage Taken", read("damage_taken")], ["Jumps", read("jumps")], ["Sneak Time", formatTicksDuration(read("sneak_time"))]]],
       ["Travel", [["Distance Climbed", fmtDistance(read("distance_climbed"))], ["Distance Crouched", fmtDistance(read("distance_crouched"))], ["Distance Fallen", fmtDistance(read("distance_fallen"))], ["Distance Flown", fmtDistance(read("distance_flown"))], ["Distance Sprinted", fmtDistance(read("distance_sprinted"))], ["Distance Swum", fmtDistance(read("distance_swum"))], ["Distance Walked", fmtDistance(read("distance_walked"))], ["Distance Walked under Water", fmtDistance(read("distance_walked_under_water"))], ["Distance by Boat", fmtDistance(read("distance_by_boat"))], ["Distance by Elytra", fmtDistance(read("distance_by_elytra"))], ["Distance by Happy Ghast", fmtDistance(read("distance_by_happy_ghast"))], ["Distance by Horse", fmtDistance(read("distance_by_horse"))], ["Distance by Minecart", fmtDistance(read("distance_by_minecart"))]]],
       ["Other", [["Blocks Placed", read("blocks_placed")], ["Blocks Broken", read("blocks_broken")], ["Fish Caught", read("fish_caught")], ["Animals Bred", read("animals_bred")], ["Chests Opened", read("chests_opened")], ["Barrels Opened", read("barrels_opened")], ["Shulker Boxes Opened", read("shulker_boxes_opened")], ["Items Dropped", read("items_dropped")], ["Items Enchanted", read("items_enchanted")], ["Talked to Villagers", read("talked_to_villagers")], ["Traded with Villagers", read("traded_with_villagers")], ["Time Since Last Rest", formatTicksDuration(read("time_since_last_rest"))], ["Times Slept in a Bed", read("times_slept_in_a_bed")]]]
     ];
     const statTable = rows => '<div class="table-wrap player-stat-table-wrap"><table class="player-stat-table"><tbody>' + rows.map(([label,value]) => '<tr><td>' + safeText(label) + '</td><td class="numeric">' + safeText(String(value ?? 0)) + '</td></tr>').join("") + '</tbody></table></div>';
     const sectionMarkup = sections.map(([name,rows]) => '<section class="player-stat-group"><h4>' + safeText(name) + '</h4>' + statTable(rows) + '</section>').join("");
-    const mobMap = new Map(rawStatistics.filter(stat => String(stat.stat_id || "").toLowerCase().startsWith("mob_kill:")).map(stat => [String(stat.stat_id).slice(9).toLowerCase().replace(/^minecraft:/, ""), Number(stat.stat_value)||0]));
+    const mobMap = new Map(rawStatistics.filter(stat => String(stat.stat_id || "").toLowerCase().startsWith("minecraft:kill_entity:")).map(stat => [String(stat.stat_id).slice("minecraft:kill_entity:".length).toLowerCase().replace(/^minecraft:/, ""), Number(stat.stat_value)||0]));
     const knownEntities = "allay,armadillo,armor_stand,axolotl,bat,bee,blaze,bogged,breeze,camel,cat,cave_spider,chicken,cod,cow,creeper,dolphin,donkey,drowned,elder_guardian,ender_dragon,enderman,endermite,evoker,fox,frog,ghast,glow_squid,goat,guardian,hoglin,horse,husk,iron_golem,llama,magma_cube,mooshroom,mule,ocelot,panda,parrot,phantom,pig,piglin,piglin_brute,pillager,polar_bear,pufferfish,rabbit,ravager,salmon,sheep,shulker,silverfish,skeleton,skeleton_horse,slime,sniffer,snow_golem,spider,squid,stray,strider,tadpole,trader_llama,tropical_fish,turtle,vex,villager,vindicator,wandering_trader,warden,witch,wither,wither_skeleton,wolf,zoglin,zombie,zombie_horse,zombie_villager,zombified_piglin".split(",");
-    const mobRows = [...new Set(knownEntities.concat([...mobMap.keys()]))].map(id => ({id,count:mobMap.get(id)||0})).sort((a,b)=>a.id.localeCompare(b.id));
+    const mobRows = [...new Set(knownEntities.concat([...mobMap.keys()]))].map(id => ({id,count:mobMap.get(id)||0})).sort((a,b)=>b.count-a.count || a.id.localeCompare(b.id));
     const mobMarkup = '<section class="player-stat-group mob-kills-group"><h4>Mob Kills</h4><div class="mob-kill-grid">' + mobRows.map(row => '<div class="mob-kill-card" data-mob-wiki="' + safeText(row.id) + '" data-profile-search="mob kills ' + safeText(row.id) + '"><img class="mob-kill-icon" alt="" loading="lazy"><span>' + safeText(titleWords(row.id)) + '</span><strong>' + formatNumber(row.count) + '</strong></div>').join("") + '</div></section>';
     const statisticMarkup = sectionMarkup + mobMarkup;
     profile.innerHTML = `<a class="back-link" href="/players">← All players</a><div class="panel"><div class="panel-heading"><div><span class="overline">PLAYER PROFILE</span><h2 class="profile-name-with-head"><img class="player-head-icon" src="https://mc-heads.net/avatar/${encodeURIComponent(player.uuid || uuid)}/24" alt="" loading="lazy"><span>${safeText(player.username)}</span></h2></div><span class="status-meta">Updated ${safeText(formatDate(player.updated_at))}</span></div><div class="panel-body"><div class="player-profile-tabs" role="tablist" aria-label="Player profile sections">${["statistics","advancements","posts"].map(tab => '<button type="button" class="profile-tab ' + (selectedProfileTab === tab ? "is-active" : "") + '" role="tab" aria-selected="' + String(selectedProfileTab === tab) + '" data-profile-tab="' + tab + '">' + (tab === "statistics" ? "Statistics" : tab === "advancements" ? "Advancements" : "Posts") + '</button>').join("")}</div><input class="search-input profile-search" id="profile-search" type="search" placeholder="${selectedProfileTab === "statistics" ? "Search statistics…" : selectedProfileTab === "advancements" ? "Search advancements…" : "Search posts…"}" aria-label="Search player profile data"><div class="player-profile-panel" data-profile-panel="statistics" ${selectedProfileTab !== "statistics" ? "hidden" : ""}><div class="player-stat-groups">${statisticMarkup}</div></div><div class="player-profile-panel" data-profile-panel="advancements" ${selectedProfileTab !== "advancements" ? "hidden" : ""}><p class="fine-print">Loading earned advancements…</p></div><div class="player-profile-panel" data-profile-panel="posts" ${selectedProfileTab !== "posts" ? "hidden" : ""}><p class="fine-print">Loading posts mentioning this player as a builder…</p></div></div></div>`;
@@ -525,7 +525,8 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       track.append(fill);
       progress.append(progressMeta, track);
       advPanel.prepend(progress);
-      // Resolve canonical advancement titles and icons from the Minecraft Wiki table by ID.
+      // Resolve advancement item artwork from the icon column on the Minecraft Wiki page.
+      // Use the linked File page and its imageinfo URL, never the decorative frame.
       if (earned.length) {
         try {
           const wikiResponse = await fetch("https://minecraft.wiki/api.php?action=parse&page=Advancement&prop=text&format=json&origin=*", { headers: { Accept: "application/json" }, cache: "force-cache" });
@@ -533,34 +534,48 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
           const wikiPayload = await wikiResponse.json();
           const wikiDocument = new DOMParser().parseFromString(wikiPayload?.parse?.text?.["*"] || "", "text/html");
           const wikiIndex = new Map();
+          const advancementIdPattern = new RegExp("^(?:[a-z0-9_.-]+:)?((?:[a-z0-9_.-]+/)+[a-z0-9_.-]+)$", "i");
           for (const row of wikiDocument.querySelectorAll("tr")) {
             const cells = [...row.querySelectorAll("th,td")];
             if (cells.length < 2) continue;
             const codeValues = [...row.querySelectorAll("code")].map(node => node.textContent.trim());
-            const match = codeValues.map(value => value.match(/^(?:[a-z0-9_.-]+:)?((?:[a-z0-9_.-]+\/)+[a-z0-9_.-]+)$/i)).filter(Boolean).pop();
+            const match = codeValues.map(value => value.match(advancementIdPattern)).filter(Boolean).pop();
             if (!match) continue;
             const id = "minecraft:" + match[1].toLowerCase();
-            const title = cells[1]?.textContent?.replace(/\s+/g, " ").trim();
-            // The Wiki renders the advancement item icon together with a separate frame overlay.
-            // Ignore Advancement-plain/oval/fancy raw/worn assets; use only the item/block artwork.
-            const itemIcon = [...(cells[0]?.querySelectorAll("img") || [])].find(candidate => {
-              const src = [candidate.getAttribute("data-src"), candidate.getAttribute("data-original"), candidate.getAttribute("src")].filter(Boolean).join(" ");
-              const alt = candidate.getAttribute("alt") || "";
-              return !/advancement-(?:plain|oval|fancy)-(?:raw|worn)/i.test(src + " " + alt)
-                && !/advancement[-_ ]frame/i.test(src + " " + alt);
+            const title = cells[1]?.textContent?.replace(/\\s+/g, " ").trim();
+            const fileLink = cells[0]?.querySelector('a[href*="/wiki/File:"],a[href^="./File:"]');
+            let fileTitle = "";
+            if (fileLink) {
+              try {
+                const fileUrl = new URL(fileLink.getAttribute("href"), "https://minecraft.wiki");
+                const filePath = decodeURIComponent(fileUrl.pathname);
+                const marker = filePath.indexOf("/wiki/File:");
+                if (marker >= 0) fileTitle = filePath.slice(marker + 6).replace(/_/g, " ");
+                else if (filePath.startsWith("/File:")) fileTitle = filePath.slice(1).replace(/_/g, " ");
+              } catch {}
+            }
+            if (title) wikiIndex.set(id, { title, fileTitle });
+          }
+          const fileTitles = [...new Set([...wikiIndex.values()].map(item => item.fileTitle).filter(Boolean))];
+          const imageUrls = new Map();
+          for (let offset = 0; offset < fileTitles.length; offset += 40) {
+            const batch = fileTitles.slice(offset, offset + 40);
+            const imageResponse = await fetch("https://minecraft.wiki/api.php?action=query&format=json&prop=imageinfo&iiprop=url&titles=" + encodeURIComponent(batch.join("|")) + "&origin=*", { headers: { Accept: "application/json" } });
+            if (!imageResponse.ok) continue;
+            const imagePayload = await imageResponse.json();
+            Object.values(imagePayload?.query?.pages || {}).forEach(page => {
+              const imageUrl = page?.imageinfo?.[0]?.url;
+              if (page?.title && imageUrl) imageUrls.set(page.title.replace(/^File:/i, "").replace(/_/g, " ").toLowerCase(), imageUrl);
             });
-            const source = itemIcon?.getAttribute("data-src") || itemIcon?.getAttribute("data-original") || itemIcon?.getAttribute("src");
-            const iconUrl = source ? new URL(source, "https://minecraft.wiki").href : "";
-            if (title) wikiIndex.set(id, { title, iconUrl });
           }
           advPanel.querySelectorAll("[data-advancement-id]").forEach(image => {
             const data = wikiIndex.get(image.dataset.advancementId);
             if (!data) return;
-            const article = image.closest(".advancement-row");
-            const heading = article?.querySelector("strong");
+            const heading = image.closest(".advancement-row")?.querySelector("strong");
             if (heading && data.title) heading.textContent = data.title;
-            if (data.iconUrl) {
-              image.src = data.iconUrl;
+            const imageUrl = data.fileTitle ? imageUrls.get(data.fileTitle.replace(/^File:/i, "").toLowerCase()) : "";
+            if (imageUrl) {
+              image.src = imageUrl;
               image.hidden = false;
               image.onerror = () => { image.hidden = true; };
             } else image.hidden = true;
