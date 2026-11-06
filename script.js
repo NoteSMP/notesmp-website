@@ -13,6 +13,7 @@ let playerLoadFailed = false;
 let selectedGalleryGroup = 'Events';
 let selectedProfileTab = 'statistics';
 let liveProfileRequests = new Map();
+let activeLiveProfileUuid = '';
 let toastTimer;
 
 function safeText(value) {
@@ -173,6 +174,11 @@ function rulesPage() {
 function render() {
   const path = currentPath();
   const profileMatch = path.match(/^\/players\/([0-9a-fA-F-]{36})$/);
+  const profileUuid = profileMatch?.[1] || '';
+  if (profileUuid !== activeLiveProfileUuid) {
+    liveProfileRequests.clear();
+    activeLiveProfileUuid = profileUuid;
+  }
   const knownRoute = routeTitles[path] ? path : (profileMatch ? '/players' : '/');
   document.title = `${profileMatch ? 'Player profile' : routeTitles[knownRoute]} | NoteSMP`;
   nav?.querySelectorAll('[data-route]').forEach(link => {
@@ -578,7 +584,6 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
           return payload;
         })
         .catch(error => { console.warn("Live player profile unavailable; keeping saved snapshot", error); return null; })
-        .finally(() => { if (liveProfileRequests.get(uuid) === request) liveProfileRequests.delete(uuid); });
       liveProfileRequests.set(uuid, request);
     }
 
