@@ -500,24 +500,28 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 }
 
 
-/* NoteSMP Minecraft cursors — use the original 16px resource PNGs. */
+/* NoteSMP Minecraft cursors — source PNGs live in notesmp-ressources/cursors. */
 :root {
   --notesmp-cursor-note: url("https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/cursors/note.png") 1 1, auto;
+  --notesmp-cursor-arrow: url("https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/cursors/arrow.png") 0 0, pointer;
+  --notesmp-cursor-text: url("https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/cursors/TextSelector.png") 8 8, text;
   --notesmp-cursor-barrier: url("https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/cursors/barrier.png") 8 8, not-allowed;
 }
 
-/* Default pointer: NoteSMP note. */
+/* Default cursor: NoteSMP note. */
 html, body { cursor: var(--notesmp-cursor-note); }
 
-/* Keep native browser cursors for interaction and text. */
+/* Clickable controls use the supplied arrow cursor. */
 a[href], button:not(:disabled), [role="button"]:not([aria-disabled="true"]),
 summary, label[for], input[type="checkbox"]:not(:disabled),
 input[type="radio"]:not(:disabled), select:not(:disabled) {
-  cursor: pointer;
+  cursor: var(--notesmp-cursor-arrow);
 }
+
+/* Text entry and selectable text use the supplied I-beam cursor. */
 input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
 textarea, [contenteditable="true"] {
-  cursor: text;
+  cursor: var(--notesmp-cursor-text);
 }
 
 /* Barrier only for controls/links that are explicitly unavailable. */
@@ -528,6 +532,6 @@ button:disabled, [role="button"][aria-disabled="true"],
   cursor: var(--notesmp-cursor-barrier) !important;
 }
 
-/* Native I-beam/selection shape, with the site's lime selection color. */
+/* Text selection highlight uses the site's lime color. */
 ::selection { color: #111713; background: #D3EF75; text-shadow: none; }
 ::-moz-selection { color: #111713; background: #D3EF75; text-shadow: none; }
