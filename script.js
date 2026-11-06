@@ -619,7 +619,8 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       advPanel.innerHTML = earned.length ? '<div class="advancement-list">' + earned.map(item => {
         const title = advancementRootTitles[item.id.toLowerCase()] || titleWords(item.id.split(":").pop().split("/").pop());
         const resourceLocation = item.id.includes(":") ? item.id.slice(item.id.indexOf(":") + 1) : item.id;
-        return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + resourceLocation).toLowerCase()) + '"><img class="advancement-icon" data-advancement-id="' + safeText(item.id) + '" alt="" loading="lazy"><strong class="advancement-name">' + safeText(title) + '</strong><span class="advancement-path">' + safeText(resourceLocation) + '</span><time class="advancement-date" datetime="' + safeText(item.earnedAt || "") + '">' + safeText(formatDate(item.earnedAt)) + '</time></article>';
+        const searchTerms = [title, item.id, resourceLocation].join(" ").toLowerCase();
+        return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText(searchTerms) + '"><img class="advancement-icon" data-advancement-id="' + safeText(item.id) + '" alt="" loading="lazy"><strong class="advancement-name">' + safeText(title) + '</strong><span class="advancement-path">' + safeText(resourceLocation) + '</span><time class="advancement-date" datetime="' + safeText(item.earnedAt || "") + '">' + safeText(formatDate(item.earnedAt)) + '</time></article>';
       }).join("") + '</div><p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
       filterProfilePanel("advancements", profileSearch?.value.trim().toLowerCase() || "");
       const totalAdvancements = Number(liveProfile?.totalAdvancements ?? countPayload?.totalAdvancements) || 0;
@@ -739,6 +740,12 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
             const data = wikiIndex.get(id);
             const heading = image.closest(".advancement-row")?.querySelector(".advancement-name");
             if (heading) heading.textContent = data?.title || rootNames[id] || heading.textContent;
+            const row = image.closest(".advancement-row");
+            if (row) {
+              const title = heading?.textContent || "";
+              const resourceLocation = id.includes(":") ? id.slice(id.indexOf(":") + 1) : id;
+              row.dataset.profileSearch = [title, id, resourceLocation].join(" ").toLowerCase();
+            }
             if (!data?.iconUrl) { image.hidden = true; return; }
             image.src = data.iconUrl;
             image.alt = (data.title || heading?.textContent || "Advancement") + " icon";
