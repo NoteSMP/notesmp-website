@@ -491,12 +491,12 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       const liveAdvancements = Array.isArray(liveProfile?.advancements) ? liveProfile.advancements : [];
       const advPayload = liveAdvancements.length ? liveProfile : savedAdvPayload;
       const earned = (Array.isArray(advPayload.advancements) ? advPayload.advancements : [])
-        .map(item => ({ id: item.advancement_id || item.advancementId || "", earnedAt: item.earned_at || item.earnedAt || null, icon: item.icon_name || item.icon || item.iconName || "" }))
+        .map(item => ({ id: item.advancement_id || item.advancementId || "", title: item.advancement_title || item.title || "", earnedAt: item.earned_at || item.earnedAt || null, icon: item.icon_name || item.icon || item.iconName || "" }))
         .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/"))
         .sort((a, b) => Date.parse(b.earnedAt || 0) - Date.parse(a.earnedAt || 0));
       const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
       advPanel.innerHTML = earned.length ? '<div class="advancement-list">' + earned.map(item => {
-        const title = titleWords(item.id.split(":").pop().split("/").pop());
+        const title = item.title || titleWords(item.id.split(":").pop().split("/").pop());
         const resourceLocation = item.id.includes(":") ? item.id.slice(item.id.indexOf(":") + 1) : item.id;
         return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + resourceLocation).toLowerCase()) + '"><img class="advancement-icon" data-advancement-icon="' + safeText(item.icon) + '" alt="" loading="lazy"><strong class="advancement-name">' + safeText(title) + '</strong><span class="advancement-path">' + safeText(resourceLocation) + '</span><time class="advancement-date" datetime="' + safeText(item.earnedAt || "") + '">' + safeText(formatDate(item.earnedAt)) + '</time></article>';
       }).join("") + '</div><p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
