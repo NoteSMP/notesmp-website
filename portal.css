@@ -518,9 +518,12 @@ input[type="radio"]:not(:disabled), select:not(:disabled) {
   cursor: var(--notesmp-cursor-arrow);
 }
 
-/* Text entry and selectable text use the supplied I-beam cursor. */
+/* Text entry and ordinary readable text use the supplied I-beam cursor. */
 input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
-textarea, [contenteditable="true"] {
+textarea, [contenteditable="true"],
+p, h1, h2, h3, h4, h5, h6, span, small, strong, em, b, i,
+code, pre, blockquote, li, dt, dd, td, th, figcaption, time,
+label:not([for]), .motd, .empty-state, .fine-print {
   cursor: var(--notesmp-cursor-text);
 }
 
