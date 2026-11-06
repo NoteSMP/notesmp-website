@@ -10,6 +10,8 @@ let pluginAvailable = false;
 let lastPluginRefreshSignal = 0;
 let playerData = [];
 let playerLoadFailed = false;
+let playerDirectoryRefreshTimer = null;
+let playerListRequestInFlight = false;
 let selectedGalleryGroup = 'Events';
 let selectedProfileTab = (() => { try { const saved = sessionStorage.getItem('notesmp-profile-tab'); return ['statistics','advancements','posts'].includes(saved) ? saved : 'statistics'; } catch { return 'statistics'; } })();
 let liveProfileRequests = new Map();
@@ -258,6 +260,7 @@ function rulesPage() {
 
 function render() {
   const path = currentPath();
+  if (playerDirectoryRefreshTimer) { clearInterval(playerDirectoryRefreshTimer); playerDirectoryRefreshTimer = null; }
   const profileMatch = path.match(/^\/players\/([0-9a-fA-F-]{36})$/);
   const profileUuid = profileMatch?.[1] || '';
   if (profileUuid !== activeLiveProfileUuid) {
@@ -280,7 +283,11 @@ function render() {
   else if (knownRoute === '/rules') app.innerHTML = rulesPage();
   else if (knownRoute === '/devlog') app.innerHTML = devlogPage();
   closeMenu();
-  if (knownRoute === '/players' && !profileMatch) loadPlayers();
+  if (knownRoute === '/players' && !profileMatch) {
+    loadPlayers();
+    // Keep the directory current while it is open so new joins appear without a manual reload.
+    playerDirectoryRefreshTimer = window.setInterval(loadPlayers, 15000);
+  }
   if (knownRoute === '/commands') filterCommands();
   if (profileMatch) renderPlayerProfile(profileMatch[1]);
   window.dispatchEvent(new Event("notesmp:render"));
@@ -356,10 +363,12 @@ async function pollPluginRefreshSignal() {
 }
 
 async function loadPlayers() {
+  if (playerListRequestInFlight) return;
+  playerListRequestInFlight = true;
   playerLoadFailed = false;
   const results = document.querySelector('#player-results');
   const count = document.querySelector('#player-count');
-  if (results) results.innerHTML = '<div class="empty-state">Loading player data…</div>';
+  if (results && !playerData.length) results.innerHTML = '<div class="empty-state">Loading player data…</div>';
   if (count) count.textContent = '';
   try {
     const response = await fetch(`${API_BASE}/players?limit=100`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
@@ -381,9 +390,13 @@ async function loadPlayers() {
       renderPlayers();
     }
   } catch {
-    playerData = [];
-    playerLoadFailed = true;
-    renderPlayers();
+    if (!playerData.length) {
+      playerData = [];
+      playerLoadFailed = true;
+      renderPlayers();
+    }
+  } finally {
+    playerListRequestInFlight = false;
   }
 }
 
