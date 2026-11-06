@@ -11,7 +11,7 @@ let lastPluginRefreshSignal = 0;
 let playerData = [];
 let playerLoadFailed = false;
 let selectedGalleryGroup = 'Events';
-let selectedProfileTab = 'statistics';
+let selectedProfileTab = (() => { try { const saved = sessionStorage.getItem('notesmp-profile-tab'); return ['statistics','advancements','posts'].includes(saved) ? saved : 'statistics'; } catch { return 'statistics'; } })();
 let liveProfileRequests = new Map();
 let activeLiveProfileUuid = '';
 let toastTimer;
@@ -369,6 +369,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
     };
     const switchProfileTab = tab => {
       selectedProfileTab = ["statistics", "advancements", "posts"].includes(tab) ? tab : "statistics";
+      try { sessionStorage.setItem("notesmp-profile-tab", selectedProfileTab); } catch {}
       profileTabs.forEach(button => { const active = button.dataset.profileTab === tab; button.classList.toggle("is-active", active); button.setAttribute("aria-selected", String(active)); });
       profilePanels.forEach(panel => { panel.hidden = panel.dataset.profilePanel !== tab; });
       if (profileSearch) { profileSearch.placeholder = tab === "statistics" ? "Search statistics…" : tab === "advancements" ? "Search advancements…" : "Search posts…"; profileSearch.value = ""; }
@@ -535,13 +536,13 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
           for (const row of wikiDocument.querySelectorAll("tr")) {
             const cells = [...row.querySelectorAll("th,td")];
             if (cells.length < 2) continue;
-            const codeText = [...row.querySelectorAll("code")].map(node => node.textContent.trim()).join(" ");
-            const match = codeText.match(/(?:[a-z0-9_.-]+:)?((?:[a-z0-9_.-]+\/)+[a-z0-9_.-]+)/i);
+            const codeValues = [...row.querySelectorAll("code")].map(node => node.textContent.trim());
+            const match = codeValues.map(value => value.match(/^(?:[a-z0-9_.-]+:)?((?:[a-z0-9_.-]+\/)+[a-z0-9_.-]+)$/i)).filter(Boolean).pop();
             if (!match) continue;
             const id = "minecraft:" + match[1].toLowerCase();
             const title = cells[1]?.textContent?.replace(/\s+/g, " ").trim();
             const icon = cells[0]?.querySelector("img");
-            const source = icon?.getAttribute("src") || icon?.getAttribute("data-src") || icon?.getAttribute("data-original");
+            const source = icon?.getAttribute("data-src") || icon?.getAttribute("data-original") || icon?.getAttribute("src");
             const iconUrl = source ? new URL(source, "https://minecraft.wiki").href : "";
             if (title) wikiIndex.set(id, { title, iconUrl });
           }
