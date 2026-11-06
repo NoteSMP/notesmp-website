@@ -495,10 +495,11 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
         .filter(item => item.id && !item.id.toLowerCase().startsWith("minecraft:recipes/") && !/(^|\/)root$/i.test(item.id))
         .sort((a, b) => Date.parse(b.earnedAt || 0) - Date.parse(a.earnedAt || 0));
       const advPanel = profile.querySelector('[data-profile-panel="advancements"]');
-      advPanel.innerHTML = earned.length ? earned.map(item => {
+      advPanel.innerHTML = earned.length ? '<div class="advancement-list">' + earned.map(item => {
         const title = titleWords(item.id.split(":").pop().split("/").pop());
-        return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + item.id).toLowerCase()) + '"><img class="advancement-icon" data-advancement-id="' + safeText(item.id) + '" alt="" loading="lazy"><div><strong>' + safeText(title) + '</strong><span>' + safeText(item.id) + '</span></div><small>' + safeText(formatDate(item.earnedAt)) + '</small></article>';
-      }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
+        const resourceLocation = item.id.includes(":") ? item.id.slice(item.id.indexOf(":") + 1) : item.id;
+        return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + resourceLocation).toLowerCase()) + '"><img class="advancement-icon" data-advancement-id="' + safeText(item.id) + '" alt="" loading="lazy"><strong class="advancement-name">' + safeText(title) + '</strong><span class="advancement-path">' + safeText(resourceLocation) + '</span><time class="advancement-date" datetime="' + safeText(item.earnedAt || "") + '">' + safeText(formatDate(item.earnedAt)) + '</time></article>';
+      }).join("") + '</div><p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
       const totalAdvancements = Number(liveProfile?.totalAdvancements ?? countPayload?.totalAdvancements) || 0;
       const completed = totalAdvancements > 0 ? Math.min(earned.length, totalAdvancements) : earned.length;
       const percent = totalAdvancements > 0 ? Math.min(100, completed / totalAdvancements * 100) : 0;
