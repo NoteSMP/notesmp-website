@@ -526,21 +526,21 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       progress.append(progressMeta, track);
       advPanel.prepend(progress);
       const advancementIcons = [...advPanel.querySelectorAll("[data-advancement-icon]")].filter(image => image.dataset.advancementIcon);
-      for (let offset = 0; offset < advancementIcons.length; offset += 35) {
-        const batch = advancementIcons.slice(offset, offset + 35);
+      for (let offset = 0; offset < advancementIcons.length; offset += 25) {
+        const batch = advancementIcons.slice(offset, offset + 25);
         const titlePairs = batch.map(image => {
           const title = titleWords(String(image.dataset.advancementIcon).split(":").pop());
           return [title, "File:" + title + ".png"];
         });
         const requestedTitles = titlePairs.flat();
         try {
-          const wikiUrl = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=imageinfo|pageimages&iiprop=url&piprop=thumbnail&pithumbsize=64&origin=*&titles=" + encodeURIComponent(requestedTitles.join("|"));
+          const wikiUrl = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=pageimages|imageinfo&iiprop=url&piprop=thumbnail&pithumbsize=96&origin=*&titles=" + encodeURIComponent(requestedTitles.join("|"));
           const wikiResponse = await fetch(wikiUrl, { headers: { Accept: "application/json" } });
           if (!wikiResponse.ok) throw new Error("Minecraft Wiki returned " + wikiResponse.status);
           const wikiData = await wikiResponse.json();
           const thumbnails = new Map();
           Object.values(wikiData?.query?.pages || {}).forEach(page => {
-            const src = page?.imageinfo?.[0]?.url || page?.thumbnail?.source;
+            const src = page?.thumbnail?.source || page?.imageinfo?.[0]?.url;
             if (page?.title && src) thumbnails.set(String(page.title).replace(/\\s+/g, "_").toLowerCase(), src);
           });
           const resolveAlias = (from, to) => {
@@ -553,10 +553,19 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
           batch.forEach((image, index) => {
             const candidates = titlePairs[index].map(title => title.replace(/\\s+/g, "_").toLowerCase());
             const src = candidates.map(title => thumbnails.get(title)).find(Boolean);
-            if (src) image.src = src;
-            else image.hidden = true;
+            if (src) {
+              image.src = src;
+              image.hidden = false;
+              image.onerror = () => {
+                image.onerror = null;
+                image.hidden = true;
+              };
+            } else image.hidden = true;
           });
-        } catch { batch.forEach(image => image.hidden = true); }
+        } catch (error) {
+          console.warn("Minecraft Wiki advancement icon lookup failed", error);
+          batch.forEach(image => { image.hidden = true; });
+        }
       }
       const postPayload = postResponse.ok ? await postResponse.json() : {posts:[]};
       const playerName = String(player.username || "").toLowerCase();
