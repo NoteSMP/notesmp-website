@@ -533,43 +533,90 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       track.append(fill);
       progress.append(progressMeta, track);
       advPanel.prepend(progress);
-      // Resolve the actual advancement item from the material icon recorded by Paper.
-      // This is the previously working Wiki pageimages lookup, not advancement title/frame artwork.
-      const advancementIcons = [...advPanel.querySelectorAll("[data-advancement-icon]")].filter(image => image.dataset.advancementIcon);
-      for (let offset = 0; offset < advancementIcons.length; offset += 25) {
-        const batch = advancementIcons.slice(offset, offset + 25);
-        const titlePairs = batch.map(image => {
-          const title = titleWords(String(image.dataset.advancementIcon).replace(/^minecraft:/i, ""));
-          return [title, "File:" + title + ".png"];
-        });
+      // Resolve each advancement's real item artwork from the Minecraft Wiki table by resource ID.
+      // The plugin intentionally sends IDs only; it must not send display names or icon metadata.
+      if (earned.length) {
         try {
-          const titles = titlePairs.flat();
-          const wikiUrl = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=pageimages|imageinfo&iiprop=url&piprop=thumbnail&pithumbsize=96&origin=*&titles=" + encodeURIComponent(titles.join("|"));
-          const wikiResponse = await fetch(wikiUrl, { headers: { Accept: "application/json" }, cache: "force-cache" });
-          if (!wikiResponse.ok) throw new Error("Minecraft Wiki returned " + wikiResponse.status);
-          const wikiData = await wikiResponse.json();
-          const thumbnails = new Map();
-          Object.values(wikiData?.query?.pages || {}).forEach(page => {
-            const source = page?.thumbnail?.source || page?.imageinfo?.[0]?.url;
-            if (page?.title && source) thumbnails.set(String(page.title).replace(/\s+/g, "_").toLowerCase(), source);
+          const wikiResponse = await fetch("https://minecraft.wiki/api.php?action=parse&page=Advancement&prop=text&format=json&formatversion=2&origin=*", {
+            headers: { Accept: "application/json" }, cache: "force-cache"
           });
-          const alias = (from, to) => {
-            const key = String(to || "").replace(/\s+/g, "_").toLowerCase();
-            const source = thumbnails.get(key);
-            if (source) thumbnails.set(String(from || "").replace(/\s+/g, "_").toLowerCase(), source);
-          };
-          (wikiData?.query?.normalized || []).forEach(item => alias(item.from, item.to));
-          (wikiData?.query?.redirects || []).forEach(item => alias(item.from, item.to));
-          batch.forEach((image, index) => {
-            const source = titlePairs[index].map(title => title.replace(/\s+/g, "_").toLowerCase()).map(key => thumbnails.get(key)).find(Boolean);
-            if (!source) { image.hidden = true; return; }
-            image.src = source;
+          if (!wikiResponse.ok) throw new Error("Minecraft Wiki returned " + wikiResponse.status);
+          const wikiPayload = await wikiResponse.json();
+          const parsedText = wikiPayload?.parse?.text;
+          const html = typeof parsedText === "string" ? parsedText : (parsedText?.["*"] || "");
+          if (!html) throw new Error("Minecraft Wiki returned no parsed table HTML");
+
+          const wikiDocument = new DOMParser().parseFromString(html, "text/html");
+          const wikiIndex = new Map();
+          const normalizeResource = value => String(value || "")
+            .trim().replace(/^minecraft:/i, "").replace(/^\/+|\/+$/g, "").toLowerCase();
+          const readImageSource = image => [
+            image.getAttribute("data-src"),
+            image.getAttribute("data-original"),
+            image.getAttribute("data-lazy-src"),
+            image.getAttribute("srcset")?.split(/\s+/)[0],
+            image.getAttribute("src")
+          ].filter(Boolean).find(source => !/^data:/i.test(source) && !/transparent|placeholder|spacer/i.test(source)) || "";
+
+          for (const table of wikiDocument.querySelectorAll("table")) {
+            const headerRow = table.querySelector("tr");
+            const headerCells = headerRow ? [...headerRow.querySelectorAll(":scope > th, :scope > td")] : [];
+            const headers = headerCells.map(cell => cell.textContent.replace(/\s+/g, " ").trim().toLowerCase());
+            const iconColumn = headers.findIndex(value => value === "icon");
+            const advancementColumn = headers.findIndex(value => value === "advancement");
+            const resourceColumn = headers.findIndex(value => value.includes("resource location"));
+            if (iconColumn < 0 || advancementColumn < 0 || resourceColumn < 0) continue;
+
+            for (const row of table.querySelectorAll("tr")) {
+              const cells = [...row.querySelectorAll(":scope > th, :scope > td")];
+              if (cells.length <= Math.max(iconColumn, advancementColumn, resourceColumn)) continue;
+              const resourceCell = cells[resourceColumn];
+              const resourceText = [...resourceCell.querySelectorAll("code")]
+                .map(node => node.textContent.trim()).find(Boolean) || resourceCell.textContent.trim();
+              const resource = normalizeResource(resourceText);
+              if (!resource || !resource.includes("/")) continue;
+
+              const id = "minecraft:" + resource;
+              const title = cells[advancementColumn].textContent.replace(/\s+/g, " ").trim();
+              const iconCell = cells[iconColumn];
+              const images = [...iconCell.querySelectorAll("img")];
+              // Wiki icon cells can include a decorative advancement frame before the item image.
+              const itemImage = images.filter(image => {
+                const source = readImageSource(image);
+                return source && !/advancement-(?:plain|oval|fancy)-(?:raw|worn)|advancement[-_ ]frame/i.test(source + " " + (image.getAttribute("alt") || ""));
+              }).at(-1);
+              let iconUrl = "";
+              const imageSource = itemImage ? readImageSource(itemImage) : "";
+              if (imageSource) {
+                try { iconUrl = new URL(imageSource.split(/\s+/)[0], "https://minecraft.wiki").href; } catch {}
+              }
+              if (!iconUrl) {
+                const imageLink = [...iconCell.querySelectorAll("a[href]")].map(anchor => anchor.getAttribute("href") || "")
+                  .find(href => /\/images\/Invicon_[^?#]+\.(?:png|webp|gif)/i.test(href));
+                if (imageLink) {
+                  try { iconUrl = new URL(imageLink, "https://minecraft.wiki").href; } catch {}
+                }
+              }
+              if (title) wikiIndex.set(id, { title, iconUrl });
+            }
+          }
+
+          const imagesById = [...advPanel.querySelectorAll("[data-advancement-id]")];
+          imagesById.forEach(image => {
+            const data = wikiIndex.get(String(image.dataset.advancementId || "").toLowerCase());
+            if (!data) { image.hidden = true; return; }
+            const heading = image.closest(".advancement-row")?.querySelector(".advancement-name");
+            if (heading && data.title) heading.textContent = data.title;
+            if (!data.iconUrl) { image.hidden = true; return; }
+            image.src = data.iconUrl;
             image.hidden = false;
             image.onerror = () => { image.onerror = null; image.hidden = true; };
           });
+          if (!wikiIndex.size) throw new Error("Minecraft Wiki advancement table contained no usable entries");
         } catch (error) {
           console.warn("Minecraft Wiki advancement icon lookup failed", error);
-          batch.forEach(image => { image.hidden = true; });
+          // Keep the row layout intact; missing icons are hidden rather than showing broken images.
+          advPanel.querySelectorAll("[data-advancement-id]").forEach(image => { image.hidden = true; });
         }
       }
       const postPayload = postResponse.ok ? await postResponse.json() : {posts:[]};
