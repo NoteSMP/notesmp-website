@@ -64,33 +64,98 @@ function formatPlaytime(seconds) {
 }
 
 function getMotd(value) {
-  const componentText = component => {
-    if (component == null) return '';
-    if (typeof component === 'string' || typeof component === 'number') return String(component);
-    if (Array.isArray(component)) return component.map(componentText).join('');
-    if (typeof component !== 'object') return '';
-    const own = typeof component.text === 'string' ? component.text : '';
-    const children = Array.isArray(component.extra) ? component.extra.map(componentText).join('') : '';
-    const args = Array.isArray(component.with) ? component.with.map(componentText).join('') : '';
-    return own + args + children;
-  };
   if (typeof value === 'string') return value.trim();
-  if (Array.isArray(value)) return value.map(componentText).join('\n').trim();
+  if (Array.isArray(value)) return value.map(item => typeof item === 'string' ? item : '').join('').trim();
   if (typeof value?.raw === 'string') return value.raw.trim();
-  if (Array.isArray(value?.raw)) return value.raw.map(componentText).join('\n').trim();
   if (typeof value?.clean === 'string') return value.clean.trim();
-  if (Array.isArray(value?.clean)) return value.clean.map(componentText).join('\n').trim();
-  return componentText(value).trim();
+  if (Array.isArray(value?.raw)) return value.raw.map(item => typeof item === 'string' ? item : '').join('').trim();
+  if (Array.isArray(value?.clean)) return value.clean.map(item => typeof item === 'string' ? item : '').join('').trim();
+  if (value && typeof value === 'object') return JSON.stringify(value) === '{}' ? '' : 'component';
+  return '';
 }
 
 function motdHtml(value) {
-  const input = getMotd(value);
-  const colors = {'0':'#000000','1':'#0000AA','2':'#00AA00','3':'#00AAAA','4':'#AA0000','5':'#AA00AA','6':'#FFAA00','7':'#AAAAAA','8':'#555555','9':'#5555FF','a':'#55FF55','b':'#55FFFF','c':'#FF5555','d':'#FF55FF','e':'#FFFF55','f':'#FFFFFF'};
-  let color='',bold=false,italic=false,underline=false,strike=false,out='',plain='';
-  const flush=()=>{if(!plain)return;let t=safeText(plain).replace(/\n/g,'<br>').replace(/\\n/g,'<br>');const css=[];if(color)css.push('color:'+color);if(bold)css.push('font-weight:700');if(italic)css.push('font-style:italic');if(underline)css.push('text-decoration:underline');if(strike)css.push('text-decoration:line-through');out+=css.length?'<span style="'+css.join(';')+'">'+t+'</span>':t;plain='';};
-  for(let i=0;i<input.length;i++){if(input[i]==='§'&&i+1<input.length){const c=input[++i].toLowerCase();if(c==='x'&&/^§x(?:§[0-9a-f]){6}/i.test(input.slice(i-1))){const hex=input.slice(i+1,i+13).replace(/§/g,'');flush();color='#'+hex;bold=italic=underline=strike=false;i+=12;continue;}if(colors[c]){flush();color=colors[c];bold=italic=underline=strike=false;continue;}if(c==='r'){flush();color='';bold=italic=underline=strike=false;continue;}if(c==='l'){flush();bold=true;continue;}if(c==='o'){flush();italic=true;continue;}if(c==='n'){flush();underline=true;continue;}if(c==='m'){flush();strike=true;continue;}plain+='§'+c;continue;}plain+=input[i];}flush();return out;
+  const legacyColors = {
+    '0':'#000000','1':'#0000AA','2':'#00AA00','3':'#00AAAA','4':'#AA0000','5':'#AA00AA','6':'#FFAA00','7':'#AAAAAA',
+    '8':'#555555','9':'#5555FF','a':'#55FF55','b':'#55FFFF','c':'#FF5555','d':'#FF55FF','e':'#FFFF55','f':'#FFFFFF'
+  };
+  const namedColors = {
+    black:'#000000',dark_blue:'#0000AA',dark_green:'#00AA00',dark_aqua:'#00AAAA',dark_red:'#AA0000',dark_purple:'#AA00AA',
+    gold:'#FFAA00',gray:'#AAAAAA',dark_gray:'#555555',blue:'#5555FF',green:'#55FF55',aqua:'#55FFFF',red:'#FF5555',
+    light_purple:'#FF55FF',yellow:'#FFFF55',white:'#FFFFFF'
+  };
+  const safeColor = color => {
+    if (typeof color !== 'string') return '';
+    const key = color.toLowerCase();
+    if (namedColors[key]) return namedColors[key];
+    return /^#[0-9a-f]{6}$/i.test(color) ? color : '';
+  };
+  const styleAttrs = style => {
+    const css = [];
+    const color = safeColor(style.color);
+    if (color) css.push('color:'+color);
+    if (style.bold) css.push('font-weight:700');
+    if (style.italic) css.push('font-style:italic');
+    const decorations = [];
+    if (style.underlined) decorations.push('underline');
+    if (style.strikethrough) decorations.push('line-through');
+    if (decorations.length) css.push('text-decoration:'+decorations.join(' '));
+    if (style.obfuscated) css.push('text-shadow:0 0 3px currentColor');
+    return css.length ? ' style="'+css.join(';')+'"' : '';
+  };
+  const renderText = (text, style) => {
+    const safe = safeText(String(text)).replace(/\r?\n/g,'<br>');
+    return safe ? '<span'+styleAttrs(style)+'>'+safe+'</span>' : '';
+  };
+  const renderLegacy = (input, inherited = {}) => {
+    const colors = legacyColors;
+    let style = {...inherited}, out = '', plain = '';
+    const flush = () => { if (plain) { out += renderText(plain, style); plain = ''; } };
+    for (let i=0;i<input.length;i++) {
+      if (input[i] === '§' && i+1<input.length) {
+        const code = input[++i].toLowerCase();
+        if (code === 'x' && /^§x(?:§[0-9a-f]){6}/i.test(input.slice(i-1))) {
+          const hex = input.slice(i+1,i+13).replace(/§/g,'');
+          flush(); style = {...style,color:'#'+hex,bold:false,italic:false,underlined:false,strikethrough:false,obfuscated:false}; i += 12; continue;
+        }
+        if (colors[code]) { flush(); style = {...style,color:colors[code],bold:false,italic:false,underlined:false,strikethrough:false,obfuscated:false}; continue; }
+        if (code === 'r') { flush(); style = {...inherited}; continue; }
+        const flags = {l:'bold',o:'italic',n:'underlined',m:'strikethrough',k:'obfuscated'};
+        if (flags[code]) { flush(); style = {...style,[flags[code]]:true}; continue; }
+        plain += '§'+code;
+      } else plain += input[i];
+    }
+    flush();
+    return out;
+  };
+  const renderComponent = (component, inherited = {}) => {
+    if (component == null) return '';
+    if (typeof component === 'string' || typeof component === 'number') return renderLegacy(String(component), inherited);
+    if (Array.isArray(component)) return component.map(child => renderComponent(child,inherited)).join('');
+    if (typeof component !== 'object') return '';
+    const style = {
+      ...inherited,
+      color: safeColor(component.color) || inherited.color || '',
+      bold: component.bold ?? inherited.bold ?? false,
+      italic: component.italic ?? inherited.italic ?? false,
+      underlined: component.underlined ?? inherited.underlined ?? false,
+      strikethrough: component.strikethrough ?? inherited.strikethrough ?? false,
+      obfuscated: component.obfuscated ?? inherited.obfuscated ?? false
+    };
+    let own = '';
+    if (typeof component.text === 'string' || typeof component.text === 'number') own = renderLegacy(String(component.text),style);
+    else if (typeof component.translate === 'string') own = renderLegacy(component.translate,style);
+    else if (typeof component.keybind === 'string') own = renderLegacy(component.keybind,style);
+    const children = Array.isArray(component.extra) ? component.extra.map(child => renderComponent(child,style)).join('') : '';
+    const args = Array.isArray(component.with) ? component.with.map(child => renderComponent(child,style)).join('') : '';
+    return own + args + children;
+  };
+  let source = value;
+  if (source && typeof source === 'object' && !Array.isArray(source) && ('raw' in source || 'clean' in source)) {
+    source = source.raw ?? source.clean;
+  }
+  return renderComponent(source);
 }
-
 function currentPath() {
   return window.location.pathname.replace(/\/$/, '') || '/';
 }
@@ -107,11 +172,12 @@ function serverStatusMarkup() {
   const online = Boolean(serverData?.online);
   const count = Number(serverData?.playersOnline || 0);
   const max = Number(serverData?.maxPlayers || 0);
-  const motd = getMotd(serverData?.motd);
+  const motd = serverData?.motd;
+  const hasMotd = Boolean(getMotd(motd));
   const statusText = serverData?.unavailable ? 'STATUS UNAVAILABLE' : (serverData ? (online ? 'ONLINE' : 'OFFLINE') : 'CHECKING STATUS');
   const playerText = serverData && !serverData.unavailable ? `${count}/${max || '—'}` : '—';
   const version = serverData?.version || '26.3';
-  const motdText = serverData?.unavailable ? 'Server details could not be reached. Try again shortly.' : (serverData ? (motd ? motdHtml(motd) : 'No message of the day is configured.') : 'Fetching live server details…');
+  const motdText = serverData?.unavailable ? 'Server details could not be reached. Try again shortly.' : (serverData ? (hasMotd ? motdHtml(motd) : 'No message of the day is configured.') : 'Fetching live server details…');
   return `<section class="panel" aria-labelledby="status-heading"><div class="panel-heading"><div><span class="overline">LIVE SERVER</span><h2 id="status-heading">Server status</h2></div></div><div class="panel-body"><div class="status-top"><span class="status-indicator ${serverData && !serverData.unavailable ? (online ? 'is-online' : 'is-offline') : ''}"><span class="status-dot"></span><span>${statusText}</span></span></div><div class="address-row"><div><span class="overline">JAVA SERVER ADDRESS</span><strong class="server-ip">${SERVER_ADDRESS}</strong></div><button class="copy-button" id="copy-address" type="button">Copy IP</button></div><p class="motd">${motdText}</p><div class="quick-stats"><div class="quick-stat"><span class="metric-label">Edition</span><strong class="metric-value">Java</strong></div><div class="quick-stat"><span class="metric-label">Version</span><strong class="metric-value">${safeText(version)}</strong></div><div class="quick-stat"><span class="metric-label">Players</span><strong class="metric-value">${playerText}</strong></div></div></div></section>`;
 }
 
