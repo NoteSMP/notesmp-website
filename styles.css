@@ -280,6 +280,14 @@ a.scheduled-event-place:hover{text-decoration:underline;color:#d6f2dc}
   .player-stat-groups{grid-template-columns:1fr}
 }
 
+/* Search matches stay visible and are highlighted in the statistics overview. */
+.player-stat-table tbody tr.is-search-match td,
+.mob-kill-card.is-search-match{
+  background:rgba(184,255,87,.16)!important;
+  box-shadow:inset 3px 0 0 var(--accent,#b8ff57);
+}
+.player-stat-table tbody tr.is-search-match td:first-child{color:var(--text)!important;font-weight:700}
+
 /* Advancement rows use four fixed, horizontal columns; override generic profile row layout. */
 .player-profile-panel[data-profile-panel="advancements"] .advancement-list{display:grid;gap:8px;overflow-x:auto;max-width:100%}
 .player-profile-panel[data-profile-panel="advancements"] .profile-search-row.advancement-row{display:grid!important;grid-template-columns:40px minmax(150px,1fr) minmax(170px,1.1fr) minmax(175px,auto);align-items:center;column-gap:14px;row-gap:0;min-width:680px;padding:12px 14px}
