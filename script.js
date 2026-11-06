@@ -541,8 +541,15 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
             if (!match) continue;
             const id = "minecraft:" + match[1].toLowerCase();
             const title = cells[1]?.textContent?.replace(/\s+/g, " ").trim();
-            const icon = cells[0]?.querySelector("img");
-            const source = icon?.getAttribute("data-src") || icon?.getAttribute("data-original") || icon?.getAttribute("src");
+            // The Wiki renders the advancement item icon together with a separate frame overlay.
+            // Ignore Advancement-plain/oval/fancy raw/worn assets; use only the item/block artwork.
+            const itemIcon = [...(cells[0]?.querySelectorAll("img") || [])].find(candidate => {
+              const src = [candidate.getAttribute("data-src"), candidate.getAttribute("data-original"), candidate.getAttribute("src")].filter(Boolean).join(" ");
+              const alt = candidate.getAttribute("alt") || "";
+              return !/advancement-(?:plain|oval|fancy)-(?:raw|worn)/i.test(src + " " + alt)
+                && !/advancement[-_ ]frame/i.test(src + " " + alt);
+            });
+            const source = itemIcon?.getAttribute("data-src") || itemIcon?.getAttribute("data-original") || itemIcon?.getAttribute("src");
             const iconUrl = source ? new URL(source, "https://minecraft.wiki").href : "";
             if (title) wikiIndex.set(id, { title, iconUrl });
           }
