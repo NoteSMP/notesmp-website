@@ -545,12 +545,13 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
             const id = "minecraft:" + match[1].toLowerCase();
             const title = cells[1]?.textContent?.replace(/\s+/g, " ").trim();
             const itemImage = [...(cells[0]?.querySelectorAll("img") || [])].find(candidate => {
-              const source = [candidate.getAttribute("src"), candidate.getAttribute("data-src"), candidate.getAttribute("data-original"), candidate.getAttribute("data-lazy-src"), candidate.getAttribute("srcset")].filter(Boolean).join(" ");
+              const candidates = [candidate.getAttribute("data-src"), candidate.getAttribute("data-original"), candidate.getAttribute("data-lazy-src"), candidate.getAttribute("srcset")?.split(/\\s+/)[0], candidate.getAttribute("src")].filter(Boolean);
+              const usableSource = candidates.find(source => !/^data:/i.test(source) && !/transparent|placeholder|spacer/i.test(source));
               const alt = candidate.getAttribute("alt") || "";
-              return source && !/advancement-(?:plain|oval|fancy)-(?:raw|worn)/i.test(source + " " + alt)
-                && !/advancement[-_ ]frame/i.test(source + " " + alt);
+              return usableSource && !/advancement-(?:plain|oval|fancy)-(?:raw|worn)/i.test(usableSource + " " + alt)
+                && !/advancement[-_ ]frame/i.test(usableSource + " " + alt);
             });
-            const rawSource = itemImage?.getAttribute("data-src") || itemImage?.getAttribute("data-original") || itemImage?.getAttribute("data-lazy-src") || itemImage?.getAttribute("src") || itemImage?.getAttribute("srcset")?.split(/\s+/)[0] || "";
+            const rawSource = [itemImage?.getAttribute("data-src"), itemImage?.getAttribute("data-original"), itemImage?.getAttribute("data-lazy-src"), itemImage?.getAttribute("srcset")?.split(/\\s+/)[0], itemImage?.getAttribute("src")].find(source => source && !/^data:/i.test(source) && !/transparent|placeholder|spacer/i.test(source)) || "";
             let iconUrl = "";
             if (rawSource) {
               try { iconUrl = new URL(rawSource.split(" ")[0], "https://minecraft.wiki").href; } catch {}
