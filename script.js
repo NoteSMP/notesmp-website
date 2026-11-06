@@ -470,11 +470,13 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       });
     });
     try {
-      const [advResponse, postResponse] = await Promise.all([
+      const [advResponse, postResponse, countResponse] = await Promise.all([
         fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/advancements`, {cache:"no-store"}),
-        fetch(`${API_BASE}/content/posts?category=gallery&builder=${encodeURIComponent(player.username)}&limit=1000`, {cache:"no-store"})
+        fetch(`${API_BASE}/content/posts?category=gallery&builder=${encodeURIComponent(player.username)}&limit=1000`, {cache:"no-store"}),
+        fetch(`${API_BASE}/server/advancement-count`, {cache:"no-store"})
       ]);
       const savedAdvPayload = advResponse?.ok ? await advResponse.json() : {advancements:[]};
+      const countPayload = countResponse?.ok ? await countResponse.json() : {};
       const liveAdvancements = Array.isArray(liveProfile?.advancements) ? liveProfile.advancements : [];
       const advPayload = liveAdvancements.length ? liveProfile : savedAdvPayload;
       const earned = (Array.isArray(advPayload.advancements) ? advPayload.advancements : [])
@@ -496,7 +498,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
         const title = item.title || item.id;
         return '<article class="profile-search-row advancement-row" data-profile-search="' + safeText((title + " " + item.id).toLowerCase()) + '"><img class="advancement-icon" data-advancement-icon="' + safeText(item.icon) + '" alt="" loading="lazy"><div><strong>' + safeText(title) + '</strong><span>' + safeText(item.id) + '</span></div><small>' + safeText(formatDate(item.earnedAt)) + '</small></article>';
       }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching advancements.</p>' : '<p class="fine-print">No earned advancements have been synced for this player yet.</p>';
-      const totalAdvancements = Number(liveProfile?.totalAdvancements) || 0;
+      const totalAdvancements = Number(liveProfile?.totalAdvancements || countPayload?.totalAdvancements) || 0;
       if (totalAdvancements > 0) {
         const completed = Math.min(earned.length, totalAdvancements);
         const percent = Math.min(100, completed / totalAdvancements * 100);
