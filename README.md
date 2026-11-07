@@ -29,8 +29,15 @@ Player directory records are stored in D1. A player is registered when they join
 | `index.html` | Frontend entry point and page shell. |
 | `script.js` | Routing, rendering, API requests and interactive behavior. |
 | `styles.css`, `portal.css` | Global and portal/page styling. |
+| `theme.js`, `theme-switcher.css` | Persistent visitor theme selection at the bottom of the site. |
 | `wrangler.jsonc` | Cloudflare Worker and static-asset configuration. |
 | `api/README.md` | Pointer to the separately maintained API project. |
+
+## Website themes
+
+The website provides five visitor-selectable options: Default and Theme 1–4. The Default option preserves the built-in NoteSMP appearance. Theme 1–4 load CSS-only files from the separate [notesmp-theme repository](https://github.com/NoteSMP/notesmp-theme). A visitor's selection is saved in that visitor's browser and does not affect other users.
+
+Theme contributors should edit only their assigned CSS file in `notesmp-theme`. Theme files must not hide or reorder sections, change layout, alter application behavior, or access API/player data. The website does not load theme code as JavaScript.
 
 ## Local development
 
