@@ -174,6 +174,7 @@
       resetThemeProperties();
       updateButtons("default");
       status.textContent = "Default theme";
+      switcher.removeAttribute("aria-busy");
       if (persist) {
         try { localStorage.setItem(STORAGE_KEY, "default"); } catch {}
       }
