@@ -1,0 +1,48 @@
+/*
+ * The theme engine exposes a small set of visual tokens.
+ * Themes provide validated JSON values only; they cannot inject CSS,
+ * hide sections, reorder content, or change website behavior.
+ */
+html[data-theme^="theme-"] body {
+  background-image: var(--theme-page-background-image, none);
+  background-position: center;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+html[data-theme^="theme-"] .home-hero {
+  background-image: var(--theme-hero-background-image, url("https://minecraft.wiki/images/Forest.png?536a7"));
+  border-radius: var(--theme-hero-radius);
+}
+
+html[data-theme^="theme-"] .feature-card,
+html[data-theme^="theme-"] .post-card,
+html[data-theme^="theme-"] .player-directory-card,
+html[data-theme^="theme-"] .creator-card,
+html[data-theme^="theme-"] .server-address {
+  border-radius: var(--theme-card-radius);
+  border-width: var(--theme-border-width);
+  box-shadow: var(--theme-card-shadow);
+  transition-duration: var(--theme-motion-duration);
+}
+
+html[data-theme^="theme-"] .header-join,
+html[data-theme^="theme-"] .resource-link,
+html[data-theme^="theme-"] .online-now-player,
+html[data-theme^="theme-"] .theme-switcher-option,
+html[data-theme^="theme-"] .copy-button {
+  border-radius: var(--theme-control-radius);
+  border-width: var(--theme-border-width);
+  transition-duration: var(--theme-motion-duration);
+}
+
+html[data-theme^="theme-"] .player-directory-card:hover,
+html[data-theme^="theme-"] .creator-card:hover,
+html[data-theme^="theme-"] .feature-card:hover,
+html[data-theme^="theme-"] .post-card:hover {
+  transform: translateY(var(--theme-hover-lift));
+}
+
+html[data-theme^="theme-"] .portal-nav a[aria-current="page"]::after {
+  height: max(2px, var(--theme-border-width));
+}
