@@ -311,12 +311,12 @@ html[data-theme="theme-2"][data-route="info"][data-frame-hero="true"] .home-hero
   box-sizing: border-box !important;
   border: 10px solid transparent !important;
   border-image-source: var(--theme-frame-image) !important;
-  border-image-slice: 10 fill !important;
+  border-image-slice: 10 !important;
   border-image-width: 10px !important;
   border-image-outset: 0 !important;
   border-image-repeat: stretch !important;
   border-radius: 0 !important;
-  background-clip: border-box !important;
+  background-clip: padding-box !important;
   overflow: hidden !important;
   box-shadow: none !important;
 }
@@ -332,4 +332,23 @@ html[data-theme="theme-2"][data-route="info"][data-frame-hero="true"] .home-hero
     border-width: 10px !important;
     border-image-width: 10px !important;
   }
+}
+
+
+/* Theme 2 fixes: keep section artwork inside the nine-slice frame and
+   use an explicit repeating 5x5 mask so both blackstone variants show. */
+html[data-theme="theme-2"][data-route="info"][data-frame-panels="true"] .panel,
+html[data-theme="theme-2"][data-route="info"][data-frame-hero="true"] .home-hero {
+  background-clip: padding-box !important;
+  border-image-slice: 10 !important;
+}
+html[data-theme="theme-2"] body::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Crect x='0' y='0' width='48' height='48' fill='white'/%3E%3Crect x='144' y='48' width='48' height='48' fill='white'/%3E%3Crect x='48' y='144' width='48' height='48' fill='white'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Crect x='0' y='0' width='48' height='48' fill='white'/%3E%3Crect x='144' y='48' width='48' height='48' fill='white'/%3E%3Crect x='48' y='144' width='48' height='48' fill='white'/%3E%3C/svg%3E");
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  -webkit-mask-size: 240px 240px;
+  mask-size: 240px 240px;
 }
