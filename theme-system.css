@@ -768,8 +768,8 @@ html[data-theme="theme-2"] .portal-nav a[aria-current="page"]::after {
 
 
 /* Theme-driven frame renderer.
-   Frame geometry and targets come from the validated theme JSON, not hard-coded
-   per-component decoration. The border image is a nine-slice overlay. */
+   Four independent SVG corners stay crisp at every panel aspect ratio.
+   Edges are drawn separately so they never stretch or distort the ornaments. */
 html[data-theme="theme-2"][data-frame-panels="true"] .panel,
 html[data-theme="theme-2"][data-frame-hero="true"] .home-hero,
 html[data-theme="theme-2"][data-frame-cards="true"] .feature-card,
@@ -777,57 +777,88 @@ html[data-theme="theme-2"][data-frame-cards="true"] .post-card,
 html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card,
 html[data-theme="theme-2"][data-frame-cards="true"] .creator-card,
 html[data-theme="theme-2"][data-frame-cards="true"] .server-address {
+  --frame-tl: var(--theme-frame-panel-tl);
+  --frame-tr: var(--theme-frame-panel-tr);
+  --frame-bl: var(--theme-frame-panel-bl);
+  --frame-br: var(--theme-frame-panel-br);
+  --frame-edge: var(--theme-frame-panel-edge);
+  position: relative;
   box-sizing: border-box;
-  border: var(--theme-frame-width, 0px) solid transparent !important;
-  border-image-source: var(--theme-frame-panel-image, none) !important;
-  border-image-slice: var(--theme-frame-slice, 32) !important;
-  border-image-width: var(--theme-frame-width, 0px) !important;
-  border-image-repeat: stretch !important;
-  border-image-outset: 0 !important;
+  border: 1px solid transparent !important;
   border-radius: 0 !important;
 }
 
-/* The hero has its own selected-state artwork. */
 html[data-theme="theme-2"][data-frame-hero="true"] .home-hero {
-  border-image-source: var(--theme-frame-hero-image, none) !important;
+  --frame-tl: var(--theme-frame-hero-tl);
+  --frame-tr: var(--theme-frame-hero-tr);
+  --frame-bl: var(--theme-frame-hero-bl);
+  --frame-br: var(--theme-frame-hero-br);
+  --frame-edge: var(--theme-frame-hero-edge);
+  border: 1px solid transparent !important;
 }
 
-/* Hover treatment is a theme token; it does not change layout geometry. */
+/* One overlay: four fixed-size corner ornaments plus four independent straight edges. */
+html[data-theme="theme-2"][data-frame-panels="true"] .panel::after,
+html[data-theme="theme-2"][data-frame-hero="true"] .home-hero::after,
+html[data-theme="theme-2"][data-frame-cards="true"] .feature-card::after,
+html[data-theme="theme-2"][data-frame-cards="true"] .post-card::after,
+html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card::after,
+html[data-theme="theme-2"][data-frame-cards="true"] .creator-card::after,
+html[data-theme="theme-2"][data-frame-cards="true"] .server-address::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background-image:
+    var(--frame-tl), var(--frame-tr), var(--frame-bl), var(--frame-br),
+    linear-gradient(var(--frame-edge), var(--frame-edge)),
+    linear-gradient(var(--frame-edge), var(--frame-edge)),
+    linear-gradient(var(--frame-edge), var(--frame-edge)),
+    linear-gradient(var(--frame-edge), var(--frame-edge));
+  background-size:
+    var(--theme-frame-corner-size) var(--theme-frame-corner-size),
+    var(--theme-frame-corner-size) var(--theme-frame-corner-size),
+    var(--theme-frame-corner-size) var(--theme-frame-corner-size),
+    var(--theme-frame-corner-size) var(--theme-frame-corner-size),
+    calc(100% - 2 * var(--theme-frame-corner-size)) var(--theme-frame-width),
+    calc(100% - 2 * var(--theme-frame-corner-size)) var(--theme-frame-width),
+    var(--theme-frame-width) calc(100% - 2 * var(--theme-frame-corner-size)),
+    var(--theme-frame-width) calc(100% - 2 * var(--theme-frame-corner-size));
+  background-position:
+    left top, right top, left bottom, right bottom,
+    center top, center bottom, left center, right center;
+  background-repeat: no-repeat;
+}
+
+/* Panels transition to the brighter frame on hover without changing their dimensions. */
 html[data-theme="theme-2"][data-frame-panels="true"] .panel:hover,
 html[data-theme="theme-2"][data-frame-cards="true"] .feature-card:hover,
 html[data-theme="theme-2"][data-frame-cards="true"] .post-card:hover,
 html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card:hover,
 html[data-theme="theme-2"][data-frame-cards="true"] .creator-card:hover,
 html[data-theme="theme-2"][data-frame-cards="true"] .server-address:hover {
-  border-image-source: var(--theme-frame-hover-image, none) !important;
-}
-
-/* The hero keeps its cinematic overlay; old ornamental pseudo-elements are
-   intentionally disabled so they cannot draw a second, misaligned frame. */
-html[data-theme="theme-2"][data-frame-panels="true"] .panel::before,
-html[data-theme="theme-2"][data-frame-panels="true"] .panel::after,
-html[data-theme="theme-2"][data-frame-hero="true"] .home-hero::after,
-html[data-theme="theme-2"][data-frame-cards="true"] .feature-card::before,
-html[data-theme="theme-2"][data-frame-cards="true"] .feature-card::after,
-html[data-theme="theme-2"][data-frame-cards="true"] .post-card::before,
-html[data-theme="theme-2"][data-frame-cards="true"] .post-card::after,
-html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card::before,
-html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card::after,
-html[data-theme="theme-2"][data-frame-cards="true"] .creator-card::before,
-html[data-theme="theme-2"][data-frame-cards="true"] .creator-card::after {
-  content: none !important;
-  display: none !important;
+  --frame-tl: var(--theme-frame-hover-tl);
+  --frame-tr: var(--theme-frame-hover-tr);
+  --frame-bl: var(--theme-frame-hover-bl);
+  --frame-br: var(--theme-frame-hover-br);
+  --frame-edge: var(--theme-frame-hover-edge);
 }
 
 @media (max-width: 600px) {
-  html[data-theme="theme-2"][data-frame-panels="true"] .panel,
-  html[data-theme="theme-2"][data-frame-hero="true"] .home-hero,
-  html[data-theme="theme-2"][data-frame-cards="true"] .feature-card,
-  html[data-theme="theme-2"][data-frame-cards="true"] .post-card,
-  html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card,
-  html[data-theme="theme-2"][data-frame-cards="true"] .creator-card,
-  html[data-theme="theme-2"][data-frame-cards="true"] .server-address {
-    border-width: min(var(--theme-frame-width, 0px), 12px) !important;
-    border-image-width: min(var(--theme-frame-width, 0px), 12px) !important;
+  html[data-theme="theme-2"][data-frame-panels="true"] .panel::after,
+  html[data-theme="theme-2"][data-frame-hero="true"] .home-hero::after,
+  html[data-theme="theme-2"][data-frame-cards="true"] .feature-card::after,
+  html[data-theme="theme-2"][data-frame-cards="true"] .post-card::after,
+  html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card::after,
+  html[data-theme="theme-2"][data-frame-cards="true"] .creator-card::after,
+  html[data-theme="theme-2"][data-frame-cards="true"] .server-address::after {
+    background-size:
+      28px 28px, 28px 28px, 28px 28px, 28px 28px,
+      calc(100% - 56px) var(--theme-frame-width),
+      calc(100% - 56px) var(--theme-frame-width),
+      var(--theme-frame-width) calc(100% - 56px),
+      var(--theme-frame-width) calc(100% - 56px);
   }
 }
