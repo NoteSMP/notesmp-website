@@ -35,7 +35,7 @@
     "--theme-body-size", "--theme-heading-scale", "--theme-small-scale",
     "--theme-body-line-height", "--theme-heading-line-height",
     "--theme-body-letter-spacing", "--theme-heading-letter-spacing",
-    "--theme-body-weight", "--theme-display-weight", "--theme-small-weight", "--theme-texture-page-base", "--theme-texture-page-accent", "--theme-texture-panel", "--theme-decoration-image", "--theme-decoration-opacity", "--theme-decoration-size"
+    "--theme-body-weight", "--theme-display-weight", "--theme-small-weight", "--theme-texture-page-base", "--theme-texture-page-accent", "--theme-texture-panel", "--theme-decoration-image", "--theme-decoration-opacity", "--theme-decoration-size", "--theme-creator-background", "--theme-creator-hover-background", "--theme-creator-border", "--theme-creator-hover-border", "--theme-creator-avatar-background", "--theme-creator-stream-title", "--theme-creator-live-text", "--theme-creator-live-background", "--theme-creator-live-border", "--theme-creator-offline-text", "--theme-creator-offline-background", "--theme-creator-offline-border"
   ];
   const shadows = {
     none: "none",
@@ -137,6 +137,8 @@
     const frames = data.frames && typeof data.frames === "object" ? data.frames : {};
     const textures = data.textures && typeof data.textures === "object" ? data.textures : {};
     const decorations = data.decorations && typeof data.decorations === "object" ? data.decorations : {};
+    const components = data.components && typeof data.components === "object" ? data.components : {};
+    const creator = components.creator && typeof components.creator === "object" ? components.creator : {};
     if (![colors, shape, effects, backgrounds, typography].every(value => value && typeof value === "object")) {
       throw new Error("Theme settings are incomplete");
     }
@@ -207,6 +209,10 @@
     if (decorations.opacity !== undefined && !validNumber(decorations.opacity, 0, 1)) throw new Error("Invalid decoration opacity");
     if (decorations.size !== undefined && !validNumber(decorations.size, 12, 96)) throw new Error("Invalid decoration size");
     if (decorations.animation !== undefined && !["none", "glow", "float"].includes(decorations.animation)) throw new Error("Invalid decoration animation");
+    const creatorColorKeys = ["background", "hoverBackground", "border", "hoverBorder", "avatarBackground", "streamTitle", "liveText", "liveBackground", "liveBorder", "offlineText", "offlineBackground", "offlineBorder"];
+    for (const key of creatorColorKeys) {
+      if (creator[key] !== undefined && !validColor(creator[key])) throw new Error("Invalid creator style color: " + key);
+    }
     return {
       colors,
       shape,
@@ -221,6 +227,20 @@
         opacity: decorations.opacity === undefined ? 0.75 : decorations.opacity,
         size: decorations.size === undefined ? 24 : decorations.size,
         animation: decorations.animation || "none"
+      },
+      creator: {
+        background: creator.background || colors.surface,
+        hoverBackground: creator.hoverBackground || colors.surfaceRaised,
+        border: creator.border || colors.border,
+        hoverBorder: creator.hoverBorder || colors.accent,
+        avatarBackground: creator.avatarBackground || colors.surfaceRaised,
+        streamTitle: creator.streamTitle || colors.muted,
+        liveText: creator.liveText || colors.accent,
+        liveBackground: creator.liveBackground || colors.surfaceRaised,
+        liveBorder: creator.liveBorder || colors.accentSecondary,
+        offlineText: creator.offlineText || colors.muted,
+        offlineBackground: creator.offlineBackground || colors.surface,
+        offlineBorder: creator.offlineBorder || colors.border
       },
       frames: {
         enabled: frames.enabled === true && (frames.style || "nine-slice") !== "off",
@@ -252,7 +272,7 @@
   function applyValidatedTheme(data) {
     const root = document.documentElement;
     const style = root.style;
-    const { colors, shape, effects, backgrounds, typography, frames, textures, decorations } = data;
+    const { colors, shape, effects, backgrounds, typography, frames, textures, decorations, creator } = data;
     for (const [key, property] of Object.entries(colorKeys)) {
       style.setProperty(property, colors[key]);
     }
@@ -311,6 +331,21 @@
     style.setProperty("--theme-decoration-opacity", decorations.opacity);
     style.setProperty("--theme-decoration-size", decorations.size + "px");
     root.dataset.decorationAnimation = decorations.animation;
+    const creatorProperties = {
+      "--theme-creator-background": creator.background,
+      "--theme-creator-hover-background": creator.hoverBackground,
+      "--theme-creator-border": creator.border,
+      "--theme-creator-hover-border": creator.hoverBorder,
+      "--theme-creator-avatar-background": creator.avatarBackground,
+      "--theme-creator-stream-title": creator.streamTitle,
+      "--theme-creator-live-text": creator.liveText,
+      "--theme-creator-live-background": creator.liveBackground,
+      "--theme-creator-live-border": creator.liveBorder,
+      "--theme-creator-offline-text": creator.offlineText,
+      "--theme-creator-offline-background": creator.offlineBackground,
+      "--theme-creator-offline-border": creator.offlineBorder
+    };
+    for (const [property, value] of Object.entries(creatorProperties)) style.setProperty(property, value);
   }
 
   async function applyTheme(themeId, persist = true) {
