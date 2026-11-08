@@ -31,7 +31,7 @@
     "--theme-card-radius", "--theme-control-radius", "--theme-hero-radius",
     "--theme-border-width", "--theme-card-shadow", "--theme-hover-lift",
     "--theme-motion-duration", "--theme-page-background-image",
-    "--theme-hero-background-image", "--font", "--display", "--mono",
+    "--theme-hero-background-image", "--theme-hero-position", "--theme-hero-size", "--theme-hero-min-height", "--theme-hero-overlay-color", "--theme-hero-overlay-opacity", "--font", "--display", "--mono", "--brand-font", "--ui-font",
     "--theme-body-size", "--theme-heading-scale", "--theme-small-scale",
     "--theme-body-line-height", "--theme-heading-line-height",
     "--theme-body-letter-spacing", "--theme-heading-letter-spacing",
@@ -48,6 +48,10 @@
     "DM Mono": "'DM Mono', monospace",
     "DM Sans": "'DM Sans', sans-serif",
     "Space Grotesk": "'Space Grotesk', sans-serif",
+    Oxanium: "'Oxanium', sans-serif",
+    Rajdhani: "'Rajdhani', sans-serif",
+    Cinzel: "'Cinzel', serif",
+    "Press Start 2P": "'Press Start 2P', cursive",
     "System UI": "system-ui, sans-serif",
     Georgia: "Georgia, serif"
   };
@@ -126,6 +130,7 @@
     const effects = data.effects;
     const backgrounds = data.backgrounds;
     const typography = data.typography;
+    const hero = backgrounds && backgrounds.heroSettings;
     if (![colors, shape, effects, backgrounds, typography].every(value => value && typeof value === "object")) {
       throw new Error("Theme settings are incomplete");
     }
@@ -164,13 +169,28 @@
         throw new Error("Invalid theme typography value: " + key + " (" + String(typography[key]) + ")");
       }
     }
+    const heroSettings = hero && typeof hero === "object" ? hero : {};
+    const heroPositions = ["center", "center top", "center center", "center bottom", "left center", "right center", "58% center", "center 42%", "center 53%", "center 60%"];
+    const heroSizes = ["cover", "contain"];
+    if (heroSettings.position !== undefined && !heroPositions.includes(heroSettings.position)) throw new Error("Invalid hero image position");
+    if (heroSettings.size !== undefined && !heroSizes.includes(heroSettings.size)) throw new Error("Invalid hero image size");
+    if (heroSettings.minHeight !== undefined && !validNumber(heroSettings.minHeight, 240, 720)) throw new Error("Invalid hero minimum height");
+    if (heroSettings.overlayColor !== undefined && !validColor(heroSettings.overlayColor)) throw new Error("Invalid hero overlay color");
+    if (heroSettings.overlayOpacity !== undefined && !validNumber(heroSettings.overlayOpacity, 0, 0.95)) throw new Error("Invalid hero overlay opacity");
     return {
       colors,
       shape,
       effects,
       backgrounds: {
         page: allowedImage(backgrounds.page),
-        hero: allowedImage(backgrounds.hero)
+        hero: allowedImage(backgrounds.hero),
+        heroSettings: {
+          position: heroSettings.position || "center 53%",
+          size: heroSettings.size || "cover",
+          minHeight: heroSettings.minHeight || 380,
+          overlayColor: heroSettings.overlayColor || "#0E1511",
+          overlayOpacity: heroSettings.overlayOpacity === undefined ? 0.55 : heroSettings.overlayOpacity
+        }
       },
       typography
     };
@@ -196,6 +216,8 @@
     style.setProperty("--font", fonts[typography.body]);
     style.setProperty("--display", fonts[typography.display]);
     style.setProperty("--mono", fonts[typography.mono]);
+    style.setProperty("--brand-font", fonts[typography.brand] || fonts[typography.display]);
+    style.setProperty("--ui-font", fonts[typography.ui] || fonts[typography.body]);
     style.setProperty("--theme-body-size", typography.bodySize + "px");
     style.setProperty("--theme-heading-scale", typography.headingScale);
     style.setProperty("--theme-small-scale", typography.smallScale);
