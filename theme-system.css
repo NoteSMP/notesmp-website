@@ -767,56 +767,6 @@ html[data-theme="theme-2"] .portal-nav a[aria-current="page"]::after {
 }
 
 
-/* Theme 2 ornamental frames — CSS border-image nine-slice.
-   The 96x96 SVG protects 32px corners, repeats the edge slices, and keeps
-   the center transparent. This replaces the previous pseudo-element renderer. */
-html[data-theme="theme-2"][data-frame-panels="true"] .panel,
-html[data-theme="theme-2"][data-frame-cards="true"] .feature-card,
-html[data-theme="theme-2"][data-frame-cards="true"] .post-card,
-html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card,
-html[data-theme="theme-2"][data-frame-cards="true"] .creator-card,
-html[data-theme="theme-2"][data-frame-cards="true"] .server-address {
-  border: var(--theme-frame-width, 18px) solid transparent !important;
-  border-image-source: var(--theme-frame-panel-image);
-  border-image-slice: 32 fill;
-  border-image-width: var(--theme-frame-width, 18px);
-  border-image-outset: 0;
-  border-image-repeat: round;
-  border-radius: 0 !important;
-  box-sizing: border-box;
-}
-
-html[data-theme="theme-2"][data-frame-hero="true"] .home-hero {
-  border: var(--theme-frame-width, 18px) solid transparent !important;
-  border-image-source: var(--theme-frame-hero-image);
-  border-image-slice: 32 fill;
-  border-image-width: var(--theme-frame-width, 18px);
-  border-image-outset: 0;
-  border-image-repeat: round;
-  border-radius: 0 !important;
-  box-sizing: border-box;
-}
-
-/* Hover swaps the complete nine-slice image; no overlay or pseudo-elements. */
-html[data-theme="theme-2"][data-frame-panels="true"] .panel:hover,
-html[data-theme="theme-2"][data-frame-cards="true"] .feature-card:hover,
-html[data-theme="theme-2"][data-frame-cards="true"] .post-card:hover,
-html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card:hover,
-html[data-theme="theme-2"][data-frame-cards="true"] .creator-card:hover,
-html[data-theme="theme-2"][data-frame-cards="true"] .server-address:hover {
-  border-image-source: var(--theme-frame-hover-image);
-}
-
-/* Keep a proportionate inset on small screens. */
-@media (max-width: 600px) {
-  html[data-theme="theme-2"][data-frame-panels="true"] .panel,
-  html[data-theme="theme-2"][data-frame-hero="true"] .home-hero {
-    border-width: min(var(--theme-frame-width, 18px), 14px) !important;
-    border-image-width: min(var(--theme-frame-width, 18px), 14px);
-  }
-}
-
-
 /* Theme 2 final nine-slice pass: remove every remnant of the former CSS ornaments. */
 html[data-theme="theme-2"] .panel::before,
 html[data-theme="theme-2"] .panel::after,
