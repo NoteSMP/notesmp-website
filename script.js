@@ -274,6 +274,7 @@ function render() {
     activeLiveProfileUuid = profileUuid;
   }
   const knownRoute = routeTitles[path] ? path : (profileMatch ? '/players' : '/');
+  document.documentElement.dataset.route = knownRoute === '/' ? 'info' : knownRoute.slice(1);
   document.title = `${profileMatch ? 'Player profile' : routeTitles[knownRoute]} | NoteSMP`;
   nav?.querySelectorAll('[data-route]').forEach(link => {
     if (link.dataset.route === knownRoute) link.setAttribute('aria-current', 'page');
