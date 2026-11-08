@@ -372,3 +372,46 @@ html[data-theme="theme-4"] .header-join,html[data-theme="theme-4"] .resource-lin
 html[data-theme="theme-4"] .header-join:hover,html[data-theme="theme-4"] .resource-link:hover,html[data-theme="theme-4"] .copy-button:hover,html[data-theme="theme-4"] .theme-switcher-option:hover{border-color:#F4C542;box-shadow:0 0 14px rgba(244,197,66,.2)}
 html[data-theme="theme-4"] ::selection{color:#210707;background:#F4C542}
 @media(prefers-reduced-motion:reduce){html[data-theme="theme-4"] *,html[data-theme="theme-4"] *::before,html[data-theme="theme-4"] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+
+/* Theme-aware creator cards: every creator surface/status color comes from theme JSON. */
+html[data-theme^="theme-"] .creator-card {
+  background: var(--theme-creator-background, var(--surface));
+  border: var(--theme-border-width, 1px) solid var(--theme-creator-border, var(--line));
+  color: var(--text);
+}
+html[data-theme^="theme-"] .creator-card:hover {
+  background: var(--theme-creator-hover-background, var(--surface-raised));
+  border-color: var(--theme-creator-hover-border, var(--lime));
+}
+html[data-theme^="theme-"] .creator-avatar {
+  background: var(--theme-creator-avatar-background, var(--surface-raised));
+}
+html[data-theme^="theme-"] .creator-stream-title {
+  color: var(--theme-creator-stream-title, var(--muted));
+}
+html[data-theme^="theme-"] .creator-status.live {
+  color: var(--theme-creator-live-text, var(--accent));
+  background: var(--theme-creator-live-background, var(--surface-raised));
+  border: 1px solid var(--theme-creator-live-border, var(--accent));
+}
+html[data-theme^="theme-"] .creator-status.offline {
+  color: var(--theme-creator-offline-text, var(--muted));
+  background: var(--theme-creator-offline-background, var(--surface));
+  border: 1px solid var(--theme-creator-offline-border, var(--line));
+}
+
+/* Theme 4 creator palette: crimson-black cards, gilded outlines, amber live badge. */
+html[data-theme="theme-4"] .creator-card {
+  border-style: solid;
+  border-color: var(--theme-creator-border, #A65A2A);
+  box-shadow: inset 0 1px 0 rgba(255, 220, 130, .1), 0 8px 22px rgba(0, 0, 0, .34);
+}
+html[data-theme="theme-4"] .creator-card:hover {
+  border-color: var(--theme-creator-hover-border, #F4C542);
+  box-shadow: inset 0 1px 0 rgba(255, 230, 160, .2), 0 10px 26px rgba(0, 0, 0, .42), 0 0 14px rgba(244, 197, 66, .14);
+}
+html[data-theme="theme-4"] .creator-status {
+  border-radius: 2px;
+  letter-spacing: .09em;
+}
