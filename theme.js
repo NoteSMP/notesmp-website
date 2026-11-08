@@ -275,11 +275,14 @@
       muted: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frames/muted-9slice.svg?v=2",
       none: "none"
     };
-    const frameUrl = (variant) => frames.enabled ? frameAssets[variant] || frameAssets.muted : frameAssets.none;
+    const frameImage = (variant) => {
+      const asset = frames.enabled ? frameAssets[variant] || frameAssets.muted : frameAssets.none;
+      return asset === "none" ? "none" : `url("${asset}")`;
+    };
     style.setProperty("--theme-frame-width", frames.width + "px");
-    style.setProperty("--theme-frame-panel-image", frameUrl(frames.panel));
-    style.setProperty("--theme-frame-hero-image", frameUrl(frames.hero));
-    style.setProperty("--theme-frame-hover-image", frameUrl(frames.hover));
+    style.setProperty("--theme-frame-panel-image", frameImage(frames.panel));
+    style.setProperty("--theme-frame-hero-image", frameImage(frames.hero));
+    style.setProperty("--theme-frame-hover-image", frameImage(frames.hover));
     root.dataset.frameHero = String(frames.enabled && frames.targets.hero);
     root.dataset.framePanels = String(frames.enabled && frames.targets.panels);
     root.dataset.frameCards = String(frames.enabled && frames.targets.cards);
