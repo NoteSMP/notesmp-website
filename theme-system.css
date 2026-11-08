@@ -389,3 +389,152 @@ html[data-theme^="theme-"] .button,
 html[data-theme^="theme-"] .header-join {
   font-family: var(--ui-font, var(--font));
 }
+
+
+/* Theme 2 refresh: block-built Minecraft Dungeons-style frames. */
+html[data-theme="theme-2"] body {
+  background-color: #10251D;
+  background-image:
+    radial-gradient(ellipse at 50% -15%, rgba(115, 190, 91, .2), transparent 48%),
+    repeating-linear-gradient(0deg, rgba(190, 225, 155, .035) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(90deg, rgba(190, 225, 155, .035) 0 1px, transparent 1px 16px),
+    linear-gradient(180deg, #10251D, #0B1B14);
+}
+
+/* Main panels use a dark stone edge, bright grass cap and a second inset frame. */
+html[data-theme="theme-2"] .feature-card,
+html[data-theme="theme-2"] .post-card,
+html[data-theme="theme-2"] .player-directory-card,
+html[data-theme="theme-2"] .creator-card,
+html[data-theme="theme-2"] .server-address {
+  border: 3px solid #638A52;
+  border-radius: 0;
+  background-color: #1B382B;
+  background-image:
+    linear-gradient(135deg, rgba(206, 239, 170, .07), transparent 34%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 5px);
+  box-shadow:
+    inset 0 2px 0 rgba(225, 248, 196, .22),
+    inset 2px 0 0 rgba(225, 248, 196, .08),
+    inset 0 -4px 0 rgba(4, 17, 11, .48),
+    0 4px 0 #0A1C13,
+    0 8px 0 rgba(5, 19, 13, .62),
+    0 15px 28px rgba(0, 0, 0, .24);
+  transition:
+    transform 220ms steps(3, end),
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    filter 180ms ease;
+}
+
+/* The inner border has clipped, stepped corners instead of a plain rounded rectangle. */
+html[data-theme="theme-2"] .feature-card::after,
+html[data-theme="theme-2"] .post-card::after,
+html[data-theme="theme-2"] .player-directory-card::after,
+html[data-theme="theme-2"] .creator-card::after,
+html[data-theme="theme-2"] .server-address::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  z-index: 2;
+  border: 1px solid rgba(233, 185, 90, .62);
+  clip-path: polygon(
+    0 9px, 9px 9px, 9px 0,
+    calc(100% - 9px) 0, calc(100% - 9px) 9px, 100% 9px,
+    100% calc(100% - 9px), calc(100% - 9px) calc(100% - 9px),
+    calc(100% - 9px) 100%, 9px 100%, 9px calc(100% - 9px),
+    0 calc(100% - 9px)
+  );
+  pointer-events: none;
+}
+
+/* Small grass-green cap over the stone edge, like a grass block cross-section. */
+html[data-theme="theme-2"] .feature-card::before,
+html[data-theme="theme-2"] .post-card::before,
+html[data-theme="theme-2"] .player-directory-card::before,
+html[data-theme="theme-2"] .creator-card::before,
+html[data-theme="theme-2"] .server-address::before {
+  top: -3px;
+  left: 12px;
+  width: 46px;
+  height: 4px;
+  background: #9BE86A;
+  box-shadow: 0 2px 0 #426B3A, 2px 0 0 rgba(233, 185, 90, .5);
+}
+
+html[data-theme="theme-2"] .feature-card:hover,
+html[data-theme="theme-2"] .post-card:hover,
+html[data-theme="theme-2"] .player-directory-card:hover,
+html[data-theme="theme-2"] .creator-card:hover,
+html[data-theme="theme-2"] .server-address:hover {
+  transform: translateY(-2px);
+  border-color: #9BE86A;
+  filter: brightness(1.07);
+  box-shadow:
+    inset 0 2px 0 rgba(225, 248, 196, .28),
+    inset 2px 0 0 rgba(225, 248, 196, .12),
+    inset 0 -4px 0 rgba(4, 17, 11, .48),
+    0 5px 0 #0A1C13,
+    0 10px 0 rgba(5, 19, 13, .58),
+    0 18px 32px rgba(0, 0, 0, .3),
+    0 0 16px rgba(155, 232, 106, .12);
+}
+
+/* Hero gets a heavier carved frame and gold inner keyline. */
+html[data-theme="theme-2"] .home-hero {
+  border: 3px solid #9BE86A;
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 5px rgba(8, 28, 18, .78),
+    inset 0 -90px 110px rgba(8, 27, 19, .78),
+    0 0 0 2px #294B37,
+    0 8px 0 #0A1C13,
+    0 16px 34px rgba(0, 0, 0, .34);
+}
+html[data-theme="theme-2"] .home-hero::after {
+  inset: 9px;
+  border: 1px solid rgba(233, 185, 90, .82);
+}
+
+/* Controls resemble compact inventory/menu buttons with hard lower bevels. */
+html[data-theme="theme-2"] .header-join,
+html[data-theme="theme-2"] .copy-button,
+html[data-theme="theme-2"] .resource-link,
+html[data-theme="theme-2"] .theme-switcher-option,
+html[data-theme="theme-2"] .online-now-player {
+  border: 2px solid #638A52;
+  border-radius: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 -2px 0 rgba(0,0,0,.22),
+    0 3px 0 #0A1C13;
+}
+html[data-theme="theme-2"] .header-join:hover,
+html[data-theme="theme-2"] .copy-button:hover,
+html[data-theme="theme-2"] .resource-link:hover,
+html[data-theme="theme-2"] .theme-switcher-option:hover {
+  border-color: #E9B95A;
+  color: #E9B95A;
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 4px 0 #0A1C13, 0 0 14px rgba(233,185,90,.14);
+}
+
+/* A slightly more game-like display face; body copy stays highly readable. */
+html[data-theme="theme-2"] h1,
+html[data-theme="theme-2"] h2,
+html[data-theme="theme-2"] h3,
+html[data-theme="theme-2"] .portal-page-title,
+html[data-theme="theme-2"] .portal-brand {
+  text-shadow: 0 2px 0 rgba(0,0,0,.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="theme-2"] *,
+  html[data-theme="theme-2"] *::before,
+  html[data-theme="theme-2"] *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
