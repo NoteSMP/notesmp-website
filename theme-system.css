@@ -767,98 +767,51 @@ html[data-theme="theme-2"] .portal-nav a[aria-current="page"]::after {
 }
 
 
-/* Theme-driven frame renderer.
-   Four independent SVG corners stay crisp at every panel aspect ratio.
-   Edges are drawn separately so they never stretch or distort the ornaments. */
+/* Theme 2 ornamental frames — CSS border-image nine-slice.
+   The 96x96 SVG protects 32px corners, repeats the edge slices, and keeps
+   the center transparent. This replaces the previous pseudo-element renderer. */
 html[data-theme="theme-2"][data-frame-panels="true"] .panel,
-html[data-theme="theme-2"][data-frame-hero="true"] .home-hero,
 html[data-theme="theme-2"][data-frame-cards="true"] .feature-card,
 html[data-theme="theme-2"][data-frame-cards="true"] .post-card,
 html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card,
 html[data-theme="theme-2"][data-frame-cards="true"] .creator-card,
 html[data-theme="theme-2"][data-frame-cards="true"] .server-address {
-  --frame-tl: var(--theme-frame-panel-tl);
-  --frame-tr: var(--theme-frame-panel-tr);
-  --frame-bl: var(--theme-frame-panel-bl);
-  --frame-br: var(--theme-frame-panel-br);
-  --frame-edge: var(--theme-frame-panel-edge);
-  position: relative;
-  box-sizing: border-box;
-  border: 1px solid transparent !important;
+  border: var(--theme-frame-width, 18px) solid transparent !important;
+  border-image-source: var(--theme-frame-panel-image);
+  border-image-slice: 32 fill;
+  border-image-width: var(--theme-frame-width, 18px);
+  border-image-outset: 0;
+  border-image-repeat: round;
   border-radius: 0 !important;
+  box-sizing: border-box;
 }
 
 html[data-theme="theme-2"][data-frame-hero="true"] .home-hero {
-  --frame-tl: var(--theme-frame-hero-tl);
-  --frame-tr: var(--theme-frame-hero-tr);
-  --frame-bl: var(--theme-frame-hero-bl);
-  --frame-br: var(--theme-frame-hero-br);
-  --frame-edge: var(--theme-frame-hero-edge);
-  border: 1px solid transparent !important;
+  border: var(--theme-frame-width, 18px) solid transparent !important;
+  border-image-source: var(--theme-frame-hero-image);
+  border-image-slice: 32 fill;
+  border-image-width: var(--theme-frame-width, 18px);
+  border-image-outset: 0;
+  border-image-repeat: round;
+  border-radius: 0 !important;
+  box-sizing: border-box;
 }
 
-/* One overlay: four fixed-size corner ornaments plus four independent straight edges. */
-html[data-theme="theme-2"][data-frame-panels="true"] .panel::after,
-html[data-theme="theme-2"][data-frame-hero="true"] .home-hero::after,
-html[data-theme="theme-2"][data-frame-cards="true"] .feature-card::after,
-html[data-theme="theme-2"][data-frame-cards="true"] .post-card::after,
-html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card::after,
-html[data-theme="theme-2"][data-frame-cards="true"] .creator-card::after,
-html[data-theme="theme-2"][data-frame-cards="true"] .server-address::after {
-  content: "" !important;
-  display: block !important;
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  pointer-events: none;
-  background-image:
-    var(--frame-tl), var(--frame-tr), var(--frame-bl), var(--frame-br),
-    linear-gradient(var(--frame-edge), var(--frame-edge)),
-    linear-gradient(var(--frame-edge), var(--frame-edge)),
-    linear-gradient(var(--frame-edge), var(--frame-edge)),
-    linear-gradient(var(--frame-edge), var(--frame-edge));
-  background-size:
-    var(--theme-frame-corner-size) var(--theme-frame-corner-size),
-    var(--theme-frame-corner-size) var(--theme-frame-corner-size),
-    var(--theme-frame-corner-size) var(--theme-frame-corner-size),
-    var(--theme-frame-corner-size) var(--theme-frame-corner-size),
-    calc(100% - 2 * var(--theme-frame-corner-size)) var(--theme-frame-width),
-    calc(100% - 2 * var(--theme-frame-corner-size)) var(--theme-frame-width),
-    var(--theme-frame-width) calc(100% - 2 * var(--theme-frame-corner-size)),
-    var(--theme-frame-width) calc(100% - 2 * var(--theme-frame-corner-size));
-  background-position:
-    left top, right top, left bottom, right bottom,
-    center top, center bottom, left center, right center;
-  background-repeat: no-repeat;
-}
-
-/* Panels transition to the brighter frame on hover without changing their dimensions. */
+/* Hover swaps the complete nine-slice image; no overlay or pseudo-elements. */
 html[data-theme="theme-2"][data-frame-panels="true"] .panel:hover,
 html[data-theme="theme-2"][data-frame-cards="true"] .feature-card:hover,
 html[data-theme="theme-2"][data-frame-cards="true"] .post-card:hover,
 html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card:hover,
 html[data-theme="theme-2"][data-frame-cards="true"] .creator-card:hover,
 html[data-theme="theme-2"][data-frame-cards="true"] .server-address:hover {
-  --frame-tl: var(--theme-frame-hover-tl);
-  --frame-tr: var(--theme-frame-hover-tr);
-  --frame-bl: var(--theme-frame-hover-bl);
-  --frame-br: var(--theme-frame-hover-br);
-  --frame-edge: var(--theme-frame-hover-edge);
+  border-image-source: var(--theme-frame-hover-image);
 }
 
+/* Keep a proportionate inset on small screens. */
 @media (max-width: 600px) {
-  html[data-theme="theme-2"][data-frame-panels="true"] .panel::after,
-  html[data-theme="theme-2"][data-frame-hero="true"] .home-hero::after,
-  html[data-theme="theme-2"][data-frame-cards="true"] .feature-card::after,
-  html[data-theme="theme-2"][data-frame-cards="true"] .post-card::after,
-  html[data-theme="theme-2"][data-frame-cards="true"] .player-directory-card::after,
-  html[data-theme="theme-2"][data-frame-cards="true"] .creator-card::after,
-  html[data-theme="theme-2"][data-frame-cards="true"] .server-address::after {
-    background-size:
-      28px 28px, 28px 28px, 28px 28px, 28px 28px,
-      calc(100% - 56px) var(--theme-frame-width),
-      calc(100% - 56px) var(--theme-frame-width),
-      var(--theme-frame-width) calc(100% - 56px),
-      var(--theme-frame-width) calc(100% - 56px);
+  html[data-theme="theme-2"][data-frame-panels="true"] .panel,
+  html[data-theme="theme-2"][data-frame-hero="true"] .home-hero {
+    border-width: min(var(--theme-frame-width, 18px), 14px) !important;
+    border-image-width: min(var(--theme-frame-width, 18px), 14px);
   }
 }
