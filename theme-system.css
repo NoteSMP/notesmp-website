@@ -303,3 +303,33 @@ html[data-theme^="theme-"] .button,
 html[data-theme^="theme-"] .header-join {
   font-family: var(--ui-font, var(--font));
 }
+
+/* Theme 2: restore the supplied 30×30 nine-slice frame.
+   Equal 10×10 slices: 10px corners, 10px edges, 10px centre. */
+html[data-theme="theme-2"][data-route="info"][data-frame-panels="true"] .panel,
+html[data-theme="theme-2"][data-route="info"][data-frame-hero="true"] .home-hero {
+  box-sizing: border-box !important;
+  border: 10px solid transparent !important;
+  border-image-source: var(--theme-frame-image) !important;
+  border-image-slice: 10 fill !important;
+  border-image-width: 10px !important;
+  border-image-outset: 0 !important;
+  border-image-repeat: stretch !important;
+  border-radius: 0 !important;
+  background-clip: border-box !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+}
+html[data-theme="theme-2"][data-route="info"][data-frame-panels="true"] .panel::before,
+html[data-theme="theme-2"][data-route="info"][data-frame-panels="true"] .panel::after,
+html[data-theme="theme-2"][data-route="info"][data-frame-hero="true"] .home-hero::after {
+  content: none !important;
+  display: none !important;
+}
+@media (max-width: 600px) {
+  html[data-theme="theme-2"][data-route="info"][data-frame-panels="true"] .panel,
+  html[data-theme="theme-2"][data-route="info"][data-frame-hero="true"] .home-hero {
+    border-width: 10px !important;
+    border-image-width: 10px !important;
+  }
+}
