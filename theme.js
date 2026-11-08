@@ -186,7 +186,7 @@
     if (heroSettings.minHeight !== undefined && !validNumber(heroSettings.minHeight, 240, 720)) throw new Error("Invalid hero minimum height");
     if (heroSettings.overlayColor !== undefined && !validColor(heroSettings.overlayColor)) throw new Error("Invalid hero overlay color");
     if (heroSettings.overlayOpacity !== undefined && !validNumber(heroSettings.overlayOpacity, 0, 0.95)) throw new Error("Invalid hero overlay opacity");
-    const frameStyles = ["pixel-ornate", "off"];
+    const frameStyles = ["nine-slice", "off"];
     const frameVariants = ["none", "muted", "bright"];
     const frameTargets = frames.targets && typeof frames.targets === "object" ? frames.targets : {};
     if (frames.enabled !== undefined && typeof frames.enabled !== "boolean") throw new Error("Invalid frame enabled setting");
@@ -203,14 +203,13 @@
       shape,
       effects,
       frames: {
-        enabled: frames.enabled === true && (frames.style || "pixel-ornate") !== "off",
+        enabled: frames.enabled === true && (frames.style || "nine-slice") !== "off",
         targets: {
           hero: frameTargets.hero === true,
           panels: frameTargets.panels === true,
           cards: frameTargets.cards === true
         },
         width: frames.width === undefined ? 24 : frames.width,
-        cornerSize: frames.cornerSize === undefined ? 40 : frames.cornerSize,
         hero: frames.hero || "bright",
         panel: frames.panel || "muted",
         hover: frames.hover || "bright"
@@ -270,19 +269,9 @@
     const overlayHex = backgrounds.heroSettings.overlayColor.slice(1);
     style.setProperty("--theme-hero-overlay-rgb", [0, 2, 4].map(index => parseInt(overlayHex.slice(index, index + 2), 16)).join(", "));
     style.setProperty("--theme-hero-overlay-opacity", backgrounds.heroSettings.overlayOpacity);
-    const frameAssets = {
-      bright: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frames/bright-9slice.svg?v=2",
-      muted: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frames/muted-9slice.svg?v=2",
-      none: "none"
-    };
-    const frameImage = (variant) => {
-      const asset = frames.enabled ? frameAssets[variant] || frameAssets.muted : frameAssets.none;
-      return asset === "none" ? "none" : `url("${asset}")`;
-    };
+    const frameAsset = "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frames/panel-9slice.png?v=1";
     style.setProperty("--theme-frame-width", frames.width + "px");
-    style.setProperty("--theme-frame-panel-image", frameImage(frames.panel));
-    style.setProperty("--theme-frame-hero-image", frameImage(frames.hero));
-    style.setProperty("--theme-frame-hover-image", frameImage(frames.hover));
+    style.setProperty("--theme-frame-image", frames.enabled ? `url("${frameAsset}")` : "none");
     root.dataset.frameHero = String(frames.enabled && frames.targets.hero);
     root.dataset.framePanels = String(frames.enabled && frames.targets.panels);
     root.dataset.frameCards = String(frames.enabled && frames.targets.cards);
