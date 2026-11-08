@@ -48,16 +48,17 @@ html[data-theme^="theme-"] .portal-nav a[aria-current="page"]::after {
 }
 
 
-/* Theme 1: repeat the supplied polished-blackstone block texture. */
+/* Theme 1: repeat the supplied polished-blackstone-bricks texture with nearest-neighbor scaling. */
 html[data-theme="theme-1"] body {
   background-color: #101014;
   background-image:
     linear-gradient(rgba(12, 8, 8, .42), rgba(12, 8, 8, .42)),
-    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d");
+    url("https://minecraft.wiki/images/BlockSprite_polished-blackstone-bricks.png?a00af");
   background-repeat: repeat, repeat;
   background-size: auto, 128px 128px;
   background-position: 0 0, 0 0;
   background-attachment: fixed, fixed;
+  image-rendering: pixelated;
 }
 
 
