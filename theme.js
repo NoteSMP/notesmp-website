@@ -35,7 +35,7 @@
     "--theme-body-size", "--theme-heading-scale", "--theme-small-scale",
     "--theme-body-line-height", "--theme-heading-line-height",
     "--theme-body-letter-spacing", "--theme-heading-letter-spacing",
-    "--theme-body-weight", "--theme-display-weight", "--theme-small-weight", "--theme-texture-page-base", "--theme-texture-page-accent", "--theme-texture-panel", "--theme-decoration-image", "--theme-decoration-opacity", "--theme-decoration-size", "--theme-creator-background", "--theme-creator-hover-background", "--theme-creator-border", "--theme-creator-hover-border", "--theme-creator-avatar-background", "--theme-creator-stream-title", "--theme-creator-live-text", "--theme-creator-live-background", "--theme-creator-live-border", "--theme-creator-offline-text", "--theme-creator-offline-background", "--theme-creator-offline-border"
+    "--theme-body-weight", "--theme-display-weight", "--theme-small-weight", "--theme-texture-page-base", "--theme-texture-page-accent", "--theme-texture-panel", "--theme-decoration-image", "--theme-decoration-opacity", "--theme-decoration-size", "--theme-creator-background", "--theme-creator-hover-background", "--theme-creator-border", "--theme-creator-hover-border", "--theme-creator-avatar-background", "--theme-creator-stream-title", "--theme-creator-live-text", "--theme-creator-live-background", "--theme-creator-live-border", "--theme-creator-offline-text", "--theme-creator-offline-background", "--theme-creator-offline-border", "--theme-profile-tab-text", "--theme-profile-tab-background", "--theme-profile-tab-border", "--theme-profile-tab-hover-text", "--theme-profile-tab-hover-background", "--theme-profile-tab-hover-border", "--theme-profile-tab-active-text", "--theme-profile-tab-active-background", "--theme-profile-tab-active-border", "--theme-profile-tab-divider"
   ];
   const shadows = {
     none: "none",
@@ -139,6 +139,7 @@
     const decorations = data.decorations && typeof data.decorations === "object" ? data.decorations : {};
     const components = data.components && typeof data.components === "object" ? data.components : {};
     const creator = components.creator && typeof components.creator === "object" ? components.creator : {};
+    const profileTabs = components.profileTabs && typeof components.profileTabs === "object" ? components.profileTabs : {};
     if (![colors, shape, effects, backgrounds, typography].every(value => value && typeof value === "object")) {
       throw new Error("Theme settings are incomplete");
     }
@@ -213,6 +214,10 @@
     for (const key of creatorColorKeys) {
       if (creator[key] !== undefined && !validColor(creator[key])) throw new Error("Invalid creator style color: " + key);
     }
+    const profileTabColorKeys = ["text", "background", "border", "hoverText", "hoverBackground", "hoverBorder", "activeText", "activeBackground", "activeBorder", "divider"];
+    for (const key of profileTabColorKeys) {
+      if (profileTabs[key] !== undefined && !validColor(profileTabs[key])) throw new Error("Invalid profile tab style color: " + key);
+    }
     return {
       colors,
       shape,
@@ -241,6 +246,18 @@
         offlineText: creator.offlineText || colors.muted,
         offlineBackground: creator.offlineBackground || colors.surface,
         offlineBorder: creator.offlineBorder || colors.border
+      },
+      profileTabs: {
+        text: profileTabs.text || colors.muted,
+        background: profileTabs.background || colors.surface,
+        border: profileTabs.border || colors.border,
+        hoverText: profileTabs.hoverText || colors.text,
+        hoverBackground: profileTabs.hoverBackground || colors.surfaceRaised,
+        hoverBorder: profileTabs.hoverBorder || colors.accentSecondary,
+        activeText: profileTabs.activeText || colors.text,
+        activeBackground: profileTabs.activeBackground || colors.surfaceRaised,
+        activeBorder: profileTabs.activeBorder || colors.accent,
+        divider: profileTabs.divider || colors.border
       },
       frames: {
         enabled: frames.enabled === true && (frames.style || "nine-slice") !== "off",
@@ -272,7 +289,7 @@
   function applyValidatedTheme(data) {
     const root = document.documentElement;
     const style = root.style;
-    const { colors, shape, effects, backgrounds, typography, frames, textures, decorations, creator } = data;
+    const { colors, shape, effects, backgrounds, typography, frames, textures, decorations, creator, profileTabs } = data;
     for (const [key, property] of Object.entries(colorKeys)) {
       style.setProperty(property, colors[key]);
     }
@@ -346,6 +363,19 @@
       "--theme-creator-offline-border": creator.offlineBorder
     };
     for (const [property, value] of Object.entries(creatorProperties)) style.setProperty(property, value);
+    const profileTabProperties = {
+      "--theme-profile-tab-text": profileTabs.text,
+      "--theme-profile-tab-background": profileTabs.background,
+      "--theme-profile-tab-border": profileTabs.border,
+      "--theme-profile-tab-hover-text": profileTabs.hoverText,
+      "--theme-profile-tab-hover-background": profileTabs.hoverBackground,
+      "--theme-profile-tab-hover-border": profileTabs.hoverBorder,
+      "--theme-profile-tab-active-text": profileTabs.activeText,
+      "--theme-profile-tab-active-background": profileTabs.activeBackground,
+      "--theme-profile-tab-active-border": profileTabs.activeBorder,
+      "--theme-profile-tab-divider": profileTabs.divider
+    };
+    for (const [property, value] of Object.entries(profileTabProperties)) style.setProperty(property, value);
   }
 
   async function applyTheme(themeId, persist = true) {
@@ -369,7 +399,7 @@
       let lastError = null;
       for (const baseUrl of THEME_BASE_URLS) {
         try {
-          const response = await fetch(baseUrl + theme.file + "?v=20261108-20", { cache: "reload", credentials: "omit" });
+          const response = await fetch(baseUrl + theme.file + "?v=20261108-21", { cache: "reload", credentials: "omit" });
           if (!response.ok) throw new Error("Theme source returned HTTP " + response.status);
           data = validateTheme(await response.json(), theme);
           break;
