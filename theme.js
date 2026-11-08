@@ -233,7 +233,8 @@
     style.setProperty("--theme-hero-position", backgrounds.heroSettings.position);
     style.setProperty("--theme-hero-size", backgrounds.heroSettings.size);
     style.setProperty("--theme-hero-min-height", backgrounds.heroSettings.minHeight + "px");
-    style.setProperty("--theme-hero-overlay-color", backgrounds.heroSettings.overlayColor);
+    const overlayHex = backgrounds.heroSettings.overlayColor.slice(1);
+    style.setProperty("--theme-hero-overlay-rgb", [0, 2, 4].map(index => parseInt(overlayHex.slice(index, index + 2), 16)).join(", "));
     style.setProperty("--theme-hero-overlay-opacity", backgrounds.heroSettings.overlayOpacity);
   }
 
