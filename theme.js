@@ -31,7 +31,7 @@
     "--theme-card-radius", "--theme-control-radius", "--theme-hero-radius",
     "--theme-border-width", "--theme-card-shadow", "--theme-hover-lift",
     "--theme-motion-duration", "--theme-page-background-image",
-    "--theme-hero-background-image", "--theme-hero-position", "--theme-hero-size", "--theme-hero-min-height", "--theme-hero-overlay-color", "--theme-hero-overlay-opacity", "--font", "--display", "--mono", "--brand-font", "--ui-font",
+    "--theme-hero-background-image", "--theme-hero-position", "--theme-hero-size", "--theme-hero-min-height", "--theme-hero-overlay-color", "--theme-hero-overlay-opacity", "--theme-frame-width", "--theme-frame-slice", "--theme-frame-panel-image", "--theme-frame-hero-image", "--theme-frame-hover-image", "--font", "--display", "--mono", "--brand-font", "--ui-font",
     "--theme-body-size", "--theme-heading-scale", "--theme-small-scale",
     "--theme-body-line-height", "--theme-heading-line-height",
     "--theme-body-letter-spacing", "--theme-heading-letter-spacing",
@@ -131,6 +131,7 @@
     const backgrounds = data.backgrounds;
     const typography = data.typography;
     const hero = backgrounds && backgrounds.heroSettings;
+    const frames = data.frames && typeof data.frames === "object" ? data.frames : {};
     if (![colors, shape, effects, backgrounds, typography].every(value => value && typeof value === "object")) {
       throw new Error("Theme settings are incomplete");
     }
@@ -182,10 +183,36 @@
     if (heroSettings.minHeight !== undefined && !validNumber(heroSettings.minHeight, 240, 720)) throw new Error("Invalid hero minimum height");
     if (heroSettings.overlayColor !== undefined && !validColor(heroSettings.overlayColor)) throw new Error("Invalid hero overlay color");
     if (heroSettings.overlayOpacity !== undefined && !validNumber(heroSettings.overlayOpacity, 0, 0.95)) throw new Error("Invalid hero overlay opacity");
+    const frameStyles = ["pixel-ornate", "off"];
+    const frameVariants = ["none", "muted", "bright"];
+    const frameTargets = frames.targets && typeof frames.targets === "object" ? frames.targets : {};
+    if (frames.enabled !== undefined && typeof frames.enabled !== "boolean") throw new Error("Invalid frame enabled setting");
+    if (frames.style !== undefined && !frameStyles.includes(frames.style)) throw new Error("Invalid frame style");
+    if (frames.width !== undefined && !validNumber(frames.width, 0, 24)) throw new Error("Invalid frame width");
+    if (frames.slice !== undefined && !validNumber(frames.slice, 8, 48)) throw new Error("Invalid frame slice");
+    for (const key of ["hero", "panel", "hover"]) {
+      if (frames[key] !== undefined && !frameVariants.includes(frames[key])) throw new Error("Invalid frame variant: " + key);
+    }
+    for (const key of ["hero", "panels", "cards"]) {
+      if (frameTargets[key] !== undefined && typeof frameTargets[key] !== "boolean") throw new Error("Invalid frame target: " + key);
+    }
     return {
       colors,
       shape,
       effects,
+      frames: {
+        enabled: frames.enabled === true && (frames.style || "pixel-ornate") !== "off",
+        targets: {
+          hero: frameTargets.hero === true,
+          panels: frameTargets.panels === true,
+          cards: frameTargets.cards === true
+        },
+        width: frames.width === undefined ? 12 : frames.width,
+        slice: frames.slice === undefined ? 32 : frames.slice,
+        hero: frames.hero || "bright",
+        panel: frames.panel || "muted",
+        hover: frames.hover || "bright"
+      },
       backgrounds: {
         page: allowedImage(backgrounds.page),
         hero: allowedImage(backgrounds.hero),
@@ -204,7 +231,7 @@
   function applyValidatedTheme(data) {
     const root = document.documentElement;
     const style = root.style;
-    const { colors, shape, effects, backgrounds, typography } = data;
+    const { colors, shape, effects, backgrounds, typography, frames } = data;
     for (const [key, property] of Object.entries(colorKeys)) {
       style.setProperty(property, colors[key]);
     }
@@ -241,6 +268,19 @@
     const overlayHex = backgrounds.heroSettings.overlayColor.slice(1);
     style.setProperty("--theme-hero-overlay-rgb", [0, 2, 4].map(index => parseInt(overlayHex.slice(index, index + 2), 16)).join(", "));
     style.setProperty("--theme-hero-overlay-opacity", backgrounds.heroSettings.overlayOpacity);
+    const frameAssets = {
+      bright: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frame-border.svg",
+      muted: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frame-border-muted.svg",
+      none: "none"
+    };
+    style.setProperty("--theme-frame-width", frames.enabled ? frames.width + "px" : "0px");
+    style.setProperty("--theme-frame-slice", frames.slice);
+    style.setProperty("--theme-frame-panel-image", frames.enabled ? 'url("' + frameAssets[frames.panel] + '")' : "none");
+    style.setProperty("--theme-frame-hero-image", frames.enabled ? 'url("' + frameAssets[frames.hero] + '")' : "none");
+    style.setProperty("--theme-frame-hover-image", frames.enabled ? 'url("' + frameAssets[frames.hover] + '")' : "none");
+    root.dataset.frameHero = String(frames.enabled && frames.targets.hero);
+    root.dataset.framePanels = String(frames.enabled && frames.targets.panels);
+    root.dataset.frameCards = String(frames.enabled && frames.targets.cards);
   }
 
   async function applyTheme(themeId, persist = true) {
@@ -264,7 +304,7 @@
       let lastError = null;
       for (const baseUrl of THEME_BASE_URLS) {
         try {
-          const response = await fetch(baseUrl + theme.file + "?v=20261108-5", { cache: "reload", credentials: "omit" });
+          const response = await fetch(baseUrl + theme.file + "?v=20261108-7", { cache: "reload", credentials: "omit" });
           if (!response.ok) throw new Error("Theme source returned HTTP " + response.status);
           data = validateTheme(await response.json(), theme);
           break;
