@@ -271,8 +271,8 @@
     style.setProperty("--theme-hero-overlay-rgb", [0, 2, 4].map(index => parseInt(overlayHex.slice(index, index + 2), 16)).join(", "));
     style.setProperty("--theme-hero-overlay-opacity", backgrounds.heroSettings.overlayOpacity);
     const frameAssets = {
-      bright: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frames/bright-9slice.svg",
-      muted: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frames/muted-9slice.svg",
+      bright: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frames/bright-9slice.svg?v=2",
+      muted: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frames/muted-9slice.svg?v=2",
       none: "none"
     };
     const frameUrl = (variant) => frames.enabled ? frameAssets[variant] || frameAssets.muted : frameAssets.none;
@@ -306,7 +306,7 @@
       let lastError = null;
       for (const baseUrl of THEME_BASE_URLS) {
         try {
-          const response = await fetch(baseUrl + theme.file + "?v=20261108-12", { cache: "reload", credentials: "omit" });
+          const response = await fetch(baseUrl + theme.file + "?v=20261108-13", { cache: "reload", credentials: "omit" });
           if (!response.ok) throw new Error("Theme source returned HTTP " + response.status);
           data = validateTheme(await response.json(), theme);
           break;
