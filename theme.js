@@ -28,7 +28,11 @@
     "--theme-card-radius", "--theme-control-radius", "--theme-hero-radius",
     "--theme-border-width", "--theme-card-shadow", "--theme-hover-lift",
     "--theme-motion-duration", "--theme-page-background-image",
-    "--theme-hero-background-image", "--font", "--display"
+    "--theme-hero-background-image", "--font", "--display", "--mono",
+    "--theme-body-size", "--theme-heading-scale", "--theme-small-scale",
+    "--theme-body-line-height", "--theme-heading-line-height",
+    "--theme-body-letter-spacing", "--theme-heading-letter-spacing",
+    "--theme-body-weight", "--theme-display-weight", "--theme-small-weight"
   ];
   const shadows = {
     none: "none",
@@ -38,6 +42,8 @@
   const fonts = {
     Manrope: "'Manrope', sans-serif",
     "DM Mono": "'DM Mono', monospace",
+    "DM Sans": "'DM Sans', sans-serif",
+    "Space Grotesk": "'Space Grotesk', sans-serif",
     "System UI": "system-ui, sans-serif",
     Georgia: "Georgia, serif"
   };
@@ -129,8 +135,17 @@
     if (!Object.hasOwn(shadows, effects.shadow) ||
         !validNumber(effects.hoverLift, 0, 4) ||
         !validNumber(effects.motionMs, 0, 600)) throw new Error("Invalid theme effect settings");
-    if (!Object.hasOwn(fonts, typography.body) || !Object.hasOwn(fonts, typography.display)) {
-      throw new Error("Unsupported theme font");
+    const weights = [400, 500, 600, 700, 800];
+    if (![typography.body, typography.display, typography.mono].every(font => Object.hasOwn(fonts, font)) ||
+        ![typography.bodyWeight, typography.displayWeight, typography.smallWeight].every(weight => weights.includes(weight)) ||
+        !validNumber(typography.bodySize, 12, 20) ||
+        !validNumber(typography.headingScale, 0.75, 1.5) ||
+        !validNumber(typography.smallScale, 0.75, 1.5) ||
+        !validNumber(typography.bodyLineHeight, 1.2, 2) ||
+        !validNumber(typography.headingLineHeight, 0.85, 1.4) ||
+        !validNumber(typography.letterSpacing, -0.05, 0.1) ||
+        !validNumber(typography.headingLetterSpacing, -0.1, 0.05)) {
+      throw new Error("Invalid theme typography settings");
     }
     return {
       colors,
@@ -163,6 +178,17 @@
     style.setProperty("--theme-motion-duration", effects.motionMs + "ms");
     style.setProperty("--font", fonts[typography.body]);
     style.setProperty("--display", fonts[typography.display]);
+    style.setProperty("--mono", fonts[typography.mono]);
+    style.setProperty("--theme-body-size", typography.bodySize + "px");
+    style.setProperty("--theme-heading-scale", typography.headingScale);
+    style.setProperty("--theme-small-scale", typography.smallScale);
+    style.setProperty("--theme-body-line-height", typography.bodyLineHeight);
+    style.setProperty("--theme-heading-line-height", typography.headingLineHeight);
+    style.setProperty("--theme-body-letter-spacing", typography.letterSpacing + "em");
+    style.setProperty("--theme-heading-letter-spacing", typography.headingLetterSpacing + "em");
+    style.setProperty("--theme-body-weight", typography.bodyWeight);
+    style.setProperty("--theme-display-weight", typography.displayWeight);
+    style.setProperty("--theme-small-weight", typography.smallWeight);
     if (backgrounds.page) style.setProperty("--theme-page-background-image", 'url("' + backgrounds.page + '")');
     if (backgrounds.hero) style.setProperty("--theme-hero-background-image", 'url("' + backgrounds.hero + '")');
   }
