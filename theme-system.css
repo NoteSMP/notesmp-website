@@ -765,3 +765,79 @@ html[data-theme="theme-2"] .portal-nav a[aria-current="page"]::after {
     transition: none;
   }
 }
+
+
+/* Theme 2 — thin, high-contrast party-menu frames based on the supplied reference.
+   The frame is a nine-slice SVG: stepped corner ornaments stay crisp at any card size. */
+html[data-theme="theme-2"] .panel,
+html[data-theme="theme-2"] .home-hero,
+html[data-theme="theme-2"] .feature-card,
+html[data-theme="theme-2"] .post-card,
+html[data-theme="theme-2"] .player-directory-card,
+html[data-theme="theme-2"] .creator-card,
+html[data-theme="theme-2"] .server-address {
+  border: 10px solid transparent;
+  border-image-source: url("https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frame-border-muted.svg");
+  border-image-slice: 32;
+  border-image-width: 10px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .28);
+}
+
+/* The hero is the selected/highlighted frame in the visual hierarchy. */
+html[data-theme="theme-2"] .home-hero {
+  border-image-source: url("https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frame-border.svg");
+}
+
+/* Small centered pixel crest replaces the previous grass cap/corner decorations. */
+html[data-theme="theme-2"] .panel::before,
+html[data-theme="theme-2"] .feature-card::before,
+html[data-theme="theme-2"] .post-card::before,
+html[data-theme="theme-2"] .player-directory-card::before,
+html[data-theme="theme-2"] .creator-card::before,
+html[data-theme="theme-2"] .server-address::before,
+html[data-theme="theme-2"] .home-hero::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  width: 36px;
+  height: 18px;
+  z-index: 4;
+  transform: translateX(-50%);
+  background: url("https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frame-notch.svg") center top / 36px 18px no-repeat;
+  pointer-events: none;
+  opacity: .92;
+}
+
+html[data-theme="theme-2"] .panel:hover,
+html[data-theme="theme-2"] .feature-card:hover,
+html[data-theme="theme-2"] .post-card:hover,
+html[data-theme="theme-2"] .player-directory-card:hover,
+html[data-theme="theme-2"] .creator-card:hover,
+html[data-theme="theme-2"] .server-address:hover {
+  border-image-source: url("https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frame-border.svg");
+}
+
+html[data-theme="theme-2"] .panel:hover::before,
+html[data-theme="theme-2"] .feature-card:hover::before,
+html[data-theme="theme-2"] .post-card:hover::before,
+html[data-theme="theme-2"] .player-directory-card:hover::before,
+html[data-theme="theme-2"] .creator-card:hover::before,
+html[data-theme="theme-2"] .server-address:hover::before {
+  opacity: 1;
+}
+
+@media (max-width: 600px) {
+  html[data-theme="theme-2"] .panel,
+  html[data-theme="theme-2"] .home-hero,
+  html[data-theme="theme-2"] .feature-card,
+  html[data-theme="theme-2"] .post-card,
+  html[data-theme="theme-2"] .player-directory-card,
+  html[data-theme="theme-2"] .creator-card,
+  html[data-theme="theme-2"] .server-address {
+    border-width: 8px;
+    border-image-width: 8px;
+  }
+}
