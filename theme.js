@@ -31,7 +31,10 @@
     "--theme-card-radius", "--theme-control-radius", "--theme-hero-radius",
     "--theme-border-width", "--theme-card-shadow", "--theme-hover-lift",
     "--theme-motion-duration", "--theme-page-background-image",
-    "--theme-hero-background-image", "--theme-hero-position", "--theme-hero-size", "--theme-hero-min-height", "--theme-hero-overlay-color", "--theme-hero-overlay-opacity", "--theme-frame-width", "--theme-frame-slice", "--theme-frame-panel-image", "--theme-frame-hero-image", "--theme-frame-hover-image", "--font", "--display", "--mono", "--brand-font", "--ui-font",
+    "--theme-hero-background-image", "--theme-hero-position", "--theme-hero-size", "--theme-hero-min-height", "--theme-hero-overlay-color", "--theme-hero-overlay-opacity", "--theme-frame-width", "--theme-frame-corner-size",
+    "--theme-frame-panel-tl", "--theme-frame-panel-tr", "--theme-frame-panel-bl", "--theme-frame-panel-br", "--theme-frame-panel-edge",
+    "--theme-frame-hero-tl", "--theme-frame-hero-tr", "--theme-frame-hero-bl", "--theme-frame-hero-br", "--theme-frame-hero-edge",
+    "--theme-frame-hover-tl", "--theme-frame-hover-tr", "--theme-frame-hover-bl", "--theme-frame-hover-br", "--theme-frame-hover-edge", "--font", "--display", "--mono", "--brand-font", "--ui-font",
     "--theme-body-size", "--theme-heading-scale", "--theme-small-scale",
     "--theme-body-line-height", "--theme-heading-line-height",
     "--theme-body-letter-spacing", "--theme-heading-letter-spacing",
@@ -191,8 +194,8 @@
     const frameTargets = frames.targets && typeof frames.targets === "object" ? frames.targets : {};
     if (frames.enabled !== undefined && typeof frames.enabled !== "boolean") throw new Error("Invalid frame enabled setting");
     if (frames.style !== undefined && !frameStyles.includes(frames.style)) throw new Error("Invalid frame style");
-    if (frames.width !== undefined && !validNumber(frames.width, 0, 24)) throw new Error("Invalid frame width");
-    if (frames.slice !== undefined && !validNumber(frames.slice, 8, 48)) throw new Error("Invalid frame slice");
+    if (frames.width !== undefined && !validNumber(frames.width, 1, 6)) throw new Error("Invalid frame line width");
+    if (frames.cornerSize !== undefined && !validNumber(frames.cornerSize, 20, 64)) throw new Error("Invalid frame corner size");
     for (const key of ["hero", "panel", "hover"]) {
       if (frames[key] !== undefined && !frameVariants.includes(frames[key])) throw new Error("Invalid frame variant: " + key);
     }
@@ -210,8 +213,8 @@
           panels: frameTargets.panels === true,
           cards: frameTargets.cards === true
         },
-        width: frames.width === undefined ? 12 : frames.width,
-        slice: frames.slice === undefined ? 32 : frames.slice,
+        width: frames.width === undefined ? 2 : frames.width,
+        cornerSize: frames.cornerSize === undefined ? 40 : frames.cornerSize,
         hero: frames.hero || "bright",
         panel: frames.panel || "muted",
         hover: frames.hover || "bright"
@@ -272,16 +275,34 @@
     style.setProperty("--theme-hero-overlay-rgb", [0, 2, 4].map(index => parseInt(overlayHex.slice(index, index + 2), 16)).join(", "));
     style.setProperty("--theme-hero-overlay-opacity", backgrounds.heroSettings.overlayOpacity);
     const frameAssets = {
-      bright: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frame-border.svg",
-      muted: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/frame-border-muted.svg",
-      none: "none"
+      bright: {
+        tl: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/corners/bright-tl.svg",
+        tr: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/corners/bright-tr.svg",
+        bl: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/corners/bright-bl.svg",
+        br: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/corners/bright-br.svg",
+        edge: "#F4F1DA"
+      },
+      muted: {
+        tl: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/corners/muted-tl.svg",
+        tr: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/corners/muted-tr.svg",
+        bl: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/corners/muted-bl.svg",
+        br: "https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/ui/theme-2/corners/muted-br.svg",
+        edge: "#8295A5"
+      },
+      none: { tl: "none", tr: "none", bl: "none", br: "none", edge: "transparent" }
     };
-    style.setProperty("--theme-frame-width", frames.enabled ? frames.width + "px" : "0px");
-    style.setProperty("--theme-frame-slice", frames.slice);
-    const frameSource = variant => !frames.enabled || variant === "none" ? "none" : 'url("' + frameAssets[variant] + '")';
-    style.setProperty("--theme-frame-panel-image", frameSource(frames.panel));
-    style.setProperty("--theme-frame-hero-image", frameSource(frames.hero));
-    style.setProperty("--theme-frame-hover-image", frameSource(frames.hover));
+    style.setProperty("--theme-frame-width", frames.width + "px");
+    style.setProperty("--theme-frame-corner-size", frames.cornerSize + "px");
+    const setFrameVariant = (prefix, variant) => {
+      const asset = frames.enabled ? frameAssets[variant] : frameAssets.none;
+      for (const corner of ["tl", "tr", "bl", "br"]) {
+        style.setProperty("--theme-frame-" + prefix + "-" + corner, asset[corner] === "none" ? "none" : 'url("' + asset[corner] + '")');
+      }
+      style.setProperty("--theme-frame-" + prefix + "-edge", asset.edge);
+    };
+    setFrameVariant("panel", frames.panel);
+    setFrameVariant("hero", frames.hero);
+    setFrameVariant("hover", frames.hover);
     root.dataset.frameHero = String(frames.enabled && frames.targets.hero);
     root.dataset.framePanels = String(frames.enabled && frames.targets.panels);
     root.dataset.frameCards = String(frames.enabled && frames.targets.cards);
