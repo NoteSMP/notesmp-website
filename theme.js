@@ -140,16 +140,29 @@
         !validNumber(effects.hoverLift, 0, 4) ||
         !validNumber(effects.motionMs, 0, 600)) throw new Error("Invalid theme effect settings");
     const weights = [400, 500, 600, 700, 800];
-    if (![typography.body, typography.display, typography.mono].every(font => Object.hasOwn(fonts, font)) ||
-        ![typography.bodyWeight, typography.displayWeight, typography.smallWeight].every(weight => weights.includes(weight)) ||
-        !validNumber(typography.bodySize, 12, 20) ||
-        !validNumber(typography.headingScale, 0.75, 1.5) ||
-        !validNumber(typography.smallScale, 0.75, 1.5) ||
-        !validNumber(typography.bodyLineHeight, 1.2, 2) ||
-        !validNumber(typography.headingLineHeight, 0.85, 1.4) ||
-        !validNumber(typography.letterSpacing, -0.05, 0.1) ||
-        !validNumber(typography.headingLetterSpacing, -0.1, 0.05)) {
-      throw new Error("Invalid theme typography settings");
+    for (const key of ["body", "display", "mono"]) {
+      if (typeof typography[key] !== "string" || !Object.hasOwn(fonts, typography[key])) {
+        throw new Error("Invalid theme typography font: " + key + " (" + String(typography[key]) + ")");
+      }
+    }
+    for (const key of ["bodyWeight", "displayWeight", "smallWeight"]) {
+      if (!weights.includes(typography[key])) {
+        throw new Error("Invalid theme typography weight: " + key + " (" + String(typography[key]) + ")");
+      }
+    }
+    const typographyRanges = {
+      bodySize: [12, 20],
+      headingScale: [0.75, 1.5],
+      smallScale: [0.75, 1.5],
+      bodyLineHeight: [1.2, 2],
+      headingLineHeight: [0.85, 1.4],
+      letterSpacing: [-0.05, 0.1],
+      headingLetterSpacing: [-0.1, 0.05]
+    };
+    for (const [key, [min, max]] of Object.entries(typographyRanges)) {
+      if (!validNumber(typography[key], min, max)) {
+        throw new Error("Invalid theme typography value: " + key + " (" + String(typography[key]) + ")");
+      }
     }
     return {
       colors,
