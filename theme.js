@@ -230,6 +230,11 @@
     style.setProperty("--theme-small-weight", typography.smallWeight);
     if (backgrounds.page) style.setProperty("--theme-page-background-image", 'url("' + backgrounds.page + '")');
     if (backgrounds.hero) style.setProperty("--theme-hero-background-image", 'url("' + backgrounds.hero + '")');
+    style.setProperty("--theme-hero-position", backgrounds.heroSettings.position);
+    style.setProperty("--theme-hero-size", backgrounds.heroSettings.size);
+    style.setProperty("--theme-hero-min-height", backgrounds.heroSettings.minHeight + "px");
+    style.setProperty("--theme-hero-overlay-color", backgrounds.heroSettings.overlayColor);
+    style.setProperty("--theme-hero-overlay-opacity", backgrounds.heroSettings.overlayOpacity);
   }
 
   async function applyTheme(themeId, persist = true) {
