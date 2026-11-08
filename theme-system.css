@@ -192,7 +192,6 @@ html[data-theme="theme-2"] .theme-switcher {
   position: relative;
   z-index: 1;
 }
-html[data-theme="theme-2"] header { position: sticky; }
 html[data-theme="theme-2"] .section-kicker,
 html[data-theme="theme-2"] .eyebrow,
 html[data-theme="theme-2"] .feature-number { color: #F2C15D; }
