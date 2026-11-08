@@ -415,3 +415,14 @@ html[data-theme="theme-4"] .creator-status {
   border-radius: 2px;
   letter-spacing: .09em;
 }
+
+
+/* Theme-controlled player profile tab group (Statistics / Advancements / Posts). */
+html[data-theme^="theme-"] .player-profile-tabs{border-bottom-color:var(--theme-profile-tab-divider,var(--line))}
+html[data-theme^="theme-"] .player-profile-tabs .profile-tab{color:var(--theme-profile-tab-text,var(--muted));background:var(--theme-profile-tab-background,transparent);border:var(--theme-border-width,1px) solid var(--theme-profile-tab-border,var(--line));border-radius:var(--theme-control-radius,5px);transition:color var(--theme-motion-duration,220ms) ease,background-color var(--theme-motion-duration,220ms) ease,border-color var(--theme-motion-duration,220ms) ease,box-shadow var(--theme-motion-duration,220ms) ease,transform var(--theme-motion-duration,220ms) ease}
+html[data-theme^="theme-"] .player-profile-tabs .profile-tab:hover{color:var(--theme-profile-tab-hover-text,var(--text));background:var(--theme-profile-tab-hover-background,var(--surface-raised));border-color:var(--theme-profile-tab-hover-border,var(--accent))}
+html[data-theme^="theme-"] .player-profile-tabs .profile-tab.is-active{color:var(--theme-profile-tab-active-text,var(--text));background:var(--theme-profile-tab-active-background,var(--surface-raised));border-color:var(--theme-profile-tab-active-border,var(--accent));box-shadow:inset 0 -2px 0 var(--theme-profile-tab-active-border,var(--accent)),0 0 12px color-mix(in srgb,var(--theme-profile-tab-active-border,var(--accent)) 18%,transparent)}
+html[data-theme="theme-4"] .player-profile-tabs .profile-tab{font-weight:700;letter-spacing:.035em;text-transform:uppercase;box-shadow:inset 0 1px 0 rgba(255,224,139,.08)}
+html[data-theme="theme-4"] .player-profile-tabs .profile-tab:hover{box-shadow:inset 0 1px 0 rgba(255,224,139,.16),0 0 10px rgba(244,197,66,.12)}
+html[data-theme="theme-4"] .player-profile-tabs .profile-tab.is-active{box-shadow:inset 0 -3px 0 #F4C542,inset 0 1px 0 rgba(255,224,139,.18),0 0 14px rgba(244,197,66,.16)}
+@media(max-width:560px){html[data-theme^="theme-"] .player-profile-tabs{gap:6px}html[data-theme^="theme-"] .player-profile-tabs .profile-tab{padding:9px 11px}}
