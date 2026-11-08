@@ -369,7 +369,7 @@
       let lastError = null;
       for (const baseUrl of THEME_BASE_URLS) {
         try {
-          const response = await fetch(baseUrl + theme.file + "?v=20261108-18", { cache: "reload", credentials: "omit" });
+          const response = await fetch(baseUrl + theme.file + "?v=20261108-20", { cache: "reload", credentials: "omit" });
           if (!response.ok) throw new Error("Theme source returned HTTP " + response.status);
           data = validateTheme(await response.json(), theme);
           break;
