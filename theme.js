@@ -218,7 +218,7 @@
       let lastError = null;
       for (const baseUrl of THEME_BASE_URLS) {
         try {
-          const response = await fetch(baseUrl + theme.file, { cache: "no-store", credentials: "omit" });
+          const response = await fetch(baseUrl + theme.file + "?v=20261108-2", { cache: "reload", credentials: "omit" });
           if (!response.ok) throw new Error("Theme source returned HTTP " + response.status);
           data = validateTheme(await response.json(), theme);
           break;
@@ -240,7 +240,7 @@
       if (requestId !== requestSequence) return;
       resetThemeProperties();
       updateButtons("default");
-      status.textContent = "Theme unavailable; using Default";
+      status.textContent = "Theme unavailable (" + (error && error.message ? error.message : "load failed") + "); using Default";
       try { localStorage.setItem(STORAGE_KEY, "default"); } catch {}
       console.warn("NoteSMP theme could not be applied", error);
     } finally {
