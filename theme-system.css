@@ -78,3 +78,49 @@ html[data-theme="theme-1"] body {
   background-position: 0 0, 0 0, 80px 40px, 0 0;
   background-attachment: fixed;
 }
+
+
+/* Validated typography tokens supplied by the selected theme. */
+html[data-theme^="theme-"] body {
+  font-family: var(--font);
+  font-size: var(--theme-body-size);
+  font-weight: var(--theme-body-weight);
+  line-height: var(--theme-body-line-height);
+  letter-spacing: var(--theme-body-letter-spacing);
+}
+
+html[data-theme^="theme-"] h1,
+html[data-theme^="theme-"] h2,
+html[data-theme^="theme-"] h3,
+html[data-theme^="theme-"] .section-heading h2,
+html[data-theme^="theme-"] .features-top h2,
+html[data-theme^="theme-"] .community-section h2,
+html[data-theme^="theme-"] .portal-page-title {
+  font-family: var(--display);
+  font-weight: var(--theme-display-weight);
+  line-height: var(--theme-heading-line-height);
+  letter-spacing: var(--theme-heading-letter-spacing);
+  zoom: var(--theme-heading-scale);
+}
+
+html[data-theme^="theme-"] .news-countdown,
+html[data-theme^="theme-"] .player-stat-table .numeric,
+html[data-theme^="theme-"] .player-stat-list li strong {
+  font-family: var(--mono);
+}
+
+html[data-theme^="theme-"] .eyebrow,
+html[data-theme^="theme-"] .section-kicker,
+html[data-theme^="theme-"] .label,
+html[data-theme^="theme-"] .meta-item b,
+html[data-theme^="theme-"] .meta-item small,
+html[data-theme^="theme-"] .server-state b,
+html[data-theme^="theme-"] .server-state small,
+html[data-theme^="theme-"] .hero-bottom,
+html[data-theme^="theme-"] .feature-number,
+html[data-theme^="theme-"] .creator-status,
+html[data-theme^="theme-"] .theme-switcher-label,
+html[data-theme^="theme-"] .theme-switcher-status {
+  font-weight: var(--theme-small-weight);
+  zoom: var(--theme-small-scale);
+}
