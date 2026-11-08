@@ -144,31 +144,270 @@ html[data-theme="theme-1"] .portal-nav a[aria-current="page"]::after {
 }
 
 
-/* Theme 2: Overworld palette and restrained interface accents. */
+/* Theme 2: polished-blackstone masonry with exact deterministic accent-block proportions. */
 html[data-theme="theme-2"] body {
-  background-color: #10251D;
+  background-color: #101014;
   background-image:
-    radial-gradient(ellipse at 50% -15%, rgba(115, 190, 91, .2), transparent 48%),
-    repeating-linear-gradient(0deg, rgba(190, 225, 155, .035) 0 1px, transparent 1px 16px),
-    repeating-linear-gradient(90deg, rgba(190, 225, 155, .035) 0 1px, transparent 1px 16px),
-    linear-gradient(180deg, #10251D, #0B1B14);
+    linear-gradient(rgba(7, 11, 10, .76), rgba(7, 11, 10, .76)),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_jukebox-side.png?8477e"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d"),
+    url("https://minecraft.wiki/images/BlockSprite_polished-blackstone-bricks.png?a00af");
+  background-position:
+    0 0,
+    64px 32px,
+    576px 96px,
+    576px 0px,
+    192px 160px,
+    544px 608px,
+    320px 128px,
+    352px 224px,
+    480px 0px,
+    32px 32px,
+    32px 416px,
+    512px 480px,
+    352px 192px,
+    384px 544px,
+    64px 256px,
+    32px 224px,
+    576px 384px,
+    576px 224px,
+    96px 32px,
+    608px 0px,
+    288px 64px,
+    480px 160px,
+    192px 192px,
+    384px 480px,
+    192px 352px,
+    160px 320px,
+    192px 224px,
+    544px 352px,
+    128px 288px,
+    256px 160px,
+    32px 480px,
+    448px 288px,
+    96px 256px,
+    160px 32px,
+    160px 512px,
+    96px 576px,
+    256px 512px,
+    64px 0px,
+    384px 512px,
+    160px 0px,
+    512px 352px,
+    416px 32px,
+    416px 352px,
+    480px 32px,
+    32px 128px,
+    416px 0px,
+    416px 256px,
+    288px 0px,
+    320px 416px,
+    96px 352px,
+    288px 256px,
+    448px 320px,
+    576px 544px,
+    160px 64px,
+    32px 576px,
+    0px 608px,
+    608px 96px,
+    416px 64px,
+    608px 64px,
+    288px 160px,
+    448px 384px,
+    0 0;
+  background-size:
+    auto,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px,
+    32px 32px;
+  background-repeat:
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    no-repeat,
+    repeat;
   background-attachment: fixed;
+  image-rendering: pixelated;
 }
 html[data-theme="theme-2"] .section-kicker,
 html[data-theme="theme-2"] .eyebrow,
-html[data-theme="theme-2"] .feature-number {
-  color: #F2C15D;
-}
-html[data-theme="theme-2"] .portal-nav a[aria-current="page"] {
-  color: #F2C15D;
-}
-html[data-theme="theme-2"] .portal-nav a[aria-current="page"]::after {
-  background: linear-gradient(90deg, #9BE86A, #E9B95A);
-}
-html[data-theme="theme-2"] ::selection {
-  color: #10251D;
-  background: #F2C15D;
-}
+html[data-theme="theme-2"] .feature-number { color: #F2C15D; }
+html[data-theme="theme-2"] .portal-nav a[aria-current="page"] { color: #F2C15D; }
+html[data-theme="theme-2"] .portal-nav a[aria-current="page"]::after { background: linear-gradient(90deg, #9BE86A, #E9B95A); }
+html[data-theme="theme-2"] ::selection { color: #10251D; background: #F2C15D; }
 
 /* Validated typography tokens supplied by the selected theme. */
 html[data-theme^="theme-"] body {
@@ -247,22 +486,21 @@ html[data-theme^="theme-"] .header-join {
 }
 
 
-/* Theme 2 — one supplied 30×30 PNG, sliced into nine 10×10 regions.
-   The same exact artwork frames the homepage hero and each main section panel. */
+/* Theme 2: frame is an inset 10px border; backgrounds stop at the padding edge. */
 html[data-theme="theme-2"] .panel,
 html[data-theme="theme-2"] .home-hero {
-  border: var(--theme-frame-width, 10px) solid transparent !important;
+  box-sizing: border-box !important;
+  border: 10px solid transparent !important;
   border-image-source: var(--theme-frame-image) !important;
-  border-image-slice: 10 fill !important;
-  border-image-width: var(--theme-frame-width, 10px) !important;
+  border-image-slice: 10 !important;
+  border-image-width: 10px !important;
   border-image-outset: 0 !important;
   border-image-repeat: stretch !important;
   border-radius: 0 !important;
+  background-clip: padding-box !important;
+  overflow: hidden !important;
   box-shadow: none !important;
-  overflow: visible;
 }
-
-/* Remove any inherited pseudo-element frame artwork; the PNG is the sole border. */
 html[data-theme="theme-2"] .panel::before,
 html[data-theme="theme-2"] .panel::after,
 html[data-theme="theme-2"] .home-hero::after,
@@ -278,12 +516,7 @@ html[data-theme="theme-2"] .server-address::before,
 html[data-theme="theme-2"] .server-address::after {
   content: none !important;
   display: none !important;
-  background: none !important;
-  border: 0 !important;
-  outline: 0 !important;
-  box-shadow: none !important;
 }
-
 @media (max-width: 600px) {
   html[data-theme="theme-2"] .panel,
   html[data-theme="theme-2"] .home-hero {
