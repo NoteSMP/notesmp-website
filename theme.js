@@ -100,6 +100,9 @@
     const rootStyle = document.documentElement.style;
     resetProperties.forEach(property => rootStyle.removeProperty(property));
     document.documentElement.dataset.theme = "default";
+    delete document.documentElement.dataset.frameHero;
+    delete document.documentElement.dataset.framePanels;
+    delete document.documentElement.dataset.frameCards;
   }
 
   function validColor(value) {
