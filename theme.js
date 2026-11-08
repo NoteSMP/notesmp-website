@@ -2,13 +2,16 @@
   "use strict";
 
   const STORAGE_KEY = "notesmp-theme";
-  const THEME_BASE_URL = "https://cdn.jsdelivr.net/gh/NoteSMP/notesmp-theme@main/themes/";
+  const THEME_BASE_URLS = [
+    "https://raw.githubusercontent.com/NoteSMP/notesmp-theme/main/themes/",
+    "https://cdn.jsdelivr.net/gh/NoteSMP/notesmp-theme@main/themes/"
+  ];
   const themes = [
     { id: "default", label: "Default", url: null },
-    { id: "theme-1", label: "Theme 1", url: THEME_BASE_URL + "theme-1.json" },
-    { id: "theme-2", label: "Theme 2", url: THEME_BASE_URL + "theme-2.json" },
-    { id: "theme-3", label: "Theme 3", url: THEME_BASE_URL + "theme-3.json" },
-    { id: "theme-4", label: "Theme 4", url: THEME_BASE_URL + "theme-4.json" }
+    { id: "theme-1", label: "Theme 1", file: "theme-1.json" },
+    { id: "theme-2", label: "Theme 2", file: "theme-2.json" },
+    { id: "theme-3", label: "Theme 3", file: "theme-3.json" },
+    { id: "theme-4", label: "Theme 4", file: "theme-4.json" }
   ];
 
   const colorKeys = {
@@ -210,9 +213,19 @@
     status.textContent = "Loading " + theme.label + "…";
     switcher.setAttribute("aria-busy", "true");
     try {
-      const response = await fetch(theme.url, { cache: "no-store", credentials: "omit" });
-      if (!response.ok) throw new Error("Theme file could not be loaded");
-      const data = validateTheme(await response.json(), theme);
+      let data = null;
+      let lastError = null;
+      for (const baseUrl of THEME_BASE_URLS) {
+        try {
+          const response = await fetch(baseUrl + theme.file, { cache: "no-store", credentials: "omit" });
+          if (!response.ok) throw new Error("Theme source returned HTTP " + response.status);
+          data = validateTheme(await response.json(), theme);
+          break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      if (!data) throw lastError || new Error("Theme file could not be loaded");
       if (requestId !== requestSequence) return;
       resetThemeProperties();
       applyValidatedTheme(data);
