@@ -48,35 +48,16 @@ html[data-theme^="theme-"] .portal-nav a[aria-current="page"]::after {
 }
 
 
-/* Theme 1: a subdued, repeating polished-blackstone brickwork treatment. */
+/* Theme 1: repeat the supplied polished-blackstone block texture. */
 html[data-theme="theme-1"] body {
   background-color: #101014;
   background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent 0,
-      transparent 77px,
-      rgba(0, 0, 0, .72) 77px,
-      rgba(0, 0, 0, .72) 80px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0,
-      transparent 157px,
-      rgba(0, 0, 0, .78) 157px,
-      rgba(0, 0, 0, .78) 160px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent 0,
-      transparent 77px,
-      rgba(0, 0, 0, .7) 77px,
-      rgba(0, 0, 0, .7) 80px
-    ),
-    linear-gradient(145deg, #292930 0%, #1d1d24 48%, #25252c 100%);
-  background-size: 160px 80px, 160px 80px, 160px 80px, 160px 80px;
-  background-position: 0 0, 0 0, 80px 40px, 0 0;
-  background-attachment: fixed;
+    linear-gradient(rgba(12, 8, 8, .42), rgba(12, 8, 8, .42)),
+    url("https://minecraft.wiki/images/BlockSprite_blackstone.png?fe08d");
+  background-repeat: repeat, repeat;
+  background-size: auto, 128px 128px;
+  background-position: 0 0, 0 0;
+  background-attachment: fixed, fixed;
 }
 
 
