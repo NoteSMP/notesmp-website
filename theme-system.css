@@ -815,3 +815,62 @@ html[data-theme="theme-2"][data-frame-cards="true"] .server-address:hover {
     border-image-width: min(var(--theme-frame-width, 18px), 14px);
   }
 }
+
+
+/* Theme 2 final nine-slice pass: remove every remnant of the former CSS ornaments. */
+html[data-theme="theme-2"] .panel::before,
+html[data-theme="theme-2"] .panel::after,
+html[data-theme="theme-2"] .feature-card::before,
+html[data-theme="theme-2"] .feature-card::after,
+html[data-theme="theme-2"] .post-card::before,
+html[data-theme="theme-2"] .post-card::after,
+html[data-theme="theme-2"] .player-directory-card::before,
+html[data-theme="theme-2"] .player-directory-card::after,
+html[data-theme="theme-2"] .creator-card::before,
+html[data-theme="theme-2"] .creator-card::after,
+html[data-theme="theme-2"] .server-address::before,
+html[data-theme="theme-2"] .server-address::after,
+html[data-theme="theme-2"] .home-hero::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="theme-2"][data-frame-panels="true"] .panel {
+  border: var(--theme-frame-width, 18px) solid transparent !important;
+  border-image-source: var(--theme-frame-panel-image) !important;
+  border-image-slice: 32 fill !important;
+  border-image-width: var(--theme-frame-width, 18px) !important;
+  border-image-outset: 0 !important;
+  border-image-repeat: stretch !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background-clip: padding-box;
+  overflow: visible;
+}
+
+html[data-theme="theme-2"][data-frame-hero="true"] .home-hero {
+  border: var(--theme-frame-width, 18px) solid transparent !important;
+  border-image-source: var(--theme-frame-hero-image) !important;
+  border-image-slice: 32 fill !important;
+  border-image-width: var(--theme-frame-width, 18px) !important;
+  border-image-outset: 0 !important;
+  border-image-repeat: stretch !important;
+  border-radius: 0 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.28) !important;
+  background-clip: padding-box;
+}
+
+html[data-theme="theme-2"][data-frame-panels="true"] .panel:hover {
+  border-image-source: var(--theme-frame-hover-image) !important;
+}
+
+@media (max-width: 600px) {
+  html[data-theme="theme-2"][data-frame-panels="true"] .panel,
+  html[data-theme="theme-2"][data-frame-hero="true"] .home-hero {
+    border-width: 14px !important;
+    border-image-width: 14px !important;
+  }
+}
