@@ -146,6 +146,12 @@ html[data-theme="theme-1"] .portal-nav a[aria-current="page"]::after {
 
 /* Theme 2: polished-blackstone masonry with a deterministic 20×20 accent mosaic.
    Every 640px repeat tile contains 85% polished bricks, 10% blackstone, 5% jukebox-side. */
+html[data-theme="theme-2"] {
+  position: relative;
+  isolation: isolate;
+  background: transparent !important;
+  image-rendering: pixelated;
+}
 html[data-theme="theme-2"] body {
   position: relative;
   isolation: isolate;
@@ -270,14 +276,15 @@ html[data-theme^="theme-"] .header-join {
 }
 
 
-/* Theme 2: frame is an inset 10px border; backgrounds stop at the padding edge. */
-html[data-theme="theme-2"] .panel,
-html[data-theme="theme-2"] .home-hero {
+/* Theme 2 nine-slice: ONLY the Info tab hero and Info panels.
+   Source artwork is 30×30px; corner slices are 8×8px. */
+html[data-theme="theme-2"][data-route="info"] .panel,
+html[data-theme="theme-2"][data-route="info"] .home-hero {
   box-sizing: border-box !important;
-  border: 10px solid transparent !important;
+  border: 8px solid transparent !important;
   border-image-source: var(--theme-frame-image) !important;
-  border-image-slice: 10 !important;
-  border-image-width: 10px !important;
+  border-image-slice: 8 !important;
+  border-image-width: 8px !important;
   border-image-outset: 0 !important;
   border-image-repeat: stretch !important;
   border-radius: 0 !important;
@@ -285,26 +292,16 @@ html[data-theme="theme-2"] .home-hero {
   overflow: hidden !important;
   box-shadow: none !important;
 }
-html[data-theme="theme-2"] .panel::before,
-html[data-theme="theme-2"] .panel::after,
-html[data-theme="theme-2"] .home-hero::after,
-html[data-theme="theme-2"] .feature-card::before,
-html[data-theme="theme-2"] .feature-card::after,
-html[data-theme="theme-2"] .post-card::before,
-html[data-theme="theme-2"] .post-card::after,
-html[data-theme="theme-2"] .player-directory-card::before,
-html[data-theme="theme-2"] .player-directory-card::after,
-html[data-theme="theme-2"] .creator-card::before,
-html[data-theme="theme-2"] .creator-card::after,
-html[data-theme="theme-2"] .server-address::before,
-html[data-theme="theme-2"] .server-address::after {
+html[data-theme="theme-2"][data-route="info"] .panel::before,
+html[data-theme="theme-2"][data-route="info"] .panel::after,
+html[data-theme="theme-2"][data-route="info"] .home-hero::after {
   content: none !important;
   display: none !important;
 }
 @media (max-width: 600px) {
-  html[data-theme="theme-2"] .panel,
-  html[data-theme="theme-2"] .home-hero {
-    border-width: 10px !important;
-    border-image-width: 10px !important;
+  html[data-theme="theme-2"][data-route="info"] .panel,
+  html[data-theme="theme-2"][data-route="info"] .home-hero {
+    border-width: 8px !important;
+    border-image-width: 8px !important;
   }
 }
