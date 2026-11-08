@@ -40,6 +40,7 @@
   const shadows = {
     none: "none",
     soft: "0 10px 28px rgba(0, 0, 0, .22)",
+    medium: "0 14px 34px rgba(0, 0, 0, .32)",
     strong: "0 16px 42px rgba(0, 0, 0, .42)"
   };
   const fonts = {
