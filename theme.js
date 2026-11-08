@@ -35,7 +35,7 @@
     "--theme-body-size", "--theme-heading-scale", "--theme-small-scale",
     "--theme-body-line-height", "--theme-heading-line-height",
     "--theme-body-letter-spacing", "--theme-heading-letter-spacing",
-    "--theme-body-weight", "--theme-display-weight", "--theme-small-weight"
+    "--theme-body-weight", "--theme-display-weight", "--theme-small-weight", "--theme-texture-page-base", "--theme-texture-page-accent", "--theme-texture-panel", "--theme-decoration-image", "--theme-decoration-opacity", "--theme-decoration-size"
   ];
   const shadows = {
     none: "none",
@@ -135,6 +135,8 @@
     const typography = data.typography;
     const hero = backgrounds && backgrounds.heroSettings;
     const frames = data.frames && typeof data.frames === "object" ? data.frames : {};
+    const textures = data.textures && typeof data.textures === "object" ? data.textures : {};
+    const decorations = data.decorations && typeof data.decorations === "object" ? data.decorations : {};
     if (![colors, shape, effects, backgrounds, typography].every(value => value && typeof value === "object")) {
       throw new Error("Theme settings are incomplete");
     }
@@ -198,10 +200,28 @@
     for (const key of ["hero", "panels", "cards"]) {
       if (frameTargets[key] !== undefined && typeof frameTargets[key] !== "boolean") throw new Error("Invalid frame target: " + key);
     }
+    for (const key of ["pageBase", "pageAccent", "panel"]) {
+      if (textures[key] !== undefined && textures[key] !== null) allowedImage(textures[key]);
+    }
+    if (decorations.item !== undefined && decorations.item !== null) allowedImage(decorations.item);
+    if (decorations.opacity !== undefined && !validNumber(decorations.opacity, 0, 1)) throw new Error("Invalid decoration opacity");
+    if (decorations.size !== undefined && !validNumber(decorations.size, 12, 96)) throw new Error("Invalid decoration size");
+    if (decorations.animation !== undefined && !["none", "glow", "float"].includes(decorations.animation)) throw new Error("Invalid decoration animation");
     return {
       colors,
       shape,
       effects,
+      textures: {
+        pageBase: textures.pageBase ? allowedImage(textures.pageBase) : null,
+        pageAccent: textures.pageAccent ? allowedImage(textures.pageAccent) : null,
+        panel: textures.panel ? allowedImage(textures.panel) : null
+      },
+      decorations: {
+        item: decorations.item ? allowedImage(decorations.item) : null,
+        opacity: decorations.opacity === undefined ? 0.75 : decorations.opacity,
+        size: decorations.size === undefined ? 24 : decorations.size,
+        animation: decorations.animation || "none"
+      },
       frames: {
         enabled: frames.enabled === true && (frames.style || "nine-slice") !== "off",
         targets: {
@@ -232,7 +252,7 @@
   function applyValidatedTheme(data) {
     const root = document.documentElement;
     const style = root.style;
-    const { colors, shape, effects, backgrounds, typography, frames } = data;
+    const { colors, shape, effects, backgrounds, typography, frames, textures, decorations } = data;
     for (const [key, property] of Object.entries(colorKeys)) {
       style.setProperty(property, colors[key]);
     }
@@ -275,6 +295,13 @@
     root.dataset.frameHero = String(frames.enabled && frames.targets.hero);
     root.dataset.framePanels = String(frames.enabled && frames.targets.panels);
     root.dataset.frameCards = String(frames.enabled && frames.targets.cards);
+    if (textures.pageBase) style.setProperty("--theme-texture-page-base", 'url("' + textures.pageBase + '")');
+    if (textures.pageAccent) style.setProperty("--theme-texture-page-accent", 'url("' + textures.pageAccent + '")');
+    if (textures.panel) style.setProperty("--theme-texture-panel", 'url("' + textures.panel + '")');
+    if (decorations.item) style.setProperty("--theme-decoration-image", 'url("' + decorations.item + '")');
+    style.setProperty("--theme-decoration-opacity", decorations.opacity);
+    style.setProperty("--theme-decoration-size", decorations.size + "px");
+    root.dataset.decorationAnimation = decorations.animation;
   }
 
   async function applyTheme(themeId, persist = true) {
@@ -298,7 +325,7 @@
       let lastError = null;
       for (const baseUrl of THEME_BASE_URLS) {
         try {
-          const response = await fetch(baseUrl + theme.file + "?v=20261108-17", { cache: "reload", credentials: "omit" });
+          const response = await fetch(baseUrl + theme.file + "?v=20261108-18", { cache: "reload", credentials: "omit" });
           if (!response.ok) throw new Error("Theme source returned HTTP " + response.status);
           data = validateTheme(await response.json(), theme);
           break;
