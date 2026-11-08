@@ -401,19 +401,47 @@ html[data-theme^="theme-"] .creator-status.offline {
   border: 1px solid var(--theme-creator-offline-border, var(--line));
 }
 
-/* Theme 4 creator palette: crimson-black cards, gilded outlines, amber live badge. */
+/* Theme 4 creators: understated like the surrounding info panels, with a quiet bastion ornament. */
 html[data-theme="theme-4"] .creator-card {
-  border-style: solid;
-  border-color: var(--theme-creator-border, #A65A2A);
-  box-shadow: inset 0 1px 0 rgba(255, 220, 130, .1), 0 8px 22px rgba(0, 0, 0, .34);
+  position: relative;
+  overflow: hidden;
+  background: rgba(43, 16, 16, .62);
+  border: 1px solid rgba(139, 74, 43, .42);
+  box-shadow: none;
+  transform: none;
 }
 html[data-theme="theme-4"] .creator-card:hover {
-  border-color: var(--theme-creator-hover-border, #F4C542);
-  box-shadow: inset 0 1px 0 rgba(255, 230, 160, .2), 0 10px 26px rgba(0, 0, 0, .42), 0 0 14px rgba(244, 197, 66, .14);
+  background: rgba(55, 20, 20, .78);
+  border-color: rgba(185, 120, 37, .62);
+  box-shadow: inset 0 1px 0 rgba(255, 224, 139, .07);
+  transform: translateY(-1px);
+}
+html[data-theme="theme-4"] .creator-card::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 9px;
+  width: 17px;
+  height: 17px;
+  pointer-events: none;
+  background: var(--theme-decoration-image) center/contain no-repeat;
+  opacity: .18;
+  filter: saturate(.8);
+}
+html[data-theme="theme-4"] .creator-avatar {
+  border: 1px solid rgba(185, 120, 37, .3);
+  box-shadow: none;
 }
 html[data-theme="theme-4"] .creator-status {
   border-radius: 2px;
-  letter-spacing: .09em;
+  letter-spacing: .055em;
+  font-size: .72em;
+}
+html[data-theme="theme-4"] .creator-status.live {
+  box-shadow: none;
+}
+html[data-theme="theme-4"] .creator-status.offline {
+  opacity: .78;
 }
 
 
