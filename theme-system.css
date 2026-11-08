@@ -144,174 +144,30 @@ html[data-theme="theme-1"] .portal-nav a[aria-current="page"]::after {
 }
 
 
-/* Theme 2: OVERWORLD EXPEDITION — lush biomes, block-built frames and loot-gold details. */
+/* Theme 2: Overworld palette and restrained interface accents. */
 html[data-theme="theme-2"] body {
   background-color: #10251D;
   background-image:
-    radial-gradient(ellipse at 50% -15%, rgba(93, 173, 91, .22), transparent 48%),
-    repeating-linear-gradient(0deg, rgba(169, 221, 139, .025) 0 1px, transparent 1px 8px),
-    repeating-linear-gradient(90deg, rgba(169, 221, 139, .025) 0 1px, transparent 1px 8px);
+    radial-gradient(ellipse at 50% -15%, rgba(115, 190, 91, .2), transparent 48%),
+    repeating-linear-gradient(0deg, rgba(190, 225, 155, .035) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(90deg, rgba(190, 225, 155, .035) 0 1px, transparent 1px 16px),
+    linear-gradient(180deg, #10251D, #0B1B14);
   background-attachment: fixed;
 }
-
-/* Give the hero a cinematic forest canopy with a readable dark-green foreground. */
-html[data-theme="theme-2"] .home-hero {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  min-height: 300px;
-  border: 2px solid #8FE36B;
-  box-shadow:
-    inset 0 0 0 5px rgba(12, 35, 25, .72),
-    inset 0 -90px 110px rgba(8, 27, 19, .78),
-    0 14px 36px rgba(0, 0, 0, .28);
-  background-position: center 42%;
-  background-size: cover;
-}
-html[data-theme="theme-2"] .home-hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background:
-    linear-gradient(90deg, rgba(8, 27, 19, .78), rgba(8, 27, 19, .2) 72%),
-    linear-gradient(0deg, rgba(8, 27, 19, .5), transparent 65%);
-  pointer-events: none;
-}
-html[data-theme="theme-2"] .home-hero::after {
-  content: "";
-  position: absolute;
-  inset: 8px;
-  z-index: -1;
-  border: 1px solid rgba(242, 193, 93, .55);
-  pointer-events: none;
-}
-
-/* Block-built panels: square corners, layered grass/stone edging and deep shadows. */
-html[data-theme="theme-2"] .feature-card,
-html[data-theme="theme-2"] .post-card,
-html[data-theme="theme-2"] .player-directory-card,
-html[data-theme="theme-2"] .creator-card,
-html[data-theme="theme-2"] .server-address {
-  position: relative;
-  border: 2px solid #456A4C;
-  border-radius: 4px;
-  background-image: linear-gradient(145deg, rgba(143, 227, 107, .055), transparent 42%);
-  box-shadow:
-    inset 0 2px 0 rgba(211, 244, 177, .10),
-    inset 0 -3px 0 rgba(5, 20, 13, .24),
-    0 7px 0 rgba(6, 23, 16, .48),
-    0 12px 24px rgba(0, 0, 0, .18);
-  transition:
-    transform 220ms cubic-bezier(.2, .8, .2, 1),
-    border-color 220ms ease,
-    box-shadow 220ms ease,
-    filter 220ms ease;
-}
-html[data-theme="theme-2"] .feature-card::before,
-html[data-theme="theme-2"] .post-card::before,
-html[data-theme="theme-2"] .player-directory-card::before,
-html[data-theme="theme-2"] .creator-card::before,
-html[data-theme="theme-2"] .server-address::before {
-  content: "";
-  position: absolute;
-  top: -2px;
-  left: 12px;
-  width: 42px;
-  height: 3px;
-  background: #8FE36B;
-  box-shadow: 0 2px 0 rgba(8, 27, 19, .4);
-  pointer-events: none;
-}
-html[data-theme="theme-2"] .feature-card:hover,
-html[data-theme="theme-2"] .post-card:hover,
-html[data-theme="theme-2"] .player-directory-card:hover,
-html[data-theme="theme-2"] .creator-card:hover,
-html[data-theme="theme-2"] .server-address:hover {
-  transform: translateY(-3px);
-  border-color: #8FE36B;
-  filter: brightness(1.06);
-  box-shadow:
-    inset 0 2px 0 rgba(211, 244, 177, .16),
-    inset 0 -3px 0 rgba(5, 20, 13, .24),
-    0 10px 0 rgba(6, 23, 16, .42),
-    0 16px 30px rgba(0, 0, 0, .26),
-    0 0 18px rgba(143, 227, 107, .10);
-}
-
-/* A little loot-gold: use it for active navigation and key calls to action. */
-html[data-theme="theme-2"] .header-join,
-html[data-theme="theme-2"] .copy-button,
-html[data-theme="theme-2"] .resource-link,
-html[data-theme="theme-2"] .theme-switcher-option {
-  border: 2px solid #6C8D59;
-  border-radius: 3px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 3px 0 rgba(5,20,13,.35);
-  transition:
-    transform 180ms ease,
-    color 180ms ease,
-    background-color 180ms ease,
-    border-color 180ms ease,
-    box-shadow 180ms ease;
-}
-html[data-theme="theme-2"] .header-join:hover,
-html[data-theme="theme-2"] .copy-button:hover,
-html[data-theme="theme-2"] .resource-link:hover,
-html[data-theme="theme-2"] .theme-switcher-option:hover {
-  border-color: #F2C15D;
+html[data-theme="theme-2"] .section-kicker,
+html[data-theme="theme-2"] .eyebrow,
+html[data-theme="theme-2"] .feature-number {
   color: #F2C15D;
-  transform: translateY(-2px);
-  box-shadow: 0 0 0 1px rgba(242, 193, 93, .18), 0 5px 0 rgba(5,20,13,.3), 0 0 16px rgba(242,193,93,.12);
 }
 html[data-theme="theme-2"] .portal-nav a[aria-current="page"] {
   color: #F2C15D;
 }
 html[data-theme="theme-2"] .portal-nav a[aria-current="page"]::after {
-  height: 3px;
-  background: linear-gradient(90deg, #8FE36B, #F2C15D);
-  box-shadow: 0 0 12px rgba(143, 227, 107, .24);
+  background: linear-gradient(90deg, #9BE86A, #E9B95A);
 }
-
-/* Pixel-inspired status markers and section accents. */
-html[data-theme="theme-2"] .section-kicker,
-html[data-theme="theme-2"] .eyebrow,
-html[data-theme="theme-2"] .feature-number {
-  color: #F2C15D;
-  text-shadow: 0 1px 0 rgba(0,0,0,.25);
-}
-html[data-theme="theme-2"] .server-state b,
-html[data-theme="theme-2"] .creator-status {
-  text-shadow: 0 0 12px rgba(143, 227, 107, .18);
-}
-html[data-theme="theme-2"] .online-now-player {
-  border: 1px solid rgba(143, 227, 107, .32);
-  border-radius: 3px;
-  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease;
-}
-html[data-theme="theme-2"] .online-now-player:hover {
-  border-color: #8FE36B;
-  transform: translateY(-2px);
-  background-color: rgba(143, 227, 107, .08);
-}
-
-/* Crisp, compact selection and focus states. */
 html[data-theme="theme-2"] ::selection {
   color: #10251D;
   background: #F2C15D;
-}
-html[data-theme="theme-2"] :focus-visible {
-  outline: 2px solid #F2C15D;
-  outline-offset: 3px;
-}
-@media (prefers-reduced-motion: reduce) {
-  html[data-theme="theme-2"] *,
-  html[data-theme="theme-2"] *::before,
-  html[data-theme="theme-2"] *::after {
-    transition-duration: .01ms !important;
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-  }
 }
 
 /* Validated typography tokens supplied by the selected theme. */
@@ -391,385 +247,25 @@ html[data-theme^="theme-"] .header-join {
 }
 
 
-/* Theme 2 refresh: block-built Minecraft Dungeons-style frames. */
-html[data-theme="theme-2"] body {
-  background-color: #10251D;
-  background-image:
-    radial-gradient(ellipse at 50% -15%, rgba(115, 190, 91, .2), transparent 48%),
-    repeating-linear-gradient(0deg, rgba(190, 225, 155, .035) 0 1px, transparent 1px 16px),
-    repeating-linear-gradient(90deg, rgba(190, 225, 155, .035) 0 1px, transparent 1px 16px),
-    linear-gradient(180deg, #10251D, #0B1B14);
-}
-
-/* Main panels use a dark stone edge, bright grass cap and a second inset frame. */
-html[data-theme="theme-2"] .feature-card,
-html[data-theme="theme-2"] .post-card,
-html[data-theme="theme-2"] .player-directory-card,
-html[data-theme="theme-2"] .creator-card,
-html[data-theme="theme-2"] .server-address {
-  border: 3px solid #638A52;
-  border-radius: 0;
-  background-color: #1B382B;
-  background-image:
-    linear-gradient(135deg, rgba(206, 239, 170, .07), transparent 34%),
-    repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0 1px, transparent 1px 5px);
-  box-shadow:
-    inset 0 2px 0 rgba(225, 248, 196, .22),
-    inset 2px 0 0 rgba(225, 248, 196, .08),
-    inset 0 -4px 0 rgba(4, 17, 11, .48),
-    0 4px 0 #0A1C13,
-    0 8px 0 rgba(5, 19, 13, .62),
-    0 15px 28px rgba(0, 0, 0, .24);
-  transition:
-    transform 220ms steps(3, end),
-    border-color 180ms ease,
-    box-shadow 180ms ease,
-    filter 180ms ease;
-}
-
-/* The inner border has clipped, stepped corners instead of a plain rounded rectangle. */
-html[data-theme="theme-2"] .feature-card::after,
-html[data-theme="theme-2"] .post-card::after,
-html[data-theme="theme-2"] .player-directory-card::after,
-html[data-theme="theme-2"] .creator-card::after,
-html[data-theme="theme-2"] .server-address::after {
-  content: "";
-  position: absolute;
-  inset: 7px;
-  z-index: 2;
-  border: 1px solid rgba(233, 185, 90, .62);
-  clip-path: polygon(
-    0 9px, 9px 9px, 9px 0,
-    calc(100% - 9px) 0, calc(100% - 9px) 9px, 100% 9px,
-    100% calc(100% - 9px), calc(100% - 9px) calc(100% - 9px),
-    calc(100% - 9px) 100%, 9px 100%, 9px calc(100% - 9px),
-    0 calc(100% - 9px)
-  );
-  pointer-events: none;
-}
-
-/* Small grass-green cap over the stone edge, like a grass block cross-section. */
-html[data-theme="theme-2"] .feature-card::before,
-html[data-theme="theme-2"] .post-card::before,
-html[data-theme="theme-2"] .player-directory-card::before,
-html[data-theme="theme-2"] .creator-card::before,
-html[data-theme="theme-2"] .server-address::before {
-  top: -3px;
-  left: 12px;
-  width: 46px;
-  height: 4px;
-  background: #9BE86A;
-  box-shadow: 0 2px 0 #426B3A, 2px 0 0 rgba(233, 185, 90, .5);
-}
-
-html[data-theme="theme-2"] .feature-card:hover,
-html[data-theme="theme-2"] .post-card:hover,
-html[data-theme="theme-2"] .player-directory-card:hover,
-html[data-theme="theme-2"] .creator-card:hover,
-html[data-theme="theme-2"] .server-address:hover {
-  transform: translateY(-2px);
-  border-color: #9BE86A;
-  filter: brightness(1.07);
-  box-shadow:
-    inset 0 2px 0 rgba(225, 248, 196, .28),
-    inset 2px 0 0 rgba(225, 248, 196, .12),
-    inset 0 -4px 0 rgba(4, 17, 11, .48),
-    0 5px 0 #0A1C13,
-    0 10px 0 rgba(5, 19, 13, .58),
-    0 18px 32px rgba(0, 0, 0, .3),
-    0 0 16px rgba(155, 232, 106, .12);
-}
-
-/* Hero gets a heavier carved frame and gold inner keyline. */
+/* Theme 2 — one supplied 30×30 PNG, sliced into nine 10×10 regions.
+   The same exact artwork frames the homepage hero and each main section panel. */
+html[data-theme="theme-2"] .panel,
 html[data-theme="theme-2"] .home-hero {
-  border: 3px solid #9BE86A;
-  border-radius: 3px;
-  box-shadow:
-    inset 0 0 0 5px rgba(8, 28, 18, .78),
-    inset 0 -90px 110px rgba(8, 27, 19, .78),
-    0 0 0 2px #294B37,
-    0 8px 0 #0A1C13,
-    0 16px 34px rgba(0, 0, 0, .34);
-}
-html[data-theme="theme-2"] .home-hero::after {
-  inset: 9px;
-  border: 1px solid rgba(233, 185, 90, .82);
+  border: var(--theme-frame-width, 10px) solid transparent !important;
+  border-image-source: var(--theme-frame-image) !important;
+  border-image-slice: 10 fill !important;
+  border-image-width: var(--theme-frame-width, 10px) !important;
+  border-image-outset: 0 !important;
+  border-image-repeat: stretch !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible;
 }
 
-/* Controls resemble compact inventory/menu buttons with hard lower bevels. */
-html[data-theme="theme-2"] .header-join,
-html[data-theme="theme-2"] .copy-button,
-html[data-theme="theme-2"] .resource-link,
-html[data-theme="theme-2"] .theme-switcher-option,
-html[data-theme="theme-2"] .online-now-player {
-  border: 2px solid #638A52;
-  border-radius: 0;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.12),
-    inset 0 -2px 0 rgba(0,0,0,.22),
-    0 3px 0 #0A1C13;
-}
-html[data-theme="theme-2"] .header-join:hover,
-html[data-theme="theme-2"] .copy-button:hover,
-html[data-theme="theme-2"] .resource-link:hover,
-html[data-theme="theme-2"] .theme-switcher-option:hover {
-  border-color: #E9B95A;
-  color: #E9B95A;
-  transform: translateY(-1px);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 4px 0 #0A1C13, 0 0 14px rgba(233,185,90,.14);
-}
-
-/* A slightly more game-like display face; body copy stays highly readable. */
-html[data-theme="theme-2"] h1,
-html[data-theme="theme-2"] h2,
-html[data-theme="theme-2"] h3,
-html[data-theme="theme-2"] .portal-page-title,
-html[data-theme="theme-2"] .portal-brand {
-  text-shadow: 0 2px 0 rgba(0,0,0,.22);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-theme="theme-2"] *,
-  html[data-theme="theme-2"] *::before,
-  html[data-theme="theme-2"] *::after {
-    transition-duration: .01ms !important;
-    animation-duration: .01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-
-/* Theme 2 — Overworld expedition interface.
-   The frame language is applied to real page sections (.panel), not only hover cards.
-   One carved outer edge, one restrained grass highlight; no nested/double outline. */
-html[data-theme="theme-2"] .panel {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border: 1px solid #55784B;
-  border-top: 3px solid #91D968;
-  border-radius: 2px;
-  background:
-    linear-gradient(145deg, rgba(151, 205, 112, .075), transparent 38%),
-    linear-gradient(180deg, #1D3A2C 0%, #172F24 100%);
-  box-shadow:
-    0 4px 0 #0B1D14,
-    0 10px 22px rgba(0, 0, 0, .22);
-}
-
-/* A single, clipped corner treatment — decorative cuts, not a second inset border. */
-html[data-theme="theme-2"] .panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(90deg, #E5B95F 0 22px, transparent 22px) top right / 42px 2px no-repeat,
-    linear-gradient(180deg, #E5B95F 0 14px, transparent 14px) top right / 2px 22px no-repeat,
-    linear-gradient(90deg, #7DAE5D 0 18px, transparent 18px) bottom left / 34px 2px no-repeat,
-    linear-gradient(0deg, #7DAE5D 0 12px, transparent 12px) bottom left / 2px 20px no-repeat;
-  opacity: .9;
-}
-html[data-theme="theme-2"] .panel > * {
-  position: relative;
-  z-index: 1;
-}
-html[data-theme="theme-2"] .panel-heading {
-  min-height: 70px;
-  padding: 17px 20px 15px;
-  border-bottom: 1px solid rgba(139, 178, 104, .28);
-  background:
-    linear-gradient(90deg, rgba(116, 164, 80, .12), transparent 68%),
-    rgba(8, 24, 16, .16);
-}
-html[data-theme="theme-2"] .panel-heading h2,
-html[data-theme="theme-2"] .panel-heading h3 {
-  color: #F3F0D8;
-  font-family: var(--display);
-  font-size: 16px;
-  letter-spacing: -.01em;
-}
-html[data-theme="theme-2"] .panel-heading .overline {
-  color: #E5B95F;
-  letter-spacing: .13em;
-}
-html[data-theme="theme-2"] .panel-body {
-  background: linear-gradient(180deg, rgba(255,255,255,.012), transparent);
-}
-html[data-theme="theme-2"] .home-section-heading {
-  position: relative;
-  align-items: center;
-  min-height: 56px;
-  padding: 0 0 10px 15px;
-  margin: 22px 0 12px;
-  border-bottom: 1px solid rgba(127, 169, 94, .35);
-}
-html[data-theme="theme-2"] .home-section-heading::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 10px;
-  width: 5px;
-  height: 28px;
-  background: linear-gradient(180deg, #A4E875 0 55%, #6F9E4D 55% 100%);
-  box-shadow: 2px 2px 0 rgba(0,0,0,.22);
-}
-html[data-theme="theme-2"] .home-section-heading .overline {
-  color: #E5B95F;
-  letter-spacing: .14em;
-}
-html[data-theme="theme-2"] .home-section-heading h2 {
-  color: #F3F0D8;
-  font-family: var(--display);
-  font-size: 19px;
-}
-
-/* The hero is the main landmark: one strong grass-stone edge, no inset frame. */
-html[data-theme="theme-2"] .home-hero {
-  border: 0;
-  border-top: 4px solid #A4E875;
-  border-bottom: 3px solid #638B4E;
-  border-radius: 2px;
-  box-shadow:
-    0 5px 0 #0A1B13,
-    0 18px 34px rgba(0,0,0,.3);
-}
-html[data-theme="theme-2"] .home-hero::after {
-  content: none;
-}
-html[data-theme="theme-2"] .home-hero-content .eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  color: #F1C66C;
-  letter-spacing: .16em;
-}
-html[data-theme="theme-2"] .home-hero-content .eyebrow::before {
-  content: "";
-  width: 20px;
-  height: 3px;
-  background: #A4E875;
-  box-shadow: 3px 3px 0 rgba(0,0,0,.28);
-}
-
-/* News and event cards use one accent rail and a soft surface change, not stacked frames. */
-html[data-theme="theme-2"] .post-card,
-html[data-theme="theme-2"] .player-directory-card,
-html[data-theme="theme-2"] .creator-card,
-html[data-theme="theme-2"] .server-address,
-html[data-theme="theme-2"] .feature-card {
-  border: 1px solid rgba(113, 151, 83, .52);
-  border-left: 3px solid #7FAE5C;
-  border-radius: 2px;
-  background: linear-gradient(135deg, rgba(142, 190, 101, .07), transparent 48%), #1A3528;
-  box-shadow: 0 3px 0 rgba(5, 19, 13, .5), 0 8px 18px rgba(0,0,0,.14);
-  transition: border-color 180ms ease, background-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
-}
-html[data-theme="theme-2"] .post-card::before,
-html[data-theme="theme-2"] .post-card::after,
-html[data-theme="theme-2"] .player-directory-card::before,
-html[data-theme="theme-2"] .player-directory-card::after,
-html[data-theme="theme-2"] .creator-card::before,
-html[data-theme="theme-2"] .creator-card::after,
-html[data-theme="theme-2"] .server-address::before,
-html[data-theme="theme-2"] .server-address::after,
-html[data-theme="theme-2"] .feature-card::before,
-html[data-theme="theme-2"] .feature-card::after {
-  content: none;
-}
-html[data-theme="theme-2"] .post-card:hover,
-html[data-theme="theme-2"] .player-directory-card:hover,
-html[data-theme="theme-2"] .creator-card:hover,
-html[data-theme="theme-2"] .server-address:hover,
-html[data-theme="theme-2"] .feature-card:hover {
-  transform: translateY(-2px);
-  border-color: #A4E875;
-  border-left-color: #E5B95F;
-  background-color: #234431;
-  box-shadow: 0 4px 0 rgba(5, 19, 13, .48), 0 12px 22px rgba(0,0,0,.2);
-}
-html[data-theme="theme-2"] .post-card-image {
-  border-bottom: 1px solid rgba(229,185,95,.34);
-}
-html[data-theme="theme-2"] .post-card-content {
-  background: linear-gradient(180deg, rgba(255,255,255,.018), transparent);
-}
-html[data-theme="theme-2"] .scheduled-event-sidebar {
-  border-left: 1px solid rgba(139,178,104,.28);
-  background: rgba(8,24,16,.25);
-}
-
-/* Data tables and grouped grids receive the same crafted edge language. */
-html[data-theme="theme-2"] .table-wrap,
-html[data-theme="theme-2"] .detail-grid,
-html[data-theme="theme-2"] .command-list {
-  border: 1px solid #55784B;
-  border-top: 3px solid #91D968;
-  border-radius: 2px;
-  box-shadow: 0 4px 0 #0B1D14, 0 10px 22px rgba(0,0,0,.18);
-}
-html[data-theme="theme-2"] .player-table th {
-  color: #E5B95F;
-  background: #203E2E;
-}
-html[data-theme="theme-2"] .player-table td {
-  border-top-color: rgba(139,178,104,.2);
-}
-html[data-theme="theme-2"] .detail-grid,
-html[data-theme="theme-2"] .command-list {
-  gap: 1px;
-  background: #55784B;
-}
-html[data-theme="theme-2"] .detail-stat,
-html[data-theme="theme-2"] .command-item {
-  background: #1A3528;
-}
-
-/* Section labels, status and navigation use the warm expedition-gold sparingly. */
-html[data-theme="theme-2"] .text-link,
-html[data-theme="theme-2"] .player-name,
-html[data-theme="theme-2"] .scheduled-event-place,
-html[data-theme="theme-2"] .scheduled-event-countdown {
-  color: #E9C16D;
-}
-html[data-theme="theme-2"] .portal-header {
-  border-bottom: 1px solid rgba(137,174,103,.42);
-  background: linear-gradient(180deg, rgba(20,49,34,.92), rgba(14,35,25,.92));
-}
-html[data-theme="theme-2"] .portal-footer {
-  border-top: 1px solid rgba(137,174,103,.42);
-  background: rgba(10,27,19,.42);
-}
-html[data-theme="theme-2"] .portal-nav a[aria-current="page"] {
-  color: #F1C66C;
-}
-html[data-theme="theme-2"] .portal-nav a[aria-current="page"]::after {
-  height: 3px;
-  background: linear-gradient(90deg, #A4E875, #E9C16D);
-  box-shadow: 0 0 10px rgba(164,232,117,.18);
-}
-
-/* Keep the cut-corner framing comfortable on narrow screens. */
-@media (max-width: 600px) {
-  html[data-theme="theme-2"] .panel-heading { padding: 14px 15px; }
-  html[data-theme="theme-2"] .panel-body { padding: 15px; }
-  html[data-theme="theme-2"] .home-section-heading { margin-top: 18px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  html[data-theme="theme-2"] .post-card,
-  html[data-theme="theme-2"] .player-directory-card,
-  html[data-theme="theme-2"] .creator-card,
-  html[data-theme="theme-2"] .feature-card {
-    transition: none;
-  }
-}
-
-
-/* Theme 2 final nine-slice pass: remove every remnant of the former CSS ornaments. */
+/* Remove any inherited pseudo-element frame artwork; the PNG is the sole border. */
 html[data-theme="theme-2"] .panel::before,
 html[data-theme="theme-2"] .panel::after,
+html[data-theme="theme-2"] .home-hero::after,
 html[data-theme="theme-2"] .feature-card::before,
 html[data-theme="theme-2"] .feature-card::after,
 html[data-theme="theme-2"] .post-card::before,
@@ -779,48 +275,19 @@ html[data-theme="theme-2"] .player-directory-card::after,
 html[data-theme="theme-2"] .creator-card::before,
 html[data-theme="theme-2"] .creator-card::after,
 html[data-theme="theme-2"] .server-address::before,
-html[data-theme="theme-2"] .server-address::after,
-html[data-theme="theme-2"] .home-hero::after {
+html[data-theme="theme-2"] .server-address::after {
   content: none !important;
   display: none !important;
   background: none !important;
   border: 0 !important;
+  outline: 0 !important;
   box-shadow: none !important;
-}
-
-html[data-theme="theme-2"][data-frame-panels="true"] .panel {
-  border: var(--theme-frame-width, 18px) solid transparent !important;
-  border-image-source: var(--theme-frame-panel-image) !important;
-  border-image-slice: 32 fill !important;
-  border-image-width: var(--theme-frame-width, 18px) !important;
-  border-image-outset: 0 !important;
-  border-image-repeat: stretch !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  background-clip: padding-box;
-  overflow: visible;
-}
-
-html[data-theme="theme-2"][data-frame-hero="true"] .home-hero {
-  border: var(--theme-frame-width, 18px) solid transparent !important;
-  border-image-source: var(--theme-frame-hero-image) !important;
-  border-image-slice: 32 fill !important;
-  border-image-width: var(--theme-frame-width, 18px) !important;
-  border-image-outset: 0 !important;
-  border-image-repeat: stretch !important;
-  border-radius: 0 !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,.28) !important;
-  background-clip: padding-box;
-}
-
-html[data-theme="theme-2"][data-frame-panels="true"] .panel:hover {
-  border-image-source: var(--theme-frame-hover-image) !important;
 }
 
 @media (max-width: 600px) {
-  html[data-theme="theme-2"][data-frame-panels="true"] .panel,
-  html[data-theme="theme-2"][data-frame-hero="true"] .home-hero {
-    border-width: 14px !important;
-    border-image-width: 14px !important;
+  html[data-theme="theme-2"] .panel,
+  html[data-theme="theme-2"] .home-hero {
+    border-width: 10px !important;
+    border-image-width: 10px !important;
   }
 }
