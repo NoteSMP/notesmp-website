@@ -295,6 +295,15 @@
     root.dataset.frameHero = String(frames.enabled && frames.targets.hero);
     root.dataset.framePanels = String(frames.enabled && frames.targets.panels);
     root.dataset.frameCards = String(frames.enabled && frames.targets.cards);
+    ["--theme-texture-page-base", "--theme-texture-page-accent", "--theme-texture-panel", "--theme-decoration-image"].forEach(property => style.removeProperty(property));
+    delete root.dataset.decorationAnimation;
+    if (textures.pageBase) style.setProperty("--theme-texture-page-base", 'url("' + textures.pageBase + '")');
+    if (textures.pageAccent) style.setProperty("--theme-texture-page-accent", 'url("' + textures.pageAccent + '")');
+    if (textures.panel) style.setProperty("--theme-texture-panel", 'url("' + textures.panel + '")');
+    if (decorations.item) style.setProperty("--theme-decoration-image", 'url("' + decorations.item + '")');
+    style.setProperty("--theme-decoration-opacity", decorations.opacity);
+    style.setProperty("--theme-decoration-size", decorations.size + "px");
+    root.dataset.decorationAnimation = decorations.animation;
     if (textures.pageBase) style.setProperty("--theme-texture-page-base", 'url("' + textures.pageBase + '")');
     if (textures.pageAccent) style.setProperty("--theme-texture-page-accent", 'url("' + textures.pageAccent + '")');
     if (textures.panel) style.setProperty("--theme-texture-panel", 'url("' + textures.panel + '")');
