@@ -62,6 +62,84 @@ html[data-theme="theme-1"] body {
 }
 
 
+
+/* Theme 1: restrained Minecraft Dungeons-inspired gold framing and smooth interaction. */
+html[data-theme="theme-1"] .feature-card,
+html[data-theme="theme-1"] .post-card,
+html[data-theme="theme-1"] .player-directory-card,
+html[data-theme="theme-1"] .creator-card,
+html[data-theme="theme-1"] .server-address,
+html[data-theme="theme-1"] .home-hero {
+  border-color: rgba(217, 155, 43, .72);
+  box-shadow:
+    inset 0 0 0 1px rgba(245, 196, 81, .16),
+    0 8px 24px rgba(12, 5, 5, .24);
+  transition:
+    transform 240ms cubic-bezier(.2, .75, .25, 1),
+    border-color 240ms ease,
+    box-shadow 240ms ease,
+    background-color 240ms ease;
+}
+
+/* A subtle double-line inner frame gives panels a crafted dungeon-menu feel. */
+html[data-theme="theme-1"] .feature-card,
+html[data-theme="theme-1"] .post-card,
+html[data-theme="theme-1"] .player-directory-card,
+html[data-theme="theme-1"] .creator-card,
+html[data-theme="theme-1"] .server-address {
+  outline: 1px solid rgba(245, 196, 81, .12);
+  outline-offset: -5px;
+}
+
+html[data-theme="theme-1"] .feature-card:hover,
+html[data-theme="theme-1"] .post-card:hover,
+html[data-theme="theme-1"] .player-directory-card:hover,
+html[data-theme="theme-1"] .creator-card:hover,
+html[data-theme="theme-1"] .server-address:hover,
+html[data-theme="theme-1"] .home-hero:hover {
+  border-color: rgba(245, 196, 81, .95);
+  box-shadow:
+    inset 0 0 0 1px rgba(245, 196, 81, .3),
+    0 10px 28px rgba(12, 5, 5, .32),
+    0 0 14px rgba(217, 155, 43, .12);
+}
+
+html[data-theme="theme-1"] .header-join,
+html[data-theme="theme-1"] .resource-link,
+html[data-theme="theme-1"] .copy-button,
+html[data-theme="theme-1"] .theme-switcher-option {
+  transition:
+    transform 220ms cubic-bezier(.2, .75, .25, 1),
+    color 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+html[data-theme="theme-1"] .header-join:hover,
+html[data-theme="theme-1"] .resource-link:hover,
+html[data-theme="theme-1"] .copy-button:hover,
+html[data-theme="theme-1"] .theme-switcher-option:hover {
+  border-color: #F5C451;
+  box-shadow: 0 0 12px rgba(245, 196, 81, .16);
+}
+
+html[data-theme="theme-1"] .portal-nav a[aria-current="page"]::after {
+  background: linear-gradient(90deg, #D99B2B, #F5C451);
+  box-shadow: 0 0 8px rgba(245, 196, 81, .28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="theme-1"] *,
+  html[data-theme="theme-1"] *::before,
+  html[data-theme="theme-1"] *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Validated typography tokens supplied by the selected theme. */
 html[data-theme^="theme-"] body {
   font-family: var(--font);
