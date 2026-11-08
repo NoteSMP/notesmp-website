@@ -278,9 +278,10 @@
     };
     style.setProperty("--theme-frame-width", frames.enabled ? frames.width + "px" : "0px");
     style.setProperty("--theme-frame-slice", frames.slice);
-    style.setProperty("--theme-frame-panel-image", frames.enabled ? 'url("' + frameAssets[frames.panel] + '")' : "none");
-    style.setProperty("--theme-frame-hero-image", frames.enabled ? 'url("' + frameAssets[frames.hero] + '")' : "none");
-    style.setProperty("--theme-frame-hover-image", frames.enabled ? 'url("' + frameAssets[frames.hover] + '")' : "none");
+    const frameSource = variant => !frames.enabled || variant === "none" ? "none" : 'url("' + frameAssets[variant] + '")';
+    style.setProperty("--theme-frame-panel-image", frameSource(frames.panel));
+    style.setProperty("--theme-frame-hero-image", frameSource(frames.hero));
+    style.setProperty("--theme-frame-hover-image", frameSource(frames.hover));
     root.dataset.frameHero = String(frames.enabled && frames.targets.hero);
     root.dataset.framePanels = String(frames.enabled && frames.targets.panels);
     root.dataset.frameCards = String(frames.enabled && frames.targets.cards);
