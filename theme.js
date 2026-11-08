@@ -31,10 +31,7 @@
     "--theme-card-radius", "--theme-control-radius", "--theme-hero-radius",
     "--theme-border-width", "--theme-card-shadow", "--theme-hover-lift",
     "--theme-motion-duration", "--theme-page-background-image",
-    "--theme-hero-background-image", "--theme-hero-position", "--theme-hero-size", "--theme-hero-min-height", "--theme-hero-overlay-color", "--theme-hero-overlay-opacity", "--theme-frame-width", "--theme-frame-corner-size",
-    "--theme-frame-panel-tl", "--theme-frame-panel-tr", "--theme-frame-panel-bl", "--theme-frame-panel-br", "--theme-frame-panel-edge",
-    "--theme-frame-hero-tl", "--theme-frame-hero-tr", "--theme-frame-hero-bl", "--theme-frame-hero-br", "--theme-frame-hero-edge",
-    "--theme-frame-hover-tl", "--theme-frame-hover-tr", "--theme-frame-hover-bl", "--theme-frame-hover-br", "--theme-frame-hover-edge", "--font", "--display", "--mono", "--brand-font", "--ui-font",
+    "--theme-hero-background-image", "--theme-hero-position", "--theme-hero-size", "--theme-hero-min-height", "--theme-hero-overlay-color", "--theme-hero-overlay-opacity", "--theme-frame-width", "--theme-frame-panel-image", "--theme-frame-hero-image", "--theme-frame-hover-image", "--font", "--display", "--mono", "--brand-font", "--ui-font",
     "--theme-body-size", "--theme-heading-scale", "--theme-small-scale",
     "--theme-body-line-height", "--theme-heading-line-height",
     "--theme-body-letter-spacing", "--theme-heading-letter-spacing",
@@ -195,7 +192,6 @@
     if (frames.enabled !== undefined && typeof frames.enabled !== "boolean") throw new Error("Invalid frame enabled setting");
     if (frames.style !== undefined && !frameStyles.includes(frames.style)) throw new Error("Invalid frame style");
     if (frames.width !== undefined && !validNumber(frames.width, 8, 32)) throw new Error("Invalid nine-slice border width");
-    if (frames.cornerSize !== undefined && !validNumber(frames.cornerSize, 20, 64)) throw new Error("Invalid frame corner size");
     for (const key of ["hero", "panel", "hover"]) {
       if (frames[key] !== undefined && !frameVariants.includes(frames[key])) throw new Error("Invalid frame variant: " + key);
     }
