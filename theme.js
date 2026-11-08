@@ -150,6 +150,11 @@
         throw new Error("Invalid theme typography font: " + key + " (" + String(typography[key]) + ")");
       }
     }
+    for (const key of ["brand", "ui"]) {
+      if (typography[key] !== undefined && (typeof typography[key] !== "string" || !Object.hasOwn(fonts, typography[key]))) {
+        throw new Error("Invalid theme typography font: " + key + " (" + String(typography[key]) + ")");
+      }
+    }
     for (const key of ["bodyWeight", "displayWeight", "smallWeight"]) {
       if (!weights.includes(typography[key])) {
         throw new Error("Invalid theme typography weight: " + key + " (" + String(typography[key]) + ")");
@@ -259,7 +264,7 @@
       let lastError = null;
       for (const baseUrl of THEME_BASE_URLS) {
         try {
-          const response = await fetch(baseUrl + theme.file + "?v=20261108-2", { cache: "reload", credentials: "omit" });
+          const response = await fetch(baseUrl + theme.file + "?v=20261108-3", { cache: "reload", credentials: "omit" });
           if (!response.ok) throw new Error("Theme source returned HTTP " + response.status);
           data = validateTheme(await response.json(), theme);
           break;
