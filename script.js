@@ -542,9 +542,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
           const builderText = Array.isArray(builders) ? builders.join(", ") : String(builders);
           const searchText = [post.title, post.subtitle, post.body, builderText].join(" ").toLowerCase();
           const images = (Array.isArray(post.images) ? post.images : []).map(safeWebUrl).filter(Boolean);
-          const group = String(post.group || post.category || "").toLowerCase().replace(/[\\s_-]+/g, "");
-          const groupLabel = ({ events: "events", buildings: "buildings", places: "places", inprogress: "in-progress" })[group] || "";
-          const galleryHref = "/gallery" + (groupLabel ? "?group=" + encodeURIComponent(groupLabel) : "") + "#post-" + encodeURIComponent(post.id);
+          const galleryHref = "/gallery#post-" + encodeURIComponent(post.id);
           const imageMarkup = images.length ? '<a class="profile-post-image-link" href="' + galleryHref + '" aria-label="Open gallery post ' + safeText(post.id) + '"><img class="profile-post-image" src="' + images[0] + '" alt="' + safeText(post.title || "Gallery post") + '" loading="lazy"></a>' : "";
           return '<article class="profile-search-row profile-post-row" data-profile-search="' + safeText(searchText) + '">' + imageMarkup + '<div class="profile-post-copy"><a class="profile-post-title" href="' + galleryHref + '">' + safeText(post.title || "Untitled post") + '</a><span>Builders: ' + safeText(builderText) + '</span><small>' + safeText(formatDate(post.publishedAt)) + ' · #' + safeText(post.id) + '</small></div></article>';
         }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching posts.</p>' : '<p class="fine-print">No published builder posts found for this player.</p>';
@@ -882,7 +880,7 @@ document.addEventListener('click', event => {
   const groupButton = event.target.closest('[data-gallery-group]');
   if (groupButton) {
     selectedGalleryGroup = groupButton.dataset.galleryGroup;
-    if (location.pathname === "/gallery" && location.search) history.replaceState({}, "", "/gallery" + location.hash);
+    if (location.pathname === "/gallery") history.replaceState({}, "", "/gallery");
     render();
   }
   const eventPeriodButton = event.target.closest('[data-event-period]');
@@ -1275,9 +1273,34 @@ async function loadPage() {
     try {
       if (path === "/") await refreshNewsBanner();
       if (path === "/gallery") {
-        const active = app.querySelector("[data-gallery-group][aria-pressed='true']");
-        const label = active ? active.dataset.galleryGroup : "Events";
+        let active = app.querySelector("[data-gallery-group][aria-pressed='true']");
+        let label = active ? active.dataset.galleryGroup : "Events";
         const target = app.querySelector(".page-content");
+        const requestedPost = decodeURIComponent(location.hash.slice(1));
+        if (/^post-\\d{6}$/.test(requestedPost)) {
+          let matchedPost = null;
+          let matchedGroup = "";
+          const allPosts = await getPosts("gallery");
+          matchedPost = allPosts.find(post => "post-" + String(post.id).replace(/[^0-9]/g, "") === requestedPost) || null;
+          if (matchedPost) {
+            const rawGroup = String(matchedPost.group || matchedPost.eventData?.group || matchedPost.event?.group || "").toLowerCase().replace(/[\\s_-]+/g, "");
+            matchedGroup = ({ events: "Events", buildings: "Buildings", places: "Places", inprogress: "In Progress" })[rawGroup] || "";
+          }
+          if (!matchedGroup) {
+            for (const candidate of ["Events", "Buildings", "Places", "In Progress"]) {
+              const candidatePosts = await getPosts("gallery", candidate.toLowerCase());
+              const found = candidatePosts.find(post => "post-" + String(post.id).replace(/[^0-9]/g, "") === requestedPost);
+              if (found) { matchedPost = found; matchedGroup = candidate; break; }
+            }
+          }
+          if (matchedGroup) {
+            label = matchedGroup;
+            selectedGalleryGroup = matchedGroup;
+            app.querySelectorAll("[data-gallery-group]").forEach(button => {
+              button.setAttribute("aria-pressed", String(button.dataset.galleryGroup === matchedGroup));
+            });
+          }
+        }
         replaceFeed(target, await getPosts("gallery", label.toLowerCase()), label + " gallery is empty", "Published Discord posts will appear here.");
       } else if (path === "/events") {
         const targetUpcoming = app.querySelector("#upcoming-events-feed");
