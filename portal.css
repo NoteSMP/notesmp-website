@@ -238,6 +238,15 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .hero-event-slot:not([hidden])::after { content:""; position:absolute; top:-19px; left:0; right:0; height:1px; background:linear-gradient(90deg,var(--lime) 0%,var(--lime) calc(50% - 34px),transparent calc(50% - 34px),transparent calc(50% + 34px),var(--lime) calc(50% + 34px),var(--lime) 100%); }
 .hero-event-content { min-width:0; display:flex; flex-direction:column; justify-content:flex-end; gap:9px; }
 .hero-event-title { font-size:22px; line-height:1.15; }
+
+/* Event typography and palette are shared between the homepage hero and Info event cards. */
+.hero-event-title,.scheduled-event-title { font-family:var(--theme-hero-event-title-font,var(--display)); color:var(--theme-hero-event-title-color,var(--text)); font-weight:var(--theme-hero-event-title-weight,700); }
+.hero-event-subtitle { font-family:var(--theme-hero-event-subtitle-font,var(--font)); color:var(--theme-hero-event-subtitle-color,var(--muted)); }
+.hero-event-slot:not([hidden]) { background-color:var(--theme-hero-event-background,rgba(15,22,18,.75)); border-color:var(--theme-hero-event-border,rgba(255,255,255,.2)); }
+.hero-event-slot:not([hidden])::before { font-family:var(--theme-hero-event-label-font,var(--font)); color:var(--theme-hero-event-label-color,var(--lime)); }
+.hero-event-time,.hero-event-place,.hero-event-countdown { font-family:var(--theme-hero-event-detail-font,var(--mono)); color:var(--theme-hero-event-detail-color,#fff); }
+.hero-event-status { font-family:var(--theme-hero-event-detail-font,var(--mono)); color:var(--theme-hero-event-status-color,#f3d28a); }
+.hero-event-status.is-in-progress { color:var(--theme-hero-event-progress-color,#8be0a2); }
 .hero-event-subtitle { font-size:12px; line-height:1.6; }
 .hero-event-details { display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end; gap:9px; text-align:right; min-width:120px; }
 .hero-event-time,.hero-event-place,.hero-event-countdown { color:#d9e6d9; font:11px var(--mono); }
