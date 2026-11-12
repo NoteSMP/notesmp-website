@@ -546,102 +546,13 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
         postsPanel.innerHTML = '<p class="fine-print">Posts could not be loaded. Please try refreshing the profile.</p>';
       }
     })();
-    // Batch Wiki lookups; a zero-inclusive profile can have hundreds of statistic rows.
-    const iconImages = [...profile.querySelectorAll('img.player-stat-icon[data-wiki-icon]')];
-    const iconLookup = new Map();
-    const iconTitles = new Set();
-    iconImages.forEach(image => {
-      try { JSON.parse(image.dataset.wikiIcon || '[]').forEach(title => iconTitles.add(title)); } catch {}
-    });
-    const titles = [...iconTitles];
-    for (let offset = 0; offset < titles.length; offset += 40) {
-      const batch = titles.slice(offset, offset + 40);
+    (async () => {
       try {
-        const url = 'https://minecraft.wiki/api.php?action=query&format=json&prop=imageinfo|pageimages&iiprop=url&piprop=thumbnail&pithumbsize=64&origin=*&titles=' + encodeURIComponent(batch.join('|'));
-        const response = await fetch(url);
-        if (!response.ok) continue;
-        const payload = await response.json();
-        Object.values(payload?.query?.pages || {}).forEach(page => {
-          const imageUrl = page?.imageinfo?.[0]?.url || page?.thumbnail?.source;
-          if (page?.title && imageUrl) iconLookup.set(page.title, imageUrl);
-        });
-      } catch {}
-    }
-    iconImages.forEach(image => {
-      let candidates = [];
-      try { candidates = JSON.parse(image.dataset.wikiIcon || '[]'); } catch {}
-      const iconUrl = candidates.map(title => iconLookup.get(title)).find(Boolean);
-      if (iconUrl) image.src = iconUrl;
-      else image.remove();
-    });
-    // Resolve mob thumbnails from Minecraft Wiki's pageimages API, including redirected/canonical page titles.
-    const mobCards = [...profile.querySelectorAll("[data-mob-wiki]")];
-    for (let offset = 0; offset < mobCards.length; offset += 35) {
-      const batch = mobCards.slice(offset, offset + 35);
-      const requestedTitles = batch.map(card => titleWords(card.dataset.mobWiki).replace(/\s+/g, "_"));
-      try {
-        const url = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=64&origin=*&titles=" + encodeURIComponent(requestedTitles.join("|"));
-        const response = await fetch(url, { headers: { Accept: "application/json" } });
-        if (!response.ok) throw new Error("Minecraft Wiki returned " + response.status);
-        const payload = await response.json();
-        const thumbnails = new Map();
-        Object.values(payload?.query?.pages || {}).forEach(page => {
-          const src = page?.thumbnail?.source;
-          if (!src || !page?.title) return;
-          const canonical = String(page.title).replace(/\s+/g, "_").toLowerCase();
-          thumbnails.set(canonical, src);
-        });
-        (payload?.query?.normalized || []).forEach(entry => {
-          const from = String(entry.from || "").replace(/\s+/g, "_").toLowerCase();
-          const to = String(entry.to || "").replace(/\s+/g, "_").toLowerCase();
-          if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
-        });
-        (payload?.query?.redirects || []).forEach(entry => {
-          const from = String(entry.from || "").replace(/\s+/g, "_").toLowerCase();
-          const to = String(entry.to || "").replace(/\s+/g, "_").toLowerCase();
-          if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
-        });
-        batch.forEach((card, index) => {
-          const image = card.querySelector(".mob-kill-icon");
-          const title = requestedTitles[index].toLowerCase();
-          const src = thumbnails.get(title);
-          if (src && image) image.src = src;
-          else if (image) image.remove();
-        });
-      } catch {
-        batch.forEach(card => card.querySelector(".mob-kill-icon")?.remove());
-      }
-    }
-    // Each profile table can be sorted independently by clicking any column heading.
-    profile.querySelectorAll('.player-stat-table').forEach(table => {
-      table.querySelectorAll('.stat-sort-button').forEach(button => {
-        button.addEventListener('click', () => {
-          const column = Number(button.dataset.sortColumn);
-          const body = table.tBodies[0];
-          if (!body) return;
-          const ascending = button.dataset.sortDirection !== 'asc';
-          table.querySelectorAll('.stat-sort-button').forEach(other => {
-            if (other !== button) delete other.dataset.sortDirection;
-            const arrow = other.querySelector('span');
-            if (arrow && other !== button) arrow.textContent = '↕';
-          });
-          button.dataset.sortDirection = ascending ? 'asc' : 'desc';
-          const arrow = button.querySelector('span');
-          if (arrow) arrow.textContent = ascending ? '↑' : '↓';
-          [...body.rows].sort((left,right) => {
-            const a = left.cells[column]?.textContent.trim() || '';
-            const b = right.cells[column]?.textContent.trim() || '';
-            const numericA = Number(a.replace(/[,\s]/g,''));
-            const numericB = Number(b.replace(/[,\s]/g,''));
-            const result = a !== '' && b !== '' && Number.isFinite(numericA) && Number.isFinite(numericB)
-              ? numericA - numericB : a.localeCompare(b, undefined, {numeric:true,sensitivity:'base'});
-            return (ascending ? result : -result);
-          }).forEach(row => body.append(row));
-        });
-      });
-    });
-    try {
-      const savedAdvPayload = advResponse?.ok ? await advResponse.json() : {advancements:[]};
+        const [advResponse, countResponse] = await Promise.all([
+          fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/advancements`, { cache: "no-store" }),
+          fetch(`${API_BASE}/server/advancement-count`, { cache: "no-store" })
+        ]);
+        const savedAdvPayload = advResponse?.ok ? await advResponse.json() : {advancements:[]};
       const countPayload = countResponse?.ok ? await countResponse.json() : {};
       const liveAdvancements = Array.isArray(liveProfile?.advancements) ? liveProfile.advancements : [];
       const advPayload = liveAdvancements.length ? liveProfile : savedAdvPayload;
@@ -806,7 +717,8 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
           advPanel.querySelectorAll("[data-advancement-id]").forEach(image => { image.hidden = true; });
         }
       }
-    } catch (error) { console.warn("Player profile supplemental data could not be loaded", error); }
+      } catch (error) { console.warn("Player profile advancements could not be loaded", error); }
+    })();
 
     // D1 is rendered first; the plugin response replaces it without persisting live data.
     if (!liveProfile && pluginAvailable && !liveProfileRequests.has(uuid)) {
@@ -820,6 +732,101 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
         .catch(error => { console.warn("Live player profile unavailable; keeping saved snapshot", error); return null; })
       liveProfileRequests.set(uuid, request);
     }
+
+    // Batch Wiki lookups; a zero-inclusive profile can have hundreds of statistic rows.
+    const iconImages = [...profile.querySelectorAll('img.player-stat-icon[data-wiki-icon]')];
+    const iconLookup = new Map();
+    const iconTitles = new Set();
+    iconImages.forEach(image => {
+      try { JSON.parse(image.dataset.wikiIcon || '[]').forEach(title => iconTitles.add(title)); } catch {}
+    });
+    const titles = [...iconTitles];
+    for (let offset = 0; offset < titles.length; offset += 40) {
+      const batch = titles.slice(offset, offset + 40);
+      try {
+        const url = 'https://minecraft.wiki/api.php?action=query&format=json&prop=imageinfo|pageimages&iiprop=url&piprop=thumbnail&pithumbsize=64&origin=*&titles=' + encodeURIComponent(batch.join('|'));
+        const response = await fetch(url);
+        if (!response.ok) continue;
+        const payload = await response.json();
+        Object.values(payload?.query?.pages || {}).forEach(page => {
+          const imageUrl = page?.imageinfo?.[0]?.url || page?.thumbnail?.source;
+          if (page?.title && imageUrl) iconLookup.set(page.title, imageUrl);
+        });
+      } catch {}
+    }
+    iconImages.forEach(image => {
+      let candidates = [];
+      try { candidates = JSON.parse(image.dataset.wikiIcon || '[]'); } catch {}
+      const iconUrl = candidates.map(title => iconLookup.get(title)).find(Boolean);
+      if (iconUrl) image.src = iconUrl;
+      else image.remove();
+    });
+    // Resolve mob thumbnails from Minecraft Wiki's pageimages API, including redirected/canonical page titles.
+    const mobCards = [...profile.querySelectorAll("[data-mob-wiki]")];
+    for (let offset = 0; offset < mobCards.length; offset += 35) {
+      const batch = mobCards.slice(offset, offset + 35);
+      const requestedTitles = batch.map(card => titleWords(card.dataset.mobWiki).replace(/\s+/g, "_"));
+      try {
+        const url = "https://minecraft.wiki/api.php?action=query&format=json&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=64&origin=*&titles=" + encodeURIComponent(requestedTitles.join("|"));
+        const response = await fetch(url, { headers: { Accept: "application/json" } });
+        if (!response.ok) throw new Error("Minecraft Wiki returned " + response.status);
+        const payload = await response.json();
+        const thumbnails = new Map();
+        Object.values(payload?.query?.pages || {}).forEach(page => {
+          const src = page?.thumbnail?.source;
+          if (!src || !page?.title) return;
+          const canonical = String(page.title).replace(/\s+/g, "_").toLowerCase();
+          thumbnails.set(canonical, src);
+        });
+        (payload?.query?.normalized || []).forEach(entry => {
+          const from = String(entry.from || "").replace(/\s+/g, "_").toLowerCase();
+          const to = String(entry.to || "").replace(/\s+/g, "_").toLowerCase();
+          if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
+        });
+        (payload?.query?.redirects || []).forEach(entry => {
+          const from = String(entry.from || "").replace(/\s+/g, "_").toLowerCase();
+          const to = String(entry.to || "").replace(/\s+/g, "_").toLowerCase();
+          if (thumbnails.has(to)) thumbnails.set(from, thumbnails.get(to));
+        });
+        batch.forEach((card, index) => {
+          const image = card.querySelector(".mob-kill-icon");
+          const title = requestedTitles[index].toLowerCase();
+          const src = thumbnails.get(title);
+          if (src && image) image.src = src;
+          else if (image) image.remove();
+        });
+      } catch {
+        batch.forEach(card => card.querySelector(".mob-kill-icon")?.remove());
+      }
+    }
+    // Each profile table can be sorted independently by clicking any column heading.
+    profile.querySelectorAll('.player-stat-table').forEach(table => {
+      table.querySelectorAll('.stat-sort-button').forEach(button => {
+        button.addEventListener('click', () => {
+          const column = Number(button.dataset.sortColumn);
+          const body = table.tBodies[0];
+          if (!body) return;
+          const ascending = button.dataset.sortDirection !== 'asc';
+          table.querySelectorAll('.stat-sort-button').forEach(other => {
+            if (other !== button) delete other.dataset.sortDirection;
+            const arrow = other.querySelector('span');
+            if (arrow && other !== button) arrow.textContent = '↕';
+          });
+          button.dataset.sortDirection = ascending ? 'asc' : 'desc';
+          const arrow = button.querySelector('span');
+          if (arrow) arrow.textContent = ascending ? '↑' : '↓';
+          [...body.rows].sort((left,right) => {
+            const a = left.cells[column]?.textContent.trim() || '';
+            const b = right.cells[column]?.textContent.trim() || '';
+            const numericA = Number(a.replace(/[,\s]/g,''));
+            const numericB = Number(b.replace(/[,\s]/g,''));
+            const result = a !== '' && b !== '' && Number.isFinite(numericA) && Number.isFinite(numericB)
+              ? numericA - numericB : a.localeCompare(b, undefined, {numeric:true,sensitivity:'base'});
+            return (ascending ? result : -result);
+          }).forEach(row => body.append(row));
+        });
+      });
+    });
 
   } catch {
     profile.innerHTML = `<a class="back-link" href="/players">← All players</a>${emptyPage('Player profile unavailable', 'This player could not be found or the player API is unavailable.')}`;
