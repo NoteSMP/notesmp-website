@@ -260,6 +260,11 @@ function rulesPage() {
 
 function render() {
   const path = currentPath();
+  if (path === "/gallery") {
+    const requestedGroup = new URLSearchParams(location.search).get("group");
+    const groupLabels = { events: "Events", buildings: "Buildings", places: "Places", "in-progress": "In Progress", inprogress: "In Progress" };
+    if (requestedGroup && groupLabels[requestedGroup.toLowerCase()]) selectedGalleryGroup = groupLabels[requestedGroup.toLowerCase()];
+  }
   if (playerDirectoryRefreshTimer) { clearInterval(playerDirectoryRefreshTimer); playerDirectoryRefreshTimer = null; }
   const profileMatch = path.match(/^\/players\/([0-9a-fA-F-]{36})$/);
   const profileUuid = profileMatch?.[1] || '';
@@ -537,8 +542,11 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
           const builderText = Array.isArray(builders) ? builders.join(", ") : String(builders);
           const searchText = [post.title, post.subtitle, post.body, builderText].join(" ").toLowerCase();
           const images = (Array.isArray(post.images) ? post.images : []).map(safeWebUrl).filter(Boolean);
-          const imageMarkup = images.length ? '<a class="profile-post-image-link" href="/gallery#post-' + safeText(post.id) + '" aria-label="Open gallery post ' + safeText(post.id) + '"><img class="profile-post-image" src="' + images[0] + '" alt="' + safeText(post.title || "Gallery post") + '" loading="lazy"></a>' : '';
-          return '<article class="profile-search-row profile-post-row" data-profile-search="' + safeText(searchText) + '">' + imageMarkup + '<div class="profile-post-copy"><a class="profile-post-title" href="/gallery#post-' + safeText(post.id) + '">' + safeText(post.title || "Untitled post") + '</a><span>Builders: ' + safeText(builderText) + '</span><small>' + safeText(formatDate(post.publishedAt)) + ' · #' + safeText(post.id) + '</small></div></article>';
+          const group = String(post.group || post.category || "").toLowerCase().replace(/[\\s_-]+/g, "");
+          const groupLabel = ({ events: "events", buildings: "buildings", places: "places", inprogress: "in-progress" })[group] || "";
+          const galleryHref = "/gallery" + (groupLabel ? "?group=" + encodeURIComponent(groupLabel) : "") + "#post-" + encodeURIComponent(post.id);
+          const imageMarkup = images.length ? '<a class="profile-post-image-link" href="' + galleryHref + '" aria-label="Open gallery post ' + safeText(post.id) + '"><img class="profile-post-image" src="' + images[0] + '" alt="' + safeText(post.title || "Gallery post") + '" loading="lazy"></a>' : "";
+          return '<article class="profile-search-row profile-post-row" data-profile-search="' + safeText(searchText) + '">' + imageMarkup + '<div class="profile-post-copy"><a class="profile-post-title" href="' + galleryHref + '">' + safeText(post.title || "Untitled post") + '</a><span>Builders: ' + safeText(builderText) + '</span><small>' + safeText(formatDate(post.publishedAt)) + ' · #' + safeText(post.id) + '</small></div></article>';
         }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching posts.</p>' : '<p class="fine-print">No published builder posts found for this player.</p>';
         filterProfilePanel("posts", profileSearch?.value.trim().toLowerCase() || "");
       } catch (error) {
@@ -874,6 +882,7 @@ document.addEventListener('click', event => {
   const groupButton = event.target.closest('[data-gallery-group]');
   if (groupButton) {
     selectedGalleryGroup = groupButton.dataset.galleryGroup;
+    if (location.pathname === "/gallery" && location.search) history.replaceState({}, "", "/gallery" + location.hash);
     render();
   }
   const eventPeriodButton = event.target.closest('[data-event-period]');
