@@ -794,7 +794,9 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
         const builders = post.event?.builders || post.builders || post.authorMinecraftName || "";
         const builderText = Array.isArray(builders) ? builders.join(", ") : String(builders);
         const searchText = (post.title + " " + post.subtitle + " " + post.body + " " + builderText).toLowerCase();
-        return '<article class="profile-search-row" data-profile-search="' + safeText(searchText) + '"><strong>' + safeText(post.title || "Untitled post") + '</strong><span>Builders: ' + safeText(builderText) + '</span><small>' + safeText(formatDate(post.publishedAt)) + '</small></article>';
+        const images = (Array.isArray(post.images) ? post.images : []).map(safeWebUrl).filter(Boolean);
+        const imageMarkup = images.length ? '<a class="profile-post-image-link" href="/gallery#post-' + safeText(post.id) + '" aria-label="Open gallery post ' + safeText(post.id) + '"><img class="profile-post-image" src="' + images[0] + '" alt="' + safeText(post.title || "Gallery post") + '" loading="lazy"></a>' : '';
+        return '<article class="profile-search-row profile-post-row" data-profile-search="' + safeText(searchText) + '">' + imageMarkup + '<div class="profile-post-copy"><a class="profile-post-title" href="/gallery#post-' + safeText(post.id) + '">' + safeText(post.title || "Untitled post") + '</a><span>Builders: ' + safeText(builderText) + '</span><small>' + safeText(formatDate(post.publishedAt)) + ' · #' + safeText(post.id) + '</small></div></article>';
       }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching posts.</p>' : '<p class="fine-print">No published builder posts found for this player.</p>';
     } catch (error) { console.warn("Player profile supplemental data could not be loaded", error); }
 
@@ -1019,6 +1021,7 @@ window.setInterval(() => { if (!pluginAvailable) fetchServerStatus(); }, 5 * 60_
   }
   function makeCard(post) {
     const card = element("article", "post-card panel");
+    if (post.id) card.id = "post-" + String(post.id).replace(/[^0-9]/g, "");
     const isScheduledEvent = Boolean(post.event?.scheduledStartTime);
     const images = (Array.isArray(post.images) ? post.images : []).map(safeUrl).filter(Boolean);
     // Event covers are rendered only in the dedicated event layout below;
@@ -1167,6 +1170,10 @@ window.setInterval(() => { if (!pluginAvailable) fetchServerStatus(); }, 5 * 60_
     const feed = element("div", "post-feed");
     posts.forEach(post => feed.append(makeCard(post)));
     target.append(feed);
+    const requestedPost = decodeURIComponent(location.hash.slice(1));
+    if (/^post-\d{6}$/.test(requestedPost)) {
+      requestAnimationFrame(() => document.getElementById(requestedPost)?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    }
   }
   let newsCountdownTimer = null;
 function renderNewsBanner(posts) {
