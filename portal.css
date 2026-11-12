@@ -548,3 +548,14 @@ button:disabled, [role="button"][aria-disabled="true"],
 /* Text selection highlight uses the site's lime color. */
 ::selection { color: #111713; background: #D3EF75; text-shadow: none; }
 ::-moz-selection { color: #111713; background: #D3EF75; text-shadow: none; }
+
+
+/* Player profile Posts tab: linked gallery preview with a 16:9 image. */
+.profile-post-row { display:flex; align-items:center; gap:14px; padding:12px; }
+.profile-post-image-link { display:block; flex:0 0 min(220px,38%); overflow:hidden; aspect-ratio:16/9; border-radius:6px; background:var(--panel2); }
+.profile-post-image { display:block; width:100%; height:100%; object-fit:cover; }
+.profile-post-copy { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:6px; }
+.profile-post-title { color:var(--text); font-weight:800; text-decoration:none; }
+.profile-post-title:hover { color:var(--lime); text-decoration:underline; text-underline-offset:3px; }
+.profile-post-copy span,.profile-post-copy small { color:var(--muted); font-size:11px; }
+@media(max-width:560px) { .profile-post-row { align-items:flex-start; flex-direction:column; } .profile-post-image-link { width:100%; flex-basis:auto; } }
