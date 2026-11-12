@@ -1280,8 +1280,12 @@ async function loadPage() {
         if (requestedPost.startsWith("post-") && requestedPost.length === 11 && [...requestedPost.slice(5)].every(character => character >= "0" && character <= "9")) {
           let matchedPost = null;
           let matchedGroup = "";
-          const allPosts = await getPosts("gallery");
-          matchedPost = allPosts.find(post => "post-" + String(post.id).replace(/[^0-9]/g, "") === requestedPost) || null;
+          const postId = requestedPost.slice(5);
+          const postResponse = await fetch(API + "/content/posts/" + encodeURIComponent(postId), { cache: "no-store" });
+          if (postResponse.ok) {
+            const postData = await postResponse.json();
+            matchedPost = postData.post || null;
+          }
           if (matchedPost) {
             const rawGroup = String(matchedPost.group || matchedPost.eventData?.group || matchedPost.event?.group || "").toLowerCase().replaceAll(" ", "").replaceAll("-", "").replaceAll("_", "");
             matchedGroup = ({ events: "Events", buildings: "Buildings", places: "Places", inprogress: "In Progress" })[rawGroup] || "";
