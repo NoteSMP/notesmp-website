@@ -140,6 +140,7 @@
     const components = data.components && typeof data.components === "object" ? data.components : {};
     const creator = components.creator && typeof components.creator === "object" ? components.creator : {};
     const profileTabs = components.profileTabs && typeof components.profileTabs === "object" ? components.profileTabs : {};
+    const heroEvent = components.heroEvent && typeof components.heroEvent === "object" ? components.heroEvent : {};
     if (![colors, shape, effects, backgrounds, typography].every(value => value && typeof value === "object")) {
       throw new Error("Theme settings are incomplete");
     }
@@ -214,6 +215,17 @@
     for (const key of creatorColorKeys) {
       if (creator[key] !== undefined && !validColor(creator[key])) throw new Error("Invalid creator style color: " + key);
     }
+    const heroEventFontKeys = ["titleFont", "subtitleFont", "labelFont", "detailFont"];
+    for (const key of heroEventFontKeys) {
+      if (heroEvent[key] !== undefined && (typeof heroEvent[key] !== "string" || !Object.hasOwn(fonts, heroEvent[key]))) {
+        throw new Error("Invalid hero event font: " + key);
+      }
+    }
+    const heroEventColorKeys = ["titleColor", "subtitleColor", "labelColor", "detailColor", "statusColor", "inProgressColor", "background", "border"];
+    for (const key of heroEventColorKeys) {
+      if (heroEvent[key] !== undefined && !validColor(heroEvent[key])) throw new Error("Invalid hero event color: " + key);
+    }
+    if (heroEvent.titleWeight !== undefined && !weights.includes(heroEvent.titleWeight)) throw new Error("Invalid hero event title weight");
     const profileTabColorKeys = ["text", "background", "border", "hoverText", "hoverBackground", "hoverBorder", "activeText", "activeBackground", "activeBorder", "divider"];
     for (const key of profileTabColorKeys) {
       if (profileTabs[key] !== undefined && !validColor(profileTabs[key])) throw new Error("Invalid profile tab style color: " + key);
@@ -246,6 +258,21 @@
         offlineText: creator.offlineText || colors.muted,
         offlineBackground: creator.offlineBackground || colors.surface,
         offlineBorder: creator.offlineBorder || colors.border
+      },
+      heroEvent: {
+        titleFont: heroEvent.titleFont || typography.display,
+        titleColor: heroEvent.titleColor || colors.text,
+        titleWeight: heroEvent.titleWeight || typography.displayWeight,
+        subtitleFont: heroEvent.subtitleFont || typography.body,
+        subtitleColor: heroEvent.subtitleColor || colors.muted,
+        labelFont: heroEvent.labelFont || typography.ui || typography.body,
+        labelColor: heroEvent.labelColor || colors.accent,
+        detailFont: heroEvent.detailFont || typography.mono,
+        detailColor: heroEvent.detailColor || colors.text,
+        statusColor: heroEvent.statusColor || colors.accent,
+        inProgressColor: heroEvent.inProgressColor || "#8BE0A2",
+        background: heroEvent.background || colors.surface,
+        border: heroEvent.border || colors.border
       },
       profileTabs: {
         text: profileTabs.text || colors.muted,
@@ -363,6 +390,22 @@
       "--theme-creator-offline-border": creator.offlineBorder
     };
     for (const [property, value] of Object.entries(creatorProperties)) style.setProperty(property, value);
+    const heroEventProperties = {
+      "--theme-hero-event-title-font": fonts[data.heroEvent.titleFont],
+      "--theme-hero-event-title-color": data.heroEvent.titleColor,
+      "--theme-hero-event-title-weight": data.heroEvent.titleWeight,
+      "--theme-hero-event-subtitle-font": fonts[data.heroEvent.subtitleFont],
+      "--theme-hero-event-subtitle-color": data.heroEvent.subtitleColor,
+      "--theme-hero-event-label-font": fonts[data.heroEvent.labelFont],
+      "--theme-hero-event-label-color": data.heroEvent.labelColor,
+      "--theme-hero-event-detail-font": fonts[data.heroEvent.detailFont],
+      "--theme-hero-event-detail-color": data.heroEvent.detailColor,
+      "--theme-hero-event-status-color": data.heroEvent.statusColor,
+      "--theme-hero-event-progress-color": data.heroEvent.inProgressColor,
+      "--theme-hero-event-background": data.heroEvent.background,
+      "--theme-hero-event-border": data.heroEvent.border
+    };
+    for (const [property, value] of Object.entries(heroEventProperties)) style.setProperty(property, value);
     const profileTabProperties = {
       "--theme-profile-tab-text": profileTabs.text,
       "--theme-profile-tab-background": profileTabs.background,
