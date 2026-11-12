@@ -247,6 +247,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .hero-event-time,.hero-event-place,.hero-event-countdown { font-family:var(--theme-hero-event-detail-font,var(--mono)); color:var(--theme-hero-event-detail-color,#fff); }
 .hero-event-status { font-family:var(--theme-hero-event-detail-font,var(--mono)); color:var(--theme-hero-event-status-color,#f3d28a); }
 .hero-event-status.is-in-progress { color:var(--theme-hero-event-progress-color,#8be0a2); }
+.scheduled-event-description { font-family:var(--theme-hero-event-subtitle-font,var(--font)); color:var(--theme-hero-event-subtitle-color,var(--muted)); }
+.scheduled-event-start,.scheduled-event-place,.scheduled-event-countdown { font-family:var(--theme-hero-event-detail-font,var(--mono)); color:var(--theme-hero-event-detail-color,var(--text)); }
+.scheduled-event-countdown.event-state-started { color:var(--theme-hero-event-progress-color,#8be0a2); }
 .hero-event-subtitle { font-size:12px; line-height:1.6; }
 .hero-event-details { display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-end; gap:9px; text-align:right; min-width:120px; }
 .hero-event-time,.hero-event-place,.hero-event-countdown { color:#d9e6d9; font:11px var(--mono); }
