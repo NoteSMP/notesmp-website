@@ -536,7 +536,7 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
           const builders = post.event?.builders || post.builders || post.authorMinecraftName || "";
           const builderText = Array.isArray(builders) ? builders.join(", ") : String(builders);
           const searchText = [post.title, post.subtitle, post.body, builderText].join(" ").toLowerCase();
-          const images = (Array.isArray(post.images) ? post.images : []).map(safeUrl).filter(Boolean);
+          const images = (Array.isArray(post.images) ? post.images : []).map(safeWebUrl).filter(Boolean);
           const imageMarkup = images.length ? '<a class="profile-post-image-link" href="/gallery#post-' + safeText(post.id) + '" aria-label="Open gallery post ' + safeText(post.id) + '"><img class="profile-post-image" src="' + images[0] + '" alt="' + safeText(post.title || "Gallery post") + '" loading="lazy"></a>' : '';
           return '<article class="profile-search-row profile-post-row" data-profile-search="' + safeText(searchText) + '">' + imageMarkup + '<div class="profile-post-copy"><a class="profile-post-title" href="/gallery#post-' + safeText(post.id) + '">' + safeText(post.title || "Untitled post") + '</a><span>Builders: ' + safeText(builderText) + '</span><small>' + safeText(formatDate(post.publishedAt)) + ' · #' + safeText(post.id) + '</small></div></article>';
         }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching posts.</p>' : '<p class="fine-print">No published builder posts found for this player.</p>';
