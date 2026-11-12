@@ -518,6 +518,34 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       const statId = item.dataset.statId || "";
       item.dataset.profileSearch = (groupName + " " + statId + " " + item.textContent).toLowerCase();
     });
+    // Load builder posts independently before any Minecraft Wiki lookups. These lookups
+    // are optional decoration and must never keep the Posts tab in its loading state.
+    (async () => {
+      const postsPanel = profile.querySelector('[data-profile-panel="posts"]');
+      try {
+        const response = await fetch(`${API_BASE}/content/posts?category=gallery&builder=${encodeURIComponent(player.username)}&limit=1000`, {cache:"no-store"});
+        if (!response.ok) throw new Error("Posts API returned HTTP " + response.status);
+        const payload = await response.json();
+        const playerName = String(player.username || "").trim().toLowerCase();
+        const matchingPosts = (payload.posts || []).filter(post => {
+          const builders = post.event?.builders || post.builders || post.authorMinecraftName || "";
+          const names = Array.isArray(builders) ? builders : String(builders).split(/[;,]/);
+          return names.some(name => String(name || "").trim().toLowerCase() === playerName);
+        });
+        postsPanel.innerHTML = matchingPosts.length ? matchingPosts.map(post => {
+          const builders = post.event?.builders || post.builders || post.authorMinecraftName || "";
+          const builderText = Array.isArray(builders) ? builders.join(", ") : String(builders);
+          const searchText = [post.title, post.subtitle, post.body, builderText].join(" ").toLowerCase();
+          const images = (Array.isArray(post.images) ? post.images : []).map(safeUrl).filter(Boolean);
+          const imageMarkup = images.length ? '<a class="profile-post-image-link" href="/gallery#post-' + safeText(post.id) + '" aria-label="Open gallery post ' + safeText(post.id) + '"><img class="profile-post-image" src="' + images[0] + '" alt="' + safeText(post.title || "Gallery post") + '" loading="lazy"></a>' : '';
+          return '<article class="profile-search-row profile-post-row" data-profile-search="' + safeText(searchText) + '">' + imageMarkup + '<div class="profile-post-copy"><a class="profile-post-title" href="/gallery#post-' + safeText(post.id) + '">' + safeText(post.title || "Untitled post") + '</a><span>Builders: ' + safeText(builderText) + '</span><small>' + safeText(formatDate(post.publishedAt)) + ' · #' + safeText(post.id) + '</small></div></article>';
+        }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching posts.</p>' : '<p class="fine-print">No published builder posts found for this player.</p>';
+        filterProfilePanel("posts", profileSearch?.value.trim().toLowerCase() || "");
+      } catch (error) {
+        console.warn("Player profile posts could not be loaded", error);
+        postsPanel.innerHTML = '<p class="fine-print">Posts could not be loaded. Please try refreshing the profile.</p>';
+      }
+    })();
     // Batch Wiki lookups; a zero-inclusive profile can have hundreds of statistic rows.
     const iconImages = [...profile.querySelectorAll('img.player-stat-icon[data-wiki-icon]')];
     const iconLookup = new Map();
@@ -613,26 +641,6 @@ async function renderPlayerProfile(uuid, liveProfile = null) {
       });
     });
     try {
-      const [advResponse, postResponse, countResponse] = await Promise.all([
-        fetch(`${API_BASE}/players/${encodeURIComponent(uuid)}/advancements`, {cache:"no-store"}),
-        fetch(`${API_BASE}/content/posts?category=gallery&builder=${encodeURIComponent(player.username)}&limit=1000`, {cache:"no-store"}),
-        fetch(`${API_BASE}/server/advancement-count`, {cache:"no-store"})
-      ]);
-      const postPayload = postResponse.ok ? await postResponse.json() : {posts:[]};
-      const playerName = String(player.username || "").toLowerCase();
-      const matchingPosts = (postPayload.posts || []).filter(post => {
-        const builders = post.event?.builders || post.builders || post.authorMinecraftName || "";
-        return String(Array.isArray(builders) ? builders.join(",") : builders).split(/[;,]/).some(name => name.trim().toLowerCase() === playerName);
-      });
-      const postsPanel = profile.querySelector('[data-profile-panel="posts"]');
-      postsPanel.innerHTML = matchingPosts.length ? matchingPosts.map(post => {
-        const builders = post.event?.builders || post.builders || post.authorMinecraftName || "";
-        const builderText = Array.isArray(builders) ? builders.join(", ") : String(builders);
-        const searchText = (post.title + " " + post.subtitle + " " + post.body + " " + builderText).toLowerCase();
-        const images = (Array.isArray(post.images) ? post.images : []).map(safeUrl).filter(Boolean);
-        const imageMarkup = images.length ? '<a class="profile-post-image-link" href="/gallery#post-' + safeText(post.id) + '" aria-label="Open gallery post ' + safeText(post.id) + '"><img class="profile-post-image" src="' + images[0] + '" alt="' + safeText(post.title || "Gallery post") + '" loading="lazy"></a>' : '';
-        return '<article class="profile-search-row profile-post-row" data-profile-search="' + safeText(searchText) + '">' + imageMarkup + '<div class="profile-post-copy"><a class="profile-post-title" href="/gallery#post-' + safeText(post.id) + '">' + safeText(post.title || "Untitled post") + '</a><span>Builders: ' + safeText(builderText) + '</span><small>' + safeText(formatDate(post.publishedAt)) + ' · #' + safeText(post.id) + '</small></div></article>';
-      }).join("") + '<p class="fine-print" data-profile-empty hidden>No matching posts.</p>' : '<p class="fine-print">No published builder posts found for this player.</p>';
       const savedAdvPayload = advResponse?.ok ? await advResponse.json() : {advancements:[]};
       const countPayload = countResponse?.ok ? await countResponse.json() : {};
       const liveAdvancements = Array.isArray(liveProfile?.advancements) ? liveProfile.advancements : [];
