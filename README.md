@@ -33,6 +33,13 @@ Player directory records are stored in D1. A player is registered when they join
 | `wrangler.jsonc` | Cloudflare Worker and static-asset configuration. |
 | `api/README.md` | Pointer to the separately maintained API project. |
 
+## Commands catalogue
+
+The `/commands` page fetches its editable catalogue from
+[`NoteSMP/notesmp-ressources/commands/commands.json`](https://github.com/NoteSMP/notesmp-ressources/blob/main/commands/commands.json).
+Add or remove plugin groups and command entries in that JSON file; the website
+renders the groups and descriptions dynamically.
+
 ## Website themes
 
 The website provides five visitor-selectable options: Default and Theme 1–4. The Default option preserves the built-in NoteSMP appearance. Theme 1–4 load validated JSON design tokens from the separate [notesmp-theme repository](https://github.com/NoteSMP/notesmp-theme). A visitor's selection is saved in that visitor's browser and does not affect other users.
