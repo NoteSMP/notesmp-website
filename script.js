@@ -231,23 +231,57 @@ function playerProfilePage(uuid) {
 }
 
 function commandsPage() {
-  const groups = [
-    {
-      name: 'Vanilla',
-      category: 'Minecraft Java Edition',
-      source: 'NATIVE',
-      commands: [['/help', 'Show available commands. The list depends on your permissions and installed server plugins.'], ['/msg <player> <message>', 'Send a private message to another player.'], ['/tell <player> <message>', 'Vanilla alias for sending a private message.'], ['/w <player> <message>', 'Vanilla alias for sending a private message.'], ['/teammsg <message>', 'Send a message to your current team, when teams are enabled.'], ['/me <action>', 'Send a third-person action message in chat.']]
-    },
-    {
-      name: 'GSit',
-      category: 'Plugin commands',
-      source: 'PLUGIN',
-      commands: [['/sit', 'Sit on the block or seat in front of you.'], ['/crawl', 'Crawl along the ground.'], ['/lay', 'Lie down in place.'], ['/spin', 'Spin in place.']]
+  return `<div class="page-shell">${pageHeading('Commands', 'Search by command, category, or plugin.', 'PLAYER GUIDE')}<div class="page-content"><div class="toolbar"><input class="search-input" id="command-search" type="search" placeholder="Search commands or categories…" aria-label="Search commands or categories"><span class="player-count" id="command-count">Loading commands…</span></div><div id="command-groups">${emptyPage('Loading commands', 'Fetching the latest command list…')}</div><div class="panel empty-state" id="command-no-results" hidden><strong>No matching commands</strong>Try a command, category, or plugin name.</div><p class="fine-print">Command availability depends on server configuration and player permissions.</p></div></div>`;
+}
+
+function renderCommandGroups(groups) {
+  const target = document.querySelector('#command-groups');
+  if (!target) return;
+  if (!Array.isArray(groups) || !groups.length) {
+    target.innerHTML = emptyPage('No commands published', 'The command list is currently empty.');
+    const count = document.querySelector('#command-count');
+    if (count) count.textContent = '0 commands';
+    return;
+  }
+  const groupMarkup = groups.map(group => {
+    const name = String(group?.name || '').trim();
+    const category = String(group?.category || 'Plugin commands').trim();
+    const source = String(group?.source || 'PLUGIN').trim();
+    const commands = Array.isArray(group?.commands) ? group.commands : [];
+    if (!name || !commands.length) return '';
+    const items = commands.map(item => {
+      const command = String(item?.command || '').trim();
+      const description = String(item?.description || '').trim();
+      if (!command) return '';
+      const searchText = `${name} ${category} ${command} ${description}`.toLowerCase();
+      return `<article class="command-item" data-command-search="${safeText(searchText)}"><code>${safeText(command)}</code><p>${safeText(description)}</p></article>`;
+    }).join('');
+    if (!items) return '';
+    return `<section class="command-heritage" data-command-group data-group-search="${safeText(`${name} ${category} ${source}`.toLowerCase())}"><header class="command-heritage-heading"><div><span class="overline">${safeText(category)}</span><h2>${safeText(name)}</h2></div><span class="status-meta">${safeText(source)}</span></header><div class="command-list">${items}</div></section>`;
+  }).join('');
+  target.innerHTML = groupMarkup || emptyPage('No commands published', 'The command list is currently empty.');
+  filterCommands();
+}
+
+async function loadCommands() {
+  const target = document.querySelector('#command-groups');
+  if (!target) return;
+  try {
+    const url = 'https://raw.githubusercontent.com/NoteSMP/notesmp-ressources/main/commands/commands.json?t=' + Date.now();
+    const response = await fetch(url, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+    if (!response.ok) throw new Error('Command resource request failed (' + response.status + ')');
+    const payload = await response.json();
+    if (!payload || !Array.isArray(payload.groups)) throw new Error('Invalid command resource format');
+    if (currentPath() !== '/commands' || !document.querySelector('#command-groups')) return;
+    renderCommandGroups(payload.groups);
+  } catch (error) {
+    console.error('NoteSMP commands could not be loaded:', error);
+    if (currentPath() === '/commands' && document.querySelector('#command-groups')) {
+      document.querySelector('#command-groups').innerHTML = emptyPage('Commands unavailable', 'The command list could not be loaded. Please try again later.');
+      const count = document.querySelector('#command-count');
+      if (count) count.textContent = 'Unavailable';
     }
-  ];
-  const commandCount = groups.reduce((count, group) => count + group.commands.length, 0);
-  const groupMarkup = groups.map(group => `<section class="command-heritage" data-command-group data-group-search="${safeText(`${group.name} ${group.category} ${group.source}`.toLowerCase())}"><header class="command-heritage-heading"><div><span class="overline">${safeText(group.category)}</span><h2>${safeText(group.name)}</h2></div><span class="status-meta">${safeText(group.source)}</span></header><div class="command-list">${group.commands.map(([command, description]) => `<article class="command-item" data-command-search="${safeText(`${group.name} ${group.category} ${command} ${description}`.toLowerCase())}"><code>${safeText(command)}</code><p>${safeText(description)}</p></article>`).join('')}</div></section>`).join('');
-  return `<div class="page-shell">${pageHeading('Commands', 'Search by command, category, or plugin.', 'PLAYER GUIDE')}<div class="page-content"><div class="toolbar"><input class="search-input" id="command-search" type="search" placeholder="Search commands or categories…" aria-label="Search commands or categories"><span class="player-count" id="command-count">${commandCount} commands</span></div><div id="command-groups">${groupMarkup}</div><div class="panel empty-state" id="command-no-results" hidden><strong>No matching commands</strong>Try a command, category, or plugin name.</div><p class="fine-print">Command availability depends on server configuration and player permissions. GSit commands listed here are enabled on NoteSMP.</p></div></div>`;
+  }
 }
 
 function devlogPage() {
@@ -300,7 +334,7 @@ function render() {
     // Keep the directory current while it is open so new joins appear without a manual reload.
     playerDirectoryRefreshTimer = window.setInterval(loadPlayers, 15000);
   }
-  if (knownRoute === '/commands') filterCommands();
+  if (knownRoute === '/commands') loadCommands();
   if (profileMatch) renderPlayerProfile(profileMatch[1]);
   window.dispatchEvent(new Event("notesmp:render"));
 }
